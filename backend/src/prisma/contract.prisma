@@ -19,3 +19,34 @@ model Post {
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
 }
+
+model Repository {
+  id        Int      @id @default(autoincrement())
+  name      String
+  path      String   @unique
+  commits   Commit[]
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+model Commit {
+  hash         String      @id
+  authorName   String
+  authorEmail  String
+  committedAt  TimestamptzString
+  subject      String
+  parentHashes String
+  repository   Repository  @relation(fields: [repositoryId], references: [id])
+  repositoryId Int
+  fileChanges  FileChange[]
+  createdAt    TimestamptzString @default(now())
+}
+
+model FileChange {
+  id         Int    @id @default(autoincrement())
+  commitHash String
+  commit     Commit @relation(fields: [commitHash], references: [hash])
+  filepath   String
+  additions  Int
+  deletions  Int
+}
