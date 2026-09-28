@@ -1,45 +1,231 @@
 // use prisma-next
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String?
-  name      String?
-  posts     Post[]
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+enum EnrollmentStatus {
+  INVITED
+  ACTIVE
+  INACTIVE
+  DROPPED
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+enum ContributionType {
+  COMMIT
+  PULL_REQUEST
+  PULL_REQUEST_REVIEW
+  ISSUE
+  FEATURE
+}
+
+enum ContributionClassification {
+  CORE_FEATURE
+  SUPPORTING_WORK
+  PERIPHERAL
+  UNCLASSIFIED
+}
+
+enum AnnotationType {
+  GENERAL_CONTEXT
+  AI_DISCLOSURE
+  COLLABORATION
+}
+
+enum ReviewRequestType {
+  CLAIM_ATTRIBUTION
+  INCORRECT_ATTRIBUTION
+  INCORRECT_CLASSIFICATION
+}
+
+enum ReviewRequestStatus {
+  OPEN
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum AlertType {
+  WORKLOAD_IMBALANCE
+  INACTIVITY
+  DEADLINE_BURST
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+model User {
+  id                Int                 @id @default(autoincrement())
+  email             String              @unique
+  username          String?
+  name              String?
+  instructorCourses CourseInstructor[]
+  enrollments       StudentEnrollment[]
+  gitIdentities     GitIdentity[]
+  createdAt         TimestamptzString   @default(now())
+  updatedAt         temporal.updatedAtString()
+}
+
+// A person can instruct one course and be enrolled in another, so roles live
+// on course-specific membership records instead of on User.
+model Course {
+  id                        Int                   @id @default(autoincrement())
+  code                      String
+  name                      String
+  term                      String
+  startsAt                  TimestamptzString?
+  endsAt                    TimestamptzString?
+  studentTeamSummaryVisible Boolean               @default(false)
+  instructors               CourseInstructor[]
+  students                  StudentEnrollment[]
+  teams                     Team[]
+  githubOrganizations       GitHubOrganization[]
+  repositories              Repository[]
+  assessmentCriteria        AssessmentCriterion[]
+  assessmentWindows         AssessmentWindow[]
+  alertRules                AlertRule[]
+  createdAt                 TimestamptzString     @default(now())
+  updatedAt                 temporal.updatedAtString()
+
+  @@unique([code, term])
+}
+
+model CourseInstructor {
+  id                          Int                         @id @default(autoincrement())
+  course                      Course                      @relation(fields: [courseId], references: [id])
+  courseId                    Int
+  user                        User                        @relation(fields: [userId], references: [id])
+  userId                      Int
+  title                       String?
+  connectedOrganizations      GitHubOrganization[]
+  connectedRepositories       Repository[]
+  createdAssessmentCriteria   AssessmentCriterion[]
+  createdAssessmentWindows    AssessmentWindow[]
+  classificationOverrides     Contribution[]
+  scoreOverrides              AssessmentResult[]
+  authoredFeedback            Feedback[]
+  reviewedRequests            ContributionReviewRequest[]
+  createdAlertRules           AlertRule[]
+  acknowledgedAlerts          WorkloadAlert[]
+  createdAt                   TimestamptzString           @default(now())
+  updatedAt                   temporal.updatedAtString()
+
+  @@unique([courseId, userId])
+}
+
+model StudentEnrollment {
+  id                Int                         @id @default(autoincrement())
+  course            Course                      @relation(fields: [courseId], references: [id])
+  courseId          Int
+  user              User                        @relation(fields: [userId], references: [id])
+  userId            Int
+  studentNumber     String?
+  section           String?
+  status            EnrollmentStatus            @default(INVITED)
+  team              Team?                       @relation(fields: [teamId], references: [id])
+  teamId            Int?
+  contributions     Contribution[]
+  assessmentResults AssessmentResult[]
+  annotations       ContributionAnnotation[]
+  reviewRequests    ContributionReviewRequest[]
+  feedback          Feedback[]
+  alerts            WorkloadAlert[]
+  createdAt         TimestamptzString           @default(now())
+  updatedAt         temporal.updatedAtString()
+
+  @@unique([courseId, userId])
+  @@unique([courseId, studentNumber])
+}
+
+model Team {
+  id                    Int                 @id @default(autoincrement())
+  course                Course              @relation(fields: [courseId], references: [id])
+  courseId              Int
+  name                  String
+  studentSummaryVisible Boolean             @default(false)
+  students              StudentEnrollment[]
+  repositories          Repository[]
+  alerts                WorkloadAlert[]
+  createdAt             TimestamptzString   @default(now())
+  updatedAt             temporal.updatedAtString()
+
+  @@unique([courseId, name])
+}
+
+model GitHubOrganization {
+  id                      Int                 @id @default(autoincrement())
+  course                  Course              @relation(fields: [courseId], references: [id])
+  courseId                Int
+  githubId                String
+  login                   String
+  installationId          String?
+  connectedByInstructor   CourseInstructor    @relation(fields: [connectedByInstructorId], references: [id])
+  connectedByInstructorId Int
+  repositories            Repository[]
+  createdAt               TimestamptzString   @default(now())
+  updatedAt               temporal.updatedAtString()
+
+  @@unique([courseId, githubId])
 }
 
 model Repository {
-  id        Int      @id @default(autoincrement())
-  name      String
-  path      String   @unique
-  commits   Commit[]
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+  id                      Int                 @id @default(autoincrement())
+  name                    String
+  path                    String?             @unique
+  provider                String              @default("github")
+  externalId              String?
+  owner                   String?
+  url                     String?
+  defaultBranch           String?
+  course                  Course?             @relation(fields: [courseId], references: [id])
+  courseId                Int?
+  team                    Team?               @relation(fields: [teamId], references: [id])
+  teamId                  Int?
+  githubOrganization      GitHubOrganization? @relation(fields: [githubOrganizationId], references: [id])
+  githubOrganizationId    Int?
+  connectedByInstructor   CourseInstructor?   @relation(fields: [connectedByInstructorId], references: [id])
+  connectedByInstructorId Int?
+  commits                 Commit[]
+  contributions           Contribution[]
+  assessmentWindows       AssessmentWindow[]
+  createdAt               TimestamptzString   @default(now())
+  updatedAt               temporal.updatedAtString()
+
+  @@unique([provider, externalId])
+}
+
+// One user can connect multiple provider accounts, usernames, or commit emails.
+model GitIdentity {
+  id         Int                 @id @default(autoincrement())
+  user       User                @relation(fields: [userId], references: [id])
+  userId     Int
+  provider   String
+  kind       String
+  value      String
+  username   String?
+  isPrimary  Boolean             @default(false)
+  verifiedAt TimestamptzString?
+  commits    Commit[]
+  createdAt  TimestamptzString   @default(now())
+  updatedAt  temporal.updatedAtString()
+
+  @@unique([provider, kind, value])
 }
 
 model Commit {
-  hash         String      @id
-  authorName   String
-  authorEmail  String
-  committedAt  TimestamptzString
-  subject      String
-  parentHashes String
-  repository   Repository  @relation(fields: [repositoryId], references: [id])
-  repositoryId Int
-  fileChanges  FileChange[]
-  createdAt    TimestamptzString @default(now())
+  hash             String            @id
+  authorName       String
+  authorEmail      String
+  committedAt      TimestamptzString
+  subject          String
+  parentHashes     String
+  repository       Repository        @relation(fields: [repositoryId], references: [id])
+  repositoryId     Int
+  authorIdentity   GitIdentity?      @relation(fields: [authorIdentityId], references: [id])
+  authorIdentityId Int?
+  contribution     Contribution?     @relation(fields: [contributionId], references: [id])
+  contributionId   Int?              @unique
+  fileChanges      FileChange[]
+  createdAt        TimestamptzString @default(now())
 }
 
 model FileChange {
@@ -49,4 +235,197 @@ model FileChange {
   filepath   String
   additions  Int
   deletions  Int
+}
+
+// Normalizes commits, pull requests, reviews, issues, and instructor-defined
+// features so dashboards and assessments can use one evidence model.
+model Contribution {
+  id                               Int                         @id @default(autoincrement())
+  repository                       Repository                  @relation(fields: [repositoryId], references: [id])
+  repositoryId                     Int
+  type                             ContributionType
+  externalId                       String
+  title                            String?
+  description                      String?
+  url                              String?
+  occurredAt                       TimestamptzString
+  assignedStudent                  StudentEnrollment?          @relation(fields: [assignedStudentId], references: [id])
+  assignedStudentId                Int?
+  detectedClassification           ContributionClassification?
+  finalClassification              ContributionClassification  @default(UNCLASSIFIED)
+  classificationConfidence         Float?
+  classificationOverrideReason     String?
+  classificationOverriddenBy       CourseInstructor?           @relation(fields: [classificationOverriddenById], references: [id])
+  classificationOverriddenById     Int?
+  classificationOverriddenAt       TimestamptzString?
+  metadata                         Json?
+  commit                           Commit?
+  assessmentEvidence               AssessmentEvidence[]
+  annotations                      ContributionAnnotation[]
+  feedback                         Feedback[]
+  reviewRequests                   ContributionReviewRequest[]
+  createdAt                        TimestamptzString             @default(now())
+  updatedAt                        temporal.updatedAtString()
+
+  @@unique([repositoryId, type, externalId])
+}
+
+model AssessmentCriterion {
+  id                    Int                 @id @default(autoincrement())
+  course                Course              @relation(fields: [courseId], references: [id])
+  courseId              Int
+  key                   String
+  name                  String
+  description           String?
+  weight                Float
+  displayOrder          Int                 @default(0)
+  published             Boolean             @default(false)
+  createdByInstructor   CourseInstructor    @relation(fields: [createdByInstructorId], references: [id])
+  createdByInstructorId Int
+  results               AssessmentResult[]
+  createdAt             TimestamptzString   @default(now())
+  updatedAt             temporal.updatedAtString()
+
+  @@unique([courseId, key])
+}
+
+model AssessmentWindow {
+  id                    Int                 @id @default(autoincrement())
+  course                Course              @relation(fields: [courseId], references: [id])
+  courseId              Int
+  repository            Repository?         @relation(fields: [repositoryId], references: [id])
+  repositoryId          Int?
+  name                  String
+  iterationLabel        String?
+  branch                String?
+  startsAt              TimestamptzString?
+  endsAt                TimestamptzString?
+  deadlineAt            TimestamptzString?
+  createdByInstructor   CourseInstructor    @relation(fields: [createdByInstructorId], references: [id])
+  createdByInstructorId Int
+  results               AssessmentResult[]
+  createdAt             TimestamptzString   @default(now())
+  updatedAt             temporal.updatedAtString()
+
+  @@unique([courseId, name])
+}
+
+model AssessmentResult {
+  id                       Int                  @id @default(autoincrement())
+  assessmentWindow         AssessmentWindow     @relation(fields: [assessmentWindowId], references: [id])
+  assessmentWindowId       Int
+  student                  StudentEnrollment    @relation(fields: [studentId], references: [id])
+  studentId                Int
+  criterion                AssessmentCriterion  @relation(fields: [criterionId], references: [id])
+  criterionId              Int
+  automatedScore           Float?
+  finalScore               Float?
+  overrideReason           String?
+  overriddenByInstructor   CourseInstructor?    @relation(fields: [overriddenByInstructorId], references: [id])
+  overriddenByInstructorId Int?
+  overriddenAt             TimestamptzString?
+  evidence                 AssessmentEvidence[]
+  feedback                 Feedback[]
+  createdAt                TimestamptzString    @default(now())
+  updatedAt                temporal.updatedAtString()
+
+  @@unique([assessmentWindowId, studentId, criterionId])
+}
+
+model AssessmentEvidence {
+  id             Int               @id @default(autoincrement())
+  assessment     AssessmentResult  @relation(fields: [assessmentId], references: [id])
+  assessmentId   Int
+  contribution   Contribution      @relation(fields: [contributionId], references: [id])
+  contributionId Int
+  note           String?
+  included       Boolean           @default(true)
+  createdAt      TimestamptzString @default(now())
+
+  @@unique([assessmentId, contributionId])
+}
+
+model Feedback {
+  id                 Int                @id @default(autoincrement())
+  student            StudentEnrollment  @relation(fields: [studentId], references: [id])
+  studentId          Int
+  authorInstructor   CourseInstructor   @relation(fields: [authorInstructorId], references: [id])
+  authorInstructorId Int
+  contribution       Contribution?      @relation(fields: [contributionId], references: [id])
+  contributionId     Int?
+  assessment         AssessmentResult?  @relation(fields: [assessmentId], references: [id])
+  assessmentId       Int?
+  body               String
+  visibleToStudent   Boolean            @default(true)
+  createdAt          TimestamptzString  @default(now())
+  updatedAt          temporal.updatedAtString()
+}
+
+model ContributionAnnotation {
+  id             Int               @id @default(autoincrement())
+  contribution   Contribution      @relation(fields: [contributionId], references: [id])
+  contributionId Int
+  student        StudentEnrollment @relation(fields: [studentId], references: [id])
+  studentId      Int
+  type           AnnotationType
+  body           String
+  aiTool         String?
+  createdAt      TimestamptzString @default(now())
+  updatedAt      temporal.updatedAtString()
+}
+
+model ContributionReviewRequest {
+  id                     Int                         @id @default(autoincrement())
+  contribution           Contribution                @relation(fields: [contributionId], references: [id])
+  contributionId         Int
+  student                StudentEnrollment           @relation(fields: [studentId], references: [id])
+  studentId              Int
+  type                   ReviewRequestType
+  proposedClassification ContributionClassification?
+  explanation            String
+  status                 ReviewRequestStatus         @default(OPEN)
+  reviewedByInstructor   CourseInstructor?           @relation(fields: [reviewedByInstructorId], references: [id])
+  reviewedByInstructorId Int?
+  reviewNote             String?
+  reviewedAt             TimestamptzString?
+  createdAt              TimestamptzString           @default(now())
+  updatedAt              temporal.updatedAtString()
+}
+
+model AlertRule {
+  id                    Int                 @id @default(autoincrement())
+  course                Course              @relation(fields: [courseId], references: [id])
+  courseId              Int
+  name                  String
+  type                  AlertType
+  threshold             Float
+  lookbackDays          Int?
+  enabled               Boolean             @default(true)
+  settings              Json?
+  createdByInstructor   CourseInstructor    @relation(fields: [createdByInstructorId], references: [id])
+  createdByInstructorId Int
+  alerts                WorkloadAlert[]
+  createdAt             TimestamptzString   @default(now())
+  updatedAt             temporal.updatedAtString()
+
+  @@unique([courseId, name])
+}
+
+model WorkloadAlert {
+  id                         Int                 @id @default(autoincrement())
+  rule                       AlertRule           @relation(fields: [ruleId], references: [id])
+  ruleId                     Int
+  student                    StudentEnrollment?  @relation(fields: [studentId], references: [id])
+  studentId                  Int?
+  team                       Team?               @relation(fields: [teamId], references: [id])
+  teamId                     Int?
+  metricValue                Float?
+  status                     AlertStatus         @default(OPEN)
+  triggeredAt                TimestamptzString   @default(now())
+  acknowledgedByInstructor   CourseInstructor?   @relation(fields: [acknowledgedByInstructorId], references: [id])
+  acknowledgedByInstructorId Int?
+  acknowledgedAt             TimestamptzString?
+  resolvedAt                 TimestamptzString?
+  createdAt                  TimestamptzString   @default(now())
+  updatedAt                  temporal.updatedAtString()
 }
