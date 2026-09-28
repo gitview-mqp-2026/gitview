@@ -20,8 +20,8 @@ app.get('/api/commits', async (req, res) => {
   try {
     const repoId = req.query.repoId ? Number(req.query.repoId) : undefined;
     const commits = repoId
-      ? await db.orm.public.Commit.where({ repositoryId: repoId }).many()
-      : await db.orm.public.Commit.many();
+      ? await db.orm.public.Commit.where({ repositoryId: repoId }).orderBy({ committedAt: 'desc' }).many()
+      : await db.orm.public.Commit.orderBy({ committedAt: 'desc' }).many();
     res.json(commits);
   } catch (err) {
     res.status(500).json({ error: String(err) });
