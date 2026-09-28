@@ -256,3 +256,55 @@ button {
 .categories-table td {
     font-size: 14px;
 }
+
+a {
+    text-align: center;
+    color: white;
+    text-decoration: none;
+}
+
+.link-button {
+    text-align: center;
+    color: white;
+    text-decoration: none;
+    background-color: #1d304a;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    display: inline-block;
+    border: 1px solid lightgray;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 700px;
+    gap: 30px;
+}
+
+.repo-input {
+    background-color: #1d304a;
+    color: white;
+    width: 250px;
+    height: 30px;
+    padding: 10px;
+}
+
+.repo-button {
+    text-align: center;
+    color: white;
+    text-decoration: none;
+    background-color: #1d304a;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.analyze-repo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
