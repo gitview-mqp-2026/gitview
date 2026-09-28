@@ -87,13 +87,11 @@ async function main() {
 
   let repo = await db.orm.public.Repository.where({ path: repoPath }).first();
   if (!repo) {
-    repo = await db.orm.public.Repository.create({
-      data: { name: repoName, path: repoPath! },
-    });
+    repo = await db.orm.public.Repository.create({ name: repoName, path: repoPath! });
   }
 
   const existingHashes = new Set(
-    (await db.orm.public.Commit.where({ repositoryId: repo.id }).many()).map((c) => c.hash)
+    (await db.orm.public.Commit.where({ repositoryId: repo.id }).all()).map((c) => c.hash)
   );
 
   const newCommits = commits.filter((c) => !existingHashes.has(c.hash));
@@ -101,25 +99,21 @@ async function main() {
 
   for (const commit of newCommits) {
     await db.orm.public.Commit.create({
-      data: {
-        hash: commit.hash,
-        authorName: commit.authorName,
-        authorEmail: commit.authorEmail,
-        committedAt: commit.committedAt,
-        subject: commit.subject,
-        parentHashes: commit.parentHashes,
-        repositoryId: repo.id,
-      },
+      hash: commit.hash,
+      authorName: commit.authorName,
+      authorEmail: commit.authorEmail,
+      committedAt: commit.committedAt,
+      subject: commit.subject,
+      parentHashes: commit.parentHashes,
+      repositoryId: repo.id,
     });
 
-    if (commit.fileChanges.length > 0) {
-      await db.orm.public.FileChange.createMany({
-        data: commit.fileChanges.map((fc) => ({
-          commitHash: commit.hash,
-          filepath: fc.filepath,
-          additions: fc.additions,
-          deletions: fc.deletions,
-        })),
+    for (const fc of commit.fileChanges) {
+      await db.orm.public.FileChange.create({
+        commitHash: commit.hash,
+        filepath: fc.filepath,
+        additions: fc.additions,
+        deletions: fc.deletions,
       });
     }
   }

@@ -9,7 +9,7 @@ app.use(express.json());
 
 app.get('/api/repositories', async (_req, res) => {
   try {
-    const repos = await db.orm.public.Repository.many();
+    const repos = await db.orm.public.Repository.all();
     res.json(repos);
   } catch (err) {
     res.status(500).json({ error: String(err) });
@@ -20,8 +20,8 @@ app.get('/api/commits', async (req, res) => {
   try {
     const repoId = req.query.repoId ? Number(req.query.repoId) : undefined;
     const commits = repoId
-      ? await db.orm.public.Commit.where({ repositoryId: repoId }).orderBy({ committedAt: 'desc' }).many()
-      : await db.orm.public.Commit.orderBy({ committedAt: 'desc' }).many();
+      ? await db.orm.public.Commit.where({ repositoryId: repoId }).orderBy((c) => c.committedAt.desc()).all()
+      : await db.orm.public.Commit.orderBy((c) => c.committedAt.desc()).all();
     res.json(commits);
   } catch (err) {
     res.status(500).json({ error: String(err) });
@@ -32,7 +32,7 @@ app.get('/api/commits/:hash/files', async (req, res) => {
   try {
     const files = await db.orm.public.FileChange
       .where({ commitHash: req.params.hash })
-      .many();
+      .all();
     res.json(files);
   } catch (err) {
     res.status(500).json({ error: String(err) });
