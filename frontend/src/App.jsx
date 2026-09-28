@@ -1,6 +1,27 @@
+import { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
+    const [commits, setCommits] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        fetch('/api/commits')
+            .then((r) => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then((data) => {
+                setCommits(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                setError(err.message);
+                setLoading(false);
+            });
+    }, []);
+
     return (
         <div>
             <header className="nav-bar">
@@ -36,7 +57,7 @@ function App() {
                 <section className="stats-overview">
                     <div className="stat-card">
                         <span>COMMITS</span>
-                        <strong>900</strong>
+                        <strong>{commits.length || '—'}</strong>
                     </div>
 
                     <div className="stat-card">
@@ -106,53 +127,41 @@ function App() {
                     </div>
                 </section>
 
-                {/* Recent Significant Commits */}
+                {/* Commit Log Table */}
                 <section className="significant-commits">
-                    <h2>Recent significant commits</h2>
+                    <h2>Commit log</h2>
 
-                    <div className="commits-container">
-                        <div className="commit">
-                            <div className="commit-info">
-                                <div className="profile-button"></div>
+                    {loading && <p>Loading commits…</p>}
+                    {error && <p style={{ color: 'red' }}>Could not load commits: {error}</p>}
 
-                                <div>
-                                    <h3>Implemented OAuth login</h3>
-                                    <p>Student 1  · src/auth</p>
-
-                                    <div className="tags">
-                                        <span>Core</span>
-                                        <span>High Impact</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="commit-actions">
-                                <button>Feedback</button>
-                                <button>Tag</button>
-                            </div>
-                        </div>
-
-                        <div className="commit">
-                            <div className="commit-info">
-                                <div className="profile-button"></div>
-
-                                <div>
-                                    <h3>Updated database schema</h3>
-                                    <p>Student 2  · src/backend</p>
-
-                                    <div className="tags">
-                                        <span>Core</span>
-                                        <span>High Impact</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="commit-actions">
-                                <button>Feedback</button>
-                                <button>Tag</button>
-                            </div>
-                        </div>
-                    </div>
+                    {!loading && !error && (
+                        <table className="categories-table">
+                            <thead>
+                                <tr>
+                                    <th>Hash</th>
+                                    <th>Subject</th>
+                                    <th>Author</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {commits.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4}>No commits ingested yet. Run <code>npm run ingest</code> in the backend.</td>
+                                    </tr>
+                                ) : (
+                                    commits.map((c) => (
+                                        <tr key={c.hash}>
+                                            <td><code>{c.hash.slice(0, 7)}</code></td>
+                                            <td>{c.subject}</td>
+                                            <td>{c.authorName}</td>
+                                            <td>{new Date(c.committedAt).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    )}
                 </section>
 
                 {/* Major Contribution Categories */}
