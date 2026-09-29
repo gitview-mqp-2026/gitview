@@ -1,52 +1,91 @@
-// use prisma-next
+    // use prisma-next
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String?
-  name      String?
-  posts     Post[]
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+  userID            Int           @id @default(autoincrement())
+  email             String        @unique
+  username          String?
+  name              String?
+  instructor        Instructor?
+  student           Student?
+  feedback          Feedback[]
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+model Instructor {
+  userID            Int           @id
+  user              User          @relation(fields: [userID], references: [userID], onDelete: Cascade)
 }
 
-model Repository {
-  id        Int      @id @default(autoincrement())
-  name      String
-  path      String   @unique
-  commits   Commit[]
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+model Student {
+  userID            Int           @id
+  user              User          @relation(fields: [userID], references: [userID], onDelete: Cascade)
+  teamID            Int
+  repository        Repository    @relation(fields: [teamID], references: [teamID])
+  commits           Commit[]
+  alerts            Alert[]
 }
 
 model Commit {
-  hash         String      @id
-  authorName   String
-  authorEmail  String
-  committedAt  TimestamptzString
-  subject      String
-  parentHashes String
-  repository   Repository  @relation(fields: [repositoryId], references: [id])
-  repositoryId Int
-  fileChanges  FileChange[]
-  createdAt    TimestamptzString @default(now())
+  commitHash        String        @id
+  isMerge           Int 
+  dateTime          DateTime
+  commitSubject     String
+  commitBody        String?
+  refs              String?
+  committer         String?
+  author            String?
+  studentID         Int
+  student           Student       @relation(fields: [studentID], references: [userID], onDelete: Cascade)
+  feedback          Feedback[]
+  tags              Tag[]
+  fileChanges       FileChange[]
+  alerts       Alert[]
+}
+
+model Tag {
+  tagID             Int          @id @default(autoincrement())
+  categoryName      String
+  commits           Commit[]
+}
+
+model CommitTag {
+  commitHash     String
+  tagID          Int
+  commit         Commit       @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
+  tag            Tag          @relation(fields: [tagID], references: [tagID], onDelete: Cascade)
+  @@id([commitHash, tagID])
+}
+
+model Feedback {
+  feedbackID        Int          @id @default(autoincrement())
+  comment           String
+  authorID          Int
+  author            User         @relation(fields: [authorID], references: [userID], onDelete: Cascade)
+  commitHash        String
+  commit            Commit       @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
 }
 
 model FileChange {
-  id         Int    @id @default(autoincrement())
-  commitHash String
-  commit     Commit @relation(fields: [commitHash], references: [hash])
-  filepath   String
-  additions  Int
-  deletions  Int
+  fileID            Int          @id @default(autoincrement())
+  deletions         Int
+  additions         Int
+  filePath          String
+  commitHash        String
+  commit            Commit       @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
+}
+
+model Repository {
+  teamID            Int          @id @default(autoincrement())
+  url               String
+  name              String
+  students          Student[]
+}
+
+model Alert {
+  alertID           Int          @id @default(autoincrement())
+  alertType         String
+  alertStatus       String
+  commitHash        String
+  commit            Commit       @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
+  studentID         Int
+  student           Student      @relation(fields: [studentID], references: [userID], onDelete: Cascade)
 }

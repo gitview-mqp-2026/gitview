@@ -33,9 +33,8 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'1e8412e162dbbe69f4bb3bf8d07f0280ae67eaab15c34dcf201e67468315428d'>;
-export type ExecutionHash =
-  ExecutionHashBase<'4abff323cc88151ef9c9a0ec90122cfee6d46814a118cdb66a9fdd94a4123463'>;
+  StorageHashBase<'1e007f9d123be96a73b31ad198af174b0a9c99feab3fbb943cee488972ad5730'>;
+export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -241,80 +240,236 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
-    readonly Post: {
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly title: CodecTypes['pg/text@1']['output'];
-      readonly content: CodecTypes['pg/text@1']['output'] | null;
-      readonly authorId: CodecTypes['pg/int4@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    readonly Alert: {
+      readonly alertID: CodecTypes['pg/int4@1']['output'];
+      readonly alertType: CodecTypes['pg/text@1']['output'];
+      readonly alertStatus: CodecTypes['pg/text@1']['output'];
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+      readonly studentID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly Commit: {
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+      readonly isMerge: CodecTypes['pg/int4@1']['output'];
+      readonly dateTime: CodecTypes['pg/timestamptz-temporal@1']['output'];
+      readonly commitSubject: CodecTypes['pg/text@1']['output'];
+      readonly commitBody: CodecTypes['pg/text@1']['output'] | null;
+      readonly refs: CodecTypes['pg/text@1']['output'] | null;
+      readonly committer: CodecTypes['pg/text@1']['output'] | null;
+      readonly author: CodecTypes['pg/text@1']['output'] | null;
+      readonly studentID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly CommitTag: {
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+      readonly tagID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly Feedback: {
+      readonly feedbackID: CodecTypes['pg/int4@1']['output'];
+      readonly comment: CodecTypes['pg/text@1']['output'];
+      readonly authorID: CodecTypes['pg/int4@1']['output'];
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+    };
+    readonly FileChange: {
+      readonly fileID: CodecTypes['pg/int4@1']['output'];
+      readonly deletions: CodecTypes['pg/int4@1']['output'];
+      readonly additions: CodecTypes['pg/int4@1']['output'];
+      readonly filePath: CodecTypes['pg/text@1']['output'];
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+    };
+    readonly Instructor: { readonly userID: CodecTypes['pg/int4@1']['output'] };
+    readonly Repository: {
+      readonly teamID: CodecTypes['pg/int4@1']['output'];
+      readonly url: CodecTypes['pg/text@1']['output'];
+      readonly name: CodecTypes['pg/text@1']['output'];
+    };
+    readonly Student: {
+      readonly userID: CodecTypes['pg/int4@1']['output'];
+      readonly teamID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly Tag: {
+      readonly tagID: CodecTypes['pg/int4@1']['output'];
+      readonly categoryName: CodecTypes['pg/text@1']['output'];
     };
     readonly User: {
-      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly userID: CodecTypes['pg/int4@1']['output'];
       readonly email: CodecTypes['pg/text@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'] | null;
       readonly name: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
   };
 };
 export type FieldInputTypes = {
   readonly public: {
-    readonly Post: {
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly title: CodecTypes['pg/text@1']['input'];
-      readonly content: CodecTypes['pg/text@1']['input'] | null;
-      readonly authorId: CodecTypes['pg/int4@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    readonly Alert: {
+      readonly alertID: CodecTypes['pg/int4@1']['input'];
+      readonly alertType: CodecTypes['pg/text@1']['input'];
+      readonly alertStatus: CodecTypes['pg/text@1']['input'];
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+      readonly studentID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly Commit: {
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+      readonly isMerge: CodecTypes['pg/int4@1']['input'];
+      readonly dateTime: CodecTypes['pg/timestamptz-temporal@1']['input'];
+      readonly commitSubject: CodecTypes['pg/text@1']['input'];
+      readonly commitBody: CodecTypes['pg/text@1']['input'] | null;
+      readonly refs: CodecTypes['pg/text@1']['input'] | null;
+      readonly committer: CodecTypes['pg/text@1']['input'] | null;
+      readonly author: CodecTypes['pg/text@1']['input'] | null;
+      readonly studentID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly CommitTag: {
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+      readonly tagID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly Feedback: {
+      readonly feedbackID: CodecTypes['pg/int4@1']['input'];
+      readonly comment: CodecTypes['pg/text@1']['input'];
+      readonly authorID: CodecTypes['pg/int4@1']['input'];
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+    };
+    readonly FileChange: {
+      readonly fileID: CodecTypes['pg/int4@1']['input'];
+      readonly deletions: CodecTypes['pg/int4@1']['input'];
+      readonly additions: CodecTypes['pg/int4@1']['input'];
+      readonly filePath: CodecTypes['pg/text@1']['input'];
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Instructor: { readonly userID: CodecTypes['pg/int4@1']['input'] };
+    readonly Repository: {
+      readonly teamID: CodecTypes['pg/int4@1']['input'];
+      readonly url: CodecTypes['pg/text@1']['input'];
+      readonly name: CodecTypes['pg/text@1']['input'];
+    };
+    readonly Student: {
+      readonly userID: CodecTypes['pg/int4@1']['input'];
+      readonly teamID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly Tag: {
+      readonly tagID: CodecTypes['pg/int4@1']['input'];
+      readonly categoryName: CodecTypes['pg/text@1']['input'];
     };
     readonly User: {
-      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly userID: CodecTypes['pg/int4@1']['input'];
       readonly email: CodecTypes['pg/text@1']['input'];
       readonly username: CodecTypes['pg/text@1']['input'] | null;
       readonly name: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
   };
 };
 export type StorageColumnTypes = {
   readonly public: {
-    readonly post: {
-      readonly authorId: CodecTypes['pg/int4@1']['output'];
-      readonly content: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly id: CodecTypes['pg/int4@1']['output'];
-      readonly title: CodecTypes['pg/text@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    readonly alert: {
+      readonly alertID: CodecTypes['pg/int4@1']['output'];
+      readonly alertStatus: CodecTypes['pg/text@1']['output'];
+      readonly alertType: CodecTypes['pg/text@1']['output'];
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+      readonly studentID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly commit: {
+      readonly author: CodecTypes['pg/text@1']['output'] | null;
+      readonly commitBody: CodecTypes['pg/text@1']['output'] | null;
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+      readonly commitSubject: CodecTypes['pg/text@1']['output'];
+      readonly committer: CodecTypes['pg/text@1']['output'] | null;
+      readonly dateTime: CodecTypes['pg/timestamptz-temporal@1']['output'];
+      readonly isMerge: CodecTypes['pg/int4@1']['output'];
+      readonly refs: CodecTypes['pg/text@1']['output'] | null;
+      readonly studentID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly commitTag: {
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+      readonly tagID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly feedback: {
+      readonly authorID: CodecTypes['pg/int4@1']['output'];
+      readonly comment: CodecTypes['pg/text@1']['output'];
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+      readonly feedbackID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly fileChange: {
+      readonly additions: CodecTypes['pg/int4@1']['output'];
+      readonly commitHash: CodecTypes['pg/text@1']['output'];
+      readonly deletions: CodecTypes['pg/int4@1']['output'];
+      readonly fileID: CodecTypes['pg/int4@1']['output'];
+      readonly filePath: CodecTypes['pg/text@1']['output'];
+    };
+    readonly instructor: { readonly userID: CodecTypes['pg/int4@1']['output'] };
+    readonly repository: {
+      readonly name: CodecTypes['pg/text@1']['output'];
+      readonly teamID: CodecTypes['pg/int4@1']['output'];
+      readonly url: CodecTypes['pg/text@1']['output'];
+    };
+    readonly student: {
+      readonly teamID: CodecTypes['pg/int4@1']['output'];
+      readonly userID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly tag: {
+      readonly categoryName: CodecTypes['pg/text@1']['output'];
+      readonly tagID: CodecTypes['pg/int4@1']['output'];
     };
     readonly user: {
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly email: CodecTypes['pg/text@1']['output'];
-      readonly id: CodecTypes['pg/int4@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly userID: CodecTypes['pg/int4@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'] | null;
     };
   };
 };
 export type StorageColumnInputTypes = {
   readonly public: {
-    readonly post: {
-      readonly authorId: CodecTypes['pg/int4@1']['input'];
-      readonly content: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly id: CodecTypes['pg/int4@1']['input'];
-      readonly title: CodecTypes['pg/text@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    readonly alert: {
+      readonly alertID: CodecTypes['pg/int4@1']['input'];
+      readonly alertStatus: CodecTypes['pg/text@1']['input'];
+      readonly alertType: CodecTypes['pg/text@1']['input'];
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+      readonly studentID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly commit: {
+      readonly author: CodecTypes['pg/text@1']['input'] | null;
+      readonly commitBody: CodecTypes['pg/text@1']['input'] | null;
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+      readonly commitSubject: CodecTypes['pg/text@1']['input'];
+      readonly committer: CodecTypes['pg/text@1']['input'] | null;
+      readonly dateTime: CodecTypes['pg/timestamptz-temporal@1']['input'];
+      readonly isMerge: CodecTypes['pg/int4@1']['input'];
+      readonly refs: CodecTypes['pg/text@1']['input'] | null;
+      readonly studentID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly commitTag: {
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+      readonly tagID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly feedback: {
+      readonly authorID: CodecTypes['pg/int4@1']['input'];
+      readonly comment: CodecTypes['pg/text@1']['input'];
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+      readonly feedbackID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly fileChange: {
+      readonly additions: CodecTypes['pg/int4@1']['input'];
+      readonly commitHash: CodecTypes['pg/text@1']['input'];
+      readonly deletions: CodecTypes['pg/int4@1']['input'];
+      readonly fileID: CodecTypes['pg/int4@1']['input'];
+      readonly filePath: CodecTypes['pg/text@1']['input'];
+    };
+    readonly instructor: { readonly userID: CodecTypes['pg/int4@1']['input'] };
+    readonly repository: {
+      readonly name: CodecTypes['pg/text@1']['input'];
+      readonly teamID: CodecTypes['pg/int4@1']['input'];
+      readonly url: CodecTypes['pg/text@1']['input'];
+    };
+    readonly student: {
+      readonly teamID: CodecTypes['pg/int4@1']['input'];
+      readonly userID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly tag: {
+      readonly categoryName: CodecTypes['pg/text@1']['input'];
+      readonly tagID: CodecTypes['pg/int4@1']['input'];
     };
     readonly user: {
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly email: CodecTypes['pg/text@1']['input'];
-      readonly id: CodecTypes['pg/int4@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly userID: CodecTypes['pg/int4@1']['input'];
       readonly username: CodecTypes['pg/text@1']['input'] | null;
     };
   };
@@ -337,9 +492,9 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
-            readonly post: {
+            readonly alert: {
               columns: {
-                readonly id: {
+                readonly alertID: {
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
@@ -348,40 +503,40 @@ type ContractBase = Omit<
                     readonly expression: 'autoincrement()';
                   };
                 };
-                readonly title: {
+                readonly alertType: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
-                readonly content: {
+                readonly alertStatus: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
+                  readonly nullable: false;
                 };
-                readonly authorId: {
+                readonly commitHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly studentID: {
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
                 };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
               };
-              primaryKey: { readonly columns: readonly ['id'] };
+              primaryKey: { readonly columns: readonly ['alertID'] };
               uniques: readonly [];
               indexes: readonly [
                 {
-                  readonly name: 'post_authorId_idx_e47547ed';
-                  readonly prefix: 'post_authorId_idx';
-                  readonly columns: readonly ['authorId'];
+                  readonly name: 'alert_commitHash_idx_a57efd78';
+                  readonly prefix: 'alert_commitHash_idx';
+                  readonly columns: readonly ['commitHash'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'alert_studentID_idx_af8ad155';
+                  readonly prefix: 'alert_studentID_idx';
+                  readonly columns: readonly ['studentID'];
                   readonly unique: false;
                 },
               ];
@@ -389,20 +544,413 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'post';
-                    readonly columns: readonly ['authorId'];
+                    readonly tableName: 'alert';
+                    readonly columns: readonly ['commitHash'];
                   };
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'user';
-                    readonly columns: readonly ['id'];
+                    readonly tableName: 'commit';
+                    readonly columns: readonly ['commitHash'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'alert';
+                    readonly columns: readonly ['studentID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'student';
+                    readonly columns: readonly ['userID'];
                   };
                 },
               ];
             };
+            readonly commit: {
+              columns: {
+                readonly commitHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly isMerge: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly dateTime: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: false;
+                };
+                readonly commitSubject: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly commitBody: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly refs: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly committer: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly author: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly studentID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['commitHash'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'commit_studentID_idx_af8ad155';
+                  readonly prefix: 'commit_studentID_idx';
+                  readonly columns: readonly ['studentID'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'commit';
+                    readonly columns: readonly ['studentID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'student';
+                    readonly columns: readonly ['userID'];
+                  };
+                },
+              ];
+            };
+            readonly commitTag: {
+              columns: {
+                readonly commitHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly tagID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['commitHash', 'tagID'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'commitTag_commitHash_idx_a57efd78';
+                  readonly prefix: 'commitTag_commitHash_idx';
+                  readonly columns: readonly ['commitHash'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'commitTag_tagID_idx_061c18c6';
+                  readonly prefix: 'commitTag_tagID_idx';
+                  readonly columns: readonly ['tagID'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'commitTag';
+                    readonly columns: readonly ['commitHash'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'commit';
+                    readonly columns: readonly ['commitHash'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'commitTag';
+                    readonly columns: readonly ['tagID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'tag';
+                    readonly columns: readonly ['tagID'];
+                  };
+                },
+              ];
+            };
+            readonly feedback: {
+              columns: {
+                readonly feedbackID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly comment: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly authorID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly commitHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['feedbackID'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'feedback_authorID_idx_65a4ffa8';
+                  readonly prefix: 'feedback_authorID_idx';
+                  readonly columns: readonly ['authorID'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'feedback_commitHash_idx_a57efd78';
+                  readonly prefix: 'feedback_commitHash_idx';
+                  readonly columns: readonly ['commitHash'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'feedback';
+                    readonly columns: readonly ['authorID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['userID'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'feedback';
+                    readonly columns: readonly ['commitHash'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'commit';
+                    readonly columns: readonly ['commitHash'];
+                  };
+                },
+              ];
+            };
+            readonly fileChange: {
+              columns: {
+                readonly fileID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly deletions: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly additions: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly filePath: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly commitHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['fileID'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'fileChange_commitHash_idx_a57efd78';
+                  readonly prefix: 'fileChange_commitHash_idx';
+                  readonly columns: readonly ['commitHash'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'fileChange';
+                    readonly columns: readonly ['commitHash'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'commit';
+                    readonly columns: readonly ['commitHash'];
+                  };
+                },
+              ];
+            };
+            readonly instructor: {
+              columns: {
+                readonly userID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['userID'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'instructor';
+                    readonly columns: readonly ['userID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['userID'];
+                  };
+                },
+              ];
+            };
+            readonly repository: {
+              columns: {
+                readonly teamID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly url: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly name: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['teamID'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly student: {
+              columns: {
+                readonly userID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly teamID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['userID'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'student_teamID_idx_fe196944';
+                  readonly prefix: 'student_teamID_idx';
+                  readonly columns: readonly ['teamID'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'student';
+                    readonly columns: readonly ['userID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['userID'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'student';
+                    readonly columns: readonly ['teamID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'repository';
+                    readonly columns: readonly ['teamID'];
+                  };
+                },
+              ];
+            };
+            readonly tag: {
+              columns: {
+                readonly tagID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly categoryName: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['tagID'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
             readonly user: {
               columns: {
-                readonly id: {
+                readonly userID: {
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
@@ -426,19 +974,8 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
               };
-              primaryKey: { readonly columns: readonly ['id'] };
+              primaryKey: { readonly columns: readonly ['userID'] };
               uniques: readonly [{ readonly columns: readonly ['email'] }];
               indexes: readonly [];
               foreignKeys: readonly [];
@@ -455,43 +992,265 @@ type ContractBase = Omit<
   readonly targetFamily: 'sql';
   readonly roots: {
     readonly user: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
-    readonly post: { readonly namespace: 'public' & NamespaceId; readonly model: 'Post' };
+    readonly instructor: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'Instructor';
+    };
+    readonly student: { readonly namespace: 'public' & NamespaceId; readonly model: 'Student' };
+    readonly commit: { readonly namespace: 'public' & NamespaceId; readonly model: 'Commit' };
+    readonly tag: { readonly namespace: 'public' & NamespaceId; readonly model: 'Tag' };
+    readonly commitTag: { readonly namespace: 'public' & NamespaceId; readonly model: 'CommitTag' };
+    readonly feedback: { readonly namespace: 'public' & NamespaceId; readonly model: 'Feedback' };
+    readonly fileChange: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'FileChange';
+    };
+    readonly repository: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'Repository';
+    };
+    readonly alert: { readonly namespace: 'public' & NamespaceId; readonly model: 'Alert' };
   };
   readonly domain: {
     readonly namespaces: {
       readonly public: {
         readonly models: {
-          readonly Post: {
+          readonly Alert: {
             readonly fields: {
-              readonly id: {
+              readonly alertID: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
-              readonly title: {
+              readonly alertType: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly content: {
+              readonly alertStatus: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly commitHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly studentID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly commit: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Commit';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['commitHash'];
+                  readonly targetFields: readonly ['commitHash'];
+                };
+              };
+              readonly student: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Student';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['studentID'];
+                  readonly targetFields: readonly ['userID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'alert';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly alertID: { readonly column: 'alertID' };
+                readonly alertType: { readonly column: 'alertType' };
+                readonly alertStatus: { readonly column: 'alertStatus' };
+                readonly commitHash: { readonly column: 'commitHash' };
+                readonly studentID: { readonly column: 'studentID' };
+              };
+            };
+          };
+          readonly Commit: {
+            readonly fields: {
+              readonly commitHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly isMerge: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly dateTime: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+              readonly commitSubject: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly commitBody: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly authorId: {
+              readonly refs: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly committer: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly author: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly studentID: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
+            };
+            readonly relations: {
+              readonly alerts: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Alert';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['commitHash'];
+                  readonly targetFields: readonly ['commitHash'];
                 };
               };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
+              readonly feedback: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Feedback';
                 };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['commitHash'];
+                  readonly targetFields: readonly ['commitHash'];
+                };
+              };
+              readonly fileChanges: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'FileChange';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['commitHash'];
+                  readonly targetFields: readonly ['commitHash'];
+                };
+              };
+              readonly student: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Student';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['studentID'];
+                  readonly targetFields: readonly ['userID'];
+                };
+              };
+              readonly tags: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Tag' };
+                readonly cardinality: 'N:M';
+                readonly on: {
+                  readonly localFields: readonly ['commitHash'];
+                  readonly targetFields: readonly ['commitHash'];
+                };
+                readonly through: {
+                  readonly table: 'commitTag';
+                  readonly namespaceId: 'public';
+                  readonly parentColumns: readonly ['commitHash'];
+                  readonly childColumns: readonly ['tagID'];
+                  readonly targetColumns: readonly ['tagID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'commit';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly commitHash: { readonly column: 'commitHash' };
+                readonly isMerge: { readonly column: 'isMerge' };
+                readonly dateTime: { readonly column: 'dateTime' };
+                readonly commitSubject: { readonly column: 'commitSubject' };
+                readonly commitBody: { readonly column: 'commitBody' };
+                readonly refs: { readonly column: 'refs' };
+                readonly committer: { readonly column: 'committer' };
+                readonly author: { readonly column: 'author' };
+                readonly studentID: { readonly column: 'studentID' };
+              };
+            };
+          };
+          readonly CommitTag: {
+            readonly fields: {
+              readonly commitHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly tagID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly commit: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Commit';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['commitHash'];
+                  readonly targetFields: readonly ['commitHash'];
+                };
+              };
+              readonly tag: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Tag' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['tagID'];
+                  readonly targetFields: readonly ['tagID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'commitTag';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly commitHash: { readonly column: 'commitHash' };
+                readonly tagID: { readonly column: 'tagID' };
+              };
+            };
+          };
+          readonly Feedback: {
+            readonly fields: {
+              readonly feedbackID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly comment: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly authorID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly commitHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
             };
             readonly relations: {
@@ -499,27 +1258,248 @@ type ContractBase = Omit<
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
                 readonly cardinality: 'N:1';
                 readonly on: {
-                  readonly localFields: readonly ['authorId'];
-                  readonly targetFields: readonly ['id'];
+                  readonly localFields: readonly ['authorID'];
+                  readonly targetFields: readonly ['userID'];
+                };
+              };
+              readonly commit: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Commit';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['commitHash'];
+                  readonly targetFields: readonly ['commitHash'];
                 };
               };
             };
             readonly storage: {
-              readonly table: 'post';
+              readonly table: 'feedback';
               readonly namespaceId: 'public';
               readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly title: { readonly column: 'title' };
-                readonly content: { readonly column: 'content' };
-                readonly authorId: { readonly column: 'authorId' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
+                readonly feedbackID: { readonly column: 'feedbackID' };
+                readonly comment: { readonly column: 'comment' };
+                readonly authorID: { readonly column: 'authorID' };
+                readonly commitHash: { readonly column: 'commitHash' };
+              };
+            };
+          };
+          readonly FileChange: {
+            readonly fields: {
+              readonly fileID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly deletions: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly additions: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly filePath: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly commitHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly commit: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Commit';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['commitHash'];
+                  readonly targetFields: readonly ['commitHash'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'fileChange';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly fileID: { readonly column: 'fileID' };
+                readonly deletions: { readonly column: 'deletions' };
+                readonly additions: { readonly column: 'additions' };
+                readonly filePath: { readonly column: 'filePath' };
+                readonly commitHash: { readonly column: 'commitHash' };
+              };
+            };
+          };
+          readonly Instructor: {
+            readonly fields: {
+              readonly userID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userID'];
+                  readonly targetFields: readonly ['userID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'instructor';
+              readonly namespaceId: 'public';
+              readonly fields: { readonly userID: { readonly column: 'userID' } };
+            };
+          };
+          readonly Repository: {
+            readonly fields: {
+              readonly teamID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly url: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly name: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly students: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Student';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['teamID'];
+                  readonly targetFields: readonly ['teamID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'repository';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly teamID: { readonly column: 'teamID' };
+                readonly url: { readonly column: 'url' };
+                readonly name: { readonly column: 'name' };
+              };
+            };
+          };
+          readonly Student: {
+            readonly fields: {
+              readonly userID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly teamID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly alerts: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Alert';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['userID'];
+                  readonly targetFields: readonly ['studentID'];
+                };
+              };
+              readonly commits: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Commit';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['userID'];
+                  readonly targetFields: readonly ['studentID'];
+                };
+              };
+              readonly repository: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Repository';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['teamID'];
+                  readonly targetFields: readonly ['teamID'];
+                };
+              };
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userID'];
+                  readonly targetFields: readonly ['userID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'student';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly userID: { readonly column: 'userID' };
+                readonly teamID: { readonly column: 'teamID' };
+              };
+            };
+          };
+          readonly Tag: {
+            readonly fields: {
+              readonly tagID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly categoryName: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly commits: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Commit';
+                };
+                readonly cardinality: 'N:M';
+                readonly on: {
+                  readonly localFields: readonly ['tagID'];
+                  readonly targetFields: readonly ['tagID'];
+                };
+                readonly through: {
+                  readonly table: 'commitTag';
+                  readonly namespaceId: 'public';
+                  readonly parentColumns: readonly ['tagID'];
+                  readonly childColumns: readonly ['commitHash'];
+                  readonly targetColumns: readonly ['commitHash'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'tag';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly tagID: { readonly column: 'tagID' };
+                readonly categoryName: { readonly column: 'categoryName' };
               };
             };
           };
           readonly User: {
             readonly fields: {
-              readonly id: {
+              readonly userID: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
@@ -535,28 +1515,39 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
             };
             readonly relations: {
-              readonly posts: {
-                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Post' };
+              readonly feedback: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Feedback';
+                };
                 readonly cardinality: '1:N';
                 readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['authorId'];
+                  readonly localFields: readonly ['userID'];
+                  readonly targetFields: readonly ['authorID'];
+                };
+              };
+              readonly instructor: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Instructor';
+                };
+                readonly cardinality: '1:1';
+                readonly on: {
+                  readonly localFields: readonly ['userID'];
+                  readonly targetFields: readonly ['userID'];
+                };
+              };
+              readonly student: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Student';
+                };
+                readonly cardinality: '1:1';
+                readonly on: {
+                  readonly localFields: readonly ['userID'];
+                  readonly targetFields: readonly ['userID'];
                 };
               };
             };
@@ -564,12 +1555,10 @@ type ContractBase = Omit<
               readonly table: 'user';
               readonly namespaceId: 'public';
               readonly fields: {
-                readonly id: { readonly column: 'id' };
+                readonly userID: { readonly column: 'userID' };
                 readonly email: { readonly column: 'email' };
                 readonly username: { readonly column: 'username' };
                 readonly name: { readonly column: 'name' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
               };
             };
           };
@@ -596,31 +1585,6 @@ type ContractBase = Omit<
     };
   };
   readonly extensions: {};
-  readonly execution: {
-    readonly executionHash: ExecutionHash;
-    readonly mutations: {
-      readonly defaults: readonly [
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'post';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'user';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-      ];
-    };
-  };
   readonly meta: {};
 
   readonly profileHash: ProfileHash;
