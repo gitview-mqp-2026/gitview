@@ -1,15 +1,35 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
+
 import Home from "./pages/Home";
+import Login from "./pages/Login";
 import TeamDashboard from "./pages/TeamDashboard";
+import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
 function App() {
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<Home/>}/>
-                <Route path="/team" element={<TeamDashboard/>}/>
-            </Routes>
-        </BrowserRouter>
+        <Routes>
+            <Route path="/login" element={<Login />} />
+
+            <Route
+                path="/"
+                element={(
+                    <ProtectedRoute>
+                        <Home />
+                    </ProtectedRoute>
+                )}
+            />
+
+            <Route
+                path="/team"
+                element={(
+                    <ProtectedRoute>
+                        <TeamDashboard />
+                    </ProtectedRoute>
+                )}
+            />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
     );
 }
 
