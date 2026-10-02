@@ -9,6 +9,7 @@ function Login() {
     const location = useLocation();
     const [requestError, setRequestError] = useState("");
     const [isRedirecting, setIsRedirecting] = useState(false);
+
     const returnTo = getSafeReturnPath(location.state?.returnTo);
 
     if (isLoading) {
@@ -31,10 +32,37 @@ function Login() {
         try {
             await loginWithRedirect({
                 appState: { returnTo },
-                authorizationParams: screenHint ? { screen_hint: screenHint } : undefined,
+                authorizationParams: screenHint
+                    ? { screen_hint: screenHint }
+                    : undefined,
             });
         } catch (loginError) {
-            setRequestError(loginError instanceof Error ? loginError.message : "Unable to start login.");
+            setRequestError(
+                loginError instanceof Error
+                    ? loginError.message
+                    : "Unable to start login."
+            );
+            setIsRedirecting(false);
+        }
+    };
+
+    const startDevLogin = async () => {
+        setRequestError("");
+        setIsRedirecting(true);
+
+        try {
+            await loginWithRedirect({
+                appState: { returnTo },
+                authorizationParams: {
+                    connection: "GitView-Development-Users",
+                },
+            });
+        } catch (loginError) {
+            setRequestError(
+                loginError instanceof Error
+                    ? loginError.message
+                    : "Unable to start developer login."
+            );
             setIsRedirecting(false);
         }
     };
@@ -44,7 +72,11 @@ function Login() {
     return (
         <main className="login-page">
             <section className="login-intro" aria-labelledby="login-heading">
-                <a className="login-brand" href="/login" aria-label="GitView login">
+                <a
+                    className="login-brand"
+                    href="/login"
+                    aria-label="GitView login"
+                >
                     <span className="login-brand-mark" aria-hidden="true">
                         <span />
                         <span />
@@ -54,15 +86,25 @@ function Login() {
                 </a>
 
                 <div className="login-copy">
-                    <p className="login-eyebrow">Repository intelligence for instructors</p>
-                    <h1 id="login-heading">See the work behind every commit.</h1>
+                    <p className="login-eyebrow">
+                        Repository intelligence for instructors
+                    </p>
+
+                    <h1 id="login-heading">
+                        See the work behind every commit.
+                    </h1>
+
                     <p>
-                        Turn repository activity into a clear view of team momentum,
-                        contributions, and the moments that need your attention.
+                        Turn repository activity into a clear view of team
+                        momentum, contributions, and the moments that need your
+                        attention.
                     </p>
                 </div>
 
-                <div className="login-proof" aria-label="GitView capabilities">
+                <div
+                    className="login-proof"
+                    aria-label="GitView capabilities"
+                >
                     <span>Contribution insights</span>
                     <span>Team-level signals</span>
                     <span>Secure access</span>
@@ -73,8 +115,13 @@ function Login() {
                 <div className="login-card">
                     <div className="login-card-heading">
                         <p className="login-eyebrow">Welcome back</p>
+
                         <h2>Log in to GitView</h2>
-                        <p>Continue through Auth0 to securely access your workspace.</p>
+
+                        <p>
+                            Continue through Auth0 to securely access your
+                            workspace.
+                        </p>
                     </div>
 
                     {visibleError && (
@@ -89,11 +136,16 @@ function Login() {
                         disabled={isRedirecting}
                         onClick={() => startLogin()}
                     >
-                        {isRedirecting ? "Opening secure login..." : "Continue to login"}
+                        {isRedirecting
+                            ? "Opening secure login..."
+                            : "Continue to login"}
+
                         <span aria-hidden="true">→</span>
                     </button>
 
-                    <div className="login-divider"><span>New to GitView?</span></div>
+                    <div className="login-divider">
+                        <span>New to GitView?</span>
+                    </div>
 
                     <button
                         className="login-secondary-button"
@@ -104,8 +156,26 @@ function Login() {
                         Create an account
                     </button>
 
+                    {import.meta.env.DEV && (
+                        <>
+                            <div className="login-divider">
+                                <span>Development</span>
+                            </div>
+
+                            <button
+                                className="login-secondary-button"
+                                type="button"
+                                disabled={isRedirecting}
+                                onClick={startDevLogin}
+                            >
+                                Developer Login
+                            </button>
+                        </>
+                    )}
+
                     <p className="login-security-note">
-                        Authentication is handled by Auth0. GitView never receives your password.
+                        Authentication is handled by Auth0. GitView never
+                        receives your password.
                     </p>
                 </div>
             </section>
