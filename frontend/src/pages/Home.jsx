@@ -15,7 +15,7 @@ function Home() {
                 <div className="nav-actions">
                     <div className="inbox-button"></div>
 
-                    <div className="profile-button">
+                    <div className="nav-account">
                         <Profile />
                         <LogoutButton />
                     </div>
