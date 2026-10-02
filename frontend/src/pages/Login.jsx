@@ -71,7 +71,7 @@ function Login() {
 
     return (
         <main className="login-page">
-            <section className="login-intro" aria-labelledby="login-heading">
+            <section className="login-card" aria-labelledby="login-heading">
                 <a
                     className="login-brand"
                     href="/login"
@@ -85,67 +85,37 @@ function Login() {
                     GitView
                 </a>
 
-                <div className="login-copy">
-                    <p className="login-eyebrow">
-                        Repository intelligence for instructors
-                    </p>
-
-                    <h1 id="login-heading">
-                        See the work behind every commit.
-                    </h1>
-
-                    <p>
-                        Turn repository activity into a clear view of team
-                        momentum, contributions, and the moments that need your
-                        attention.
-                    </p>
+                <div className="login-card-heading">
+                    <h1 id="login-heading">Sign in</h1>
+                    <p>Continue to your GitView workspace.</p>
                 </div>
 
-                <div
-                    className="login-proof"
-                    aria-label="GitView capabilities"
-                >
-                    <span>Contribution insights</span>
-                    <span>Team-level signals</span>
-                    <span>Secure access</span>
-                </div>
-            </section>
-
-            <section className="login-panel" aria-label="Account access">
-                <div className="login-card">
-                    <div className="login-card-heading">
-                        <p className="login-eyebrow">Welcome back</p>
-
-                        <h2>Log in to GitView</h2>
-
-                        <p>
-                            Continue through Auth0 to securely access your
-                            workspace.
-                        </p>
+                {visibleError && (
+                    <div className="login-error" role="alert">
+                        {visibleError}
                     </div>
+                )}
 
-                    {visibleError && (
-                        <div className="login-error" role="alert">
-                            {visibleError}
-                        </div>
-                    )}
-
+                <div className="login-actions">
                     <button
                         className="login-primary-button"
                         type="button"
                         disabled={isRedirecting}
+                        aria-busy={isRedirecting}
                         onClick={() => startLogin()}
                     >
-                        {isRedirecting
-                            ? "Opening secure login..."
-                            : "Continue to login"}
-
-                        <span aria-hidden="true">→</span>
+                        {isRedirecting ? (
+                            <>
+                                <span
+                                    className="login-button-spinner"
+                                    aria-hidden="true"
+                                />
+                                Opening login...
+                            </>
+                        ) : (
+                            "Continue with Auth0"
+                        )}
                     </button>
-
-                    <div className="login-divider">
-                        <span>New to GitView?</span>
-                    </div>
 
                     <button
                         className="login-secondary-button"
@@ -153,31 +123,20 @@ function Login() {
                         disabled={isRedirecting}
                         onClick={() => startLogin("signup")}
                     >
-                        Create an account
+                        Create account
                     </button>
-
-                    {import.meta.env.DEV && (
-                        <>
-                            <div className="login-divider">
-                                <span>Development</span>
-                            </div>
-
-                            <button
-                                className="login-secondary-button"
-                                type="button"
-                                disabled={isRedirecting}
-                                onClick={startDevLogin}
-                            >
-                                Developer Login
-                            </button>
-                        </>
-                    )}
-
-                    <p className="login-security-note">
-                        Authentication is handled by Auth0. GitView never
-                        receives your password.
-                    </p>
                 </div>
+
+                {import.meta.env.DEV && (
+                    <button
+                        className="login-dev-button"
+                        type="button"
+                        disabled={isRedirecting}
+                        onClick={startDevLogin}
+                    >
+                        Developer login
+                    </button>
+                )}
             </section>
         </main>
     );
