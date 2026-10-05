@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import "../App.css";
 import { Link, useParams } from "react-router-dom";
 
+const PAGE_SIZE = 10;
+
 async function getJson(path) {
     const response = await fetch(path);
     const data = await response.json().catch(() => ({}));
@@ -13,12 +15,14 @@ function TeamDashboard() {
     const { teamId } = useParams();
     const [commits, setCommits] = useState([]);
     const [stats, setStats] = useState(null);
+    const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         setLoading(true);
         setError(null);
+        setPage(1);
 
         Promise.all([
             getJson(`/api/commits?teamId=${teamId}`),
@@ -33,6 +37,11 @@ function TeamDashboard() {
     }, [teamId]);
 
     const stat = (value) => (loading || error || !stats ? "—" : value);
+
+    const pageCount = Math.max(1, Math.ceil(commits.length / PAGE_SIZE));
+    const firstShown = (page - 1) * PAGE_SIZE + 1;
+    const lastShown = Math.min(page * PAGE_SIZE, commits.length);
+    const visibleCommits = commits.slice(firstShown - 1, lastShown);
 
     return (
         <div>
@@ -58,6 +67,7 @@ function TeamDashboard() {
                 {/* Team Header */}
                 <section className="team-header">
                     <div>
+                        <Link to="/" className="back-link">← All repositories</Link>
                         <h1>{stats?.name ?? "Team"}</h1>
                         <p>{stats ? `${stats.members} ${stats.members === 1 ? "member" : "members"} · ${stats.url}` : ""}</p>
                     </div>
@@ -196,32 +206,48 @@ function TeamDashboard() {
                     {error && <p style={{ color: "red" }}>Could not load commits: {error}</p>}
 
                     {!loading && !error && (
-                        <table className="categories-table">
-                            <thead>
-                                <tr>
-                                    <th>Hash</th>
-                                    <th>Subject</th>
-                                    <th>Author</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {commits.length === 0 ? (
+                        <>
+                            <table className="categories-table">
+                                <thead>
                                     <tr>
-                                        <td colSpan={4}>No commits found for this repository.</td>
+                                        <th>Hash</th>
+                                        <th>Subject</th>
+                                        <th>Author</th>
+                                        <th>Date</th>
                                     </tr>
-                                ) : (
-                                    commits.map((c) => (
-                                        <tr key={c.commitHash}>
-                                            <td><code>{c.commitHash.slice(0, 7)}</code></td>
-                                            <td>{c.commitSubject}</td>
-                                            <td>{c.author}</td>
-                                            <td>{new Date(c.dateTime).toLocaleDateString()}</td>
+                                </thead>
+                                <tbody>
+                                    {commits.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4}>No commits found for this repository.</td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        visibleCommits.map((c) => (
+                                            <tr key={c.commitHash}>
+                                                <td><code>{c.commitHash.slice(0, 7)}</code></td>
+                                                <td>{c.commitSubject}</td>
+                                                <td>{c.author}</td>
+                                                <td>{new Date(c.dateTime).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+
+                            {pageCount > 1 && (
+                                <div className="pager">
+                                    <button type="button" onClick={() => setPage(page - 1)} disabled={page === 1}>
+                                        Previous
+                                    </button>
+                                    <span>
+                                        Page {page} of {pageCount} · {firstShown}–{lastShown} of {commits.length}
+                                    </span>
+                                    <button type="button" onClick={() => setPage(page + 1)} disabled={page === pageCount}>
+                                        Next
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </section>
 
