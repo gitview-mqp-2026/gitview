@@ -1,22 +1,38 @@
 import { useEffect, useState } from "react";
 import "../App.css";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+
+async function getJson(path) {
+    const response = await fetch(path);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    return data;
+}
 
 function TeamDashboard() {
+    const { teamId } = useParams();
     const [commits, setCommits] = useState([]);
+    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetch("/api/commits")
-            .then((r) => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json();
+        setLoading(true);
+        setError(null);
+
+        Promise.all([
+            getJson(`/api/commits?teamId=${teamId}`),
+            getJson(`/api/repositories/${teamId}/stats`),
+        ])
+            .then(([commitRows, statRows]) => {
+                setCommits(commitRows);
+                setStats(statRows);
             })
-            .then(setCommits)
             .catch((err) => setError(err.message))
             .finally(() => setLoading(false));
-    }, []);
+    }, [teamId]);
+
+    const stat = (value) => (loading || error || !stats ? "—" : value);
 
     return (
         <div>
@@ -42,8 +58,8 @@ function TeamDashboard() {
                 {/* Team Header */}
                 <section className="team-header">
                     <div>
-                        <h1>Team 1</h1>
-                        <p>4 members · github.com/cs3733-soft-eng/team-1</p>
+                        <h1>{stats?.name ?? "Team"}</h1>
+                        <p>{stats ? `${stats.members} ${stats.members === 1 ? "member" : "members"} · ${stats.url}` : ""}</p>
                     </div>
 
                     <button>last 30 days</button>
@@ -53,22 +69,22 @@ function TeamDashboard() {
                 <section className="stats-overview">
                     <div className="stat-card">
                         <span>COMMITS</span>
-                        <strong>{loading || error ? "—" : commits.length}</strong>
+                        <strong>{stat(stats?.commits)}</strong>
                     </div>
 
                     <div className="stat-card">
                         <span>PRS MERGED</span>
-                        <strong>24</strong>
+                        <strong>{stat(stats?.prsMerged)}</strong>
                     </div>
 
                     <div className="stat-card">
                         <span>COMMENTS</span>
-                        <strong>31</strong>
+                        <strong>{stat(stats?.comments)}</strong>
                     </div>
 
                     <div className="stat-card">
                         <span>ISSUES CLOSED</span>
-                        <strong>47</strong>
+                        <strong>{stat(stats?.issuesClosed)}</strong>
                     </div>
 
                     <div className="stat-card">
@@ -192,7 +208,7 @@ function TeamDashboard() {
                             <tbody>
                                 {commits.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4}>No commits ingested yet. Run <code>npm run ingest</code> in the backend.</td>
+                                        <td colSpan={4}>No commits found for this repository.</td>
                                     </tr>
                                 ) : (
                                     commits.map((c) => (
