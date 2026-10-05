@@ -5,4 +5,9 @@ import { fileURLToPath, URL } from "node:url";
 export default defineConfig({
     envDir: fileURLToPath(new URL("../backend", import.meta.url)),
     plugins: [react()],
+    server: {
+        proxy: {
+            "/api": "http://localhost:3001",
+        },
+    },
 });

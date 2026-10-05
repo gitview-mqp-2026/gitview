@@ -17,111 +17,147 @@ if (!repoPath) {
 }
 
 interface ParsedFileChange {
-  filepath: string;
+  filePath: string;
   additions: number;
   deletions: number;
 }
 
 interface ParsedCommit {
-  hash: string;
-  parentHashes: string;
-  authorName: string;
+  commitHash: string;
+  parentHashes: string[];
+  author: string;
   authorEmail: string;
-  committedAt: string; // ISO 8601
+  committer: string;
+  committedAtMs: number;
+  refs: string;
   subject: string;
+  body: string;
   fileChanges: ParsedFileChange[];
 }
 
+const COMMIT_MARK = '--GITVIEW-COMMIT--';
+const BODY_START = '--GITVIEW-BODY--';
+const BODY_END = '--GITVIEW-BODY-END--';
+
 function parseGitLog(cwd: string): ParsedCommit[] {
-  // --pretty=format: avoids extra trailing newlines; --numstat appends file stats per commit.
-  // The --GITVIEW-COMMIT-- sentinel splits commits reliably regardless of message content.
+  // Fixed-position header lines, then a marker-delimited body (it can span lines), then --numstat rows.
   const raw = execSync(
-    'git log --pretty=format:"--GITVIEW-COMMIT--%n%H%n%P%n%an%n%ae%n%at%n%s" --numstat',
+    `git log --pretty=format:"${COMMIT_MARK}%n%H%n%P%n%an%n%ae%n%at%n%cn%n%D%n%s%n${BODY_START}%n%b%n${BODY_END}" --numstat`,
     { cwd, encoding: 'utf-8', maxBuffer: 200 * 1024 * 1024 }
   );
 
   return raw
-    .split('--GITVIEW-COMMIT--\n')
+    .split(`${COMMIT_MARK}\n`)
     .filter(Boolean)
     .flatMap((block): ParsedCommit[] => {
       const lines = block.split('\n');
-      const hash = lines[0]?.trim() ?? '';
-      if (hash.length !== 40) return []; // skip malformed blocks
+      const commitHash = lines[0]?.trim() ?? '';
+      if (commitHash.length !== 40 || lines[8]?.trim() !== BODY_START) return [];
 
-      const parentHashes = lines[1]?.trim() ?? '';
-      const authorName = lines[2]?.trim() ?? '';
-      const authorEmail = lines[3]?.trim() ?? '';
-      const unixTimestamp = parseInt(lines[4]?.trim() ?? '0', 10);
-      const subject = lines[5]?.trim() ?? '';
-      const committedAt = new Date(unixTimestamp * 1000).toISOString();
+      const bodyEnd = lines.indexOf(BODY_END, 9);
+      if (bodyEnd === -1) return [];
 
-      // Line 6 is blank (numstat separator); file stat lines follow from index 7.
       const fileChanges: ParsedFileChange[] = [];
-      for (let i = 7; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        const match = line.match(/^(\d+|-)\t(\d+|-)\t(.+)$/);
+      for (let i = bodyEnd + 1; i < lines.length; i++) {
+        const match = lines[i].trim().match(/^(\d+|-)\t(\d+|-)\t(.+)$/);
         if (match) {
           fileChanges.push({
-            filepath: match[3],
+            filePath: match[3],
             additions: match[1] === '-' ? 0 : parseInt(match[1], 10),
             deletions: match[2] === '-' ? 0 : parseInt(match[2], 10),
           });
         }
       }
 
-      return [{ hash, parentHashes, authorName, authorEmail, committedAt, subject, fileChanges }];
+      return [
+        {
+          commitHash,
+          parentHashes: (lines[1] ?? '').trim().split(/\s+/).filter(Boolean),
+          author: lines[2].trim(),
+          authorEmail: lines[3].trim().toLowerCase(),
+          committedAtMs: parseInt(lines[4].trim(), 10) * 1000,
+          committer: lines[5].trim(),
+          refs: lines[6].trim(),
+          subject: lines[7].trim(),
+          body: lines.slice(9, bodyEnd).join('\n').trim(),
+          fileChanges,
+        },
+      ];
     });
+}
+
+function remoteUrl(cwd: string): string | null {
+  try {
+    return execSync('git config --get remote.origin.url', { cwd, encoding: 'utf-8' }).trim() || null;
+  } catch {
+    return null;
+  }
 }
 
 async function main() {
   const commits = parseGitLog(repoPath!);
   console.log(`Parsed ${commits.length} commits from ${repoPath}`);
 
-  // NOTE: The ORM calls below use the Prisma Next v8 RC query API
-  // (db.orm.public.ModelName). The exact mutation method signatures (.create,
-  // .createMany) should be verified against @prisma/orm-postgres v8 RC docs
-  // once stable. After editing contract.prisma, run:
-  //   cd backend && npx prisma contract emit && npx prisma db push
-  // before running this script.
-
-  let repo = await db.orm.public.Repository.where({ path: repoPath }).first();
+  // Repository has no path column, so the remote URL (falling back to the local path) is its identity.
+  const url = remoteUrl(repoPath!) ?? repoPath!;
+  let repo = await db.orm.public.Repository.where({ url }).first();
   if (!repo) {
-    repo = await db.orm.public.Repository.create({
-      data: { name: repoName, path: repoPath! },
-    });
+    repo = await db.orm.public.Repository.create({ url, name: repoName });
   }
 
+  // Every Commit needs a Student, and every Student needs a User, so build both from commit authors.
+  const studentIdByEmail = new Map<string, number>();
+  async function studentIdFor(email: string, name: string): Promise<number> {
+    const key = email || `${name}@unknown`;
+    const cached = studentIdByEmail.get(key);
+    if (cached !== undefined) return cached;
+
+    let user = await db.orm.public.User.where({ email: key }).first();
+    if (!user) {
+      user = await db.orm.public.User.create({ email: key, name });
+    }
+    const student = await db.orm.public.Student.where({ userID: user.userID }).first();
+    if (!student) {
+      await db.orm.public.Student.create({ userID: user.userID, teamID: repo!.teamID });
+    }
+    studentIdByEmail.set(key, user.userID);
+    return user.userID;
+  }
+
+  // commitHash is the global primary key, so dedupe against every stored commit, not just this repo's.
   const existingHashes = new Set(
-    (await db.orm.public.Commit.where({ repositoryId: repo.id }).many()).map((c) => c.hash)
+    (await db.orm.public.Commit.select('commitHash').all()).map((c) => c.commitHash)
   );
 
-  const newCommits = commits.filter((c) => !existingHashes.has(c.hash));
+  const newCommits = commits.filter((c) => !existingHashes.has(c.commitHash));
   console.log(`Ingesting ${newCommits.length} new commits (${existingHashes.size} already present)`);
 
   for (const commit of newCommits) {
-    await db.orm.public.Commit.create({
-      data: {
-        hash: commit.hash,
-        authorName: commit.authorName,
-        authorEmail: commit.authorEmail,
-        committedAt: commit.committedAt,
-        subject: commit.subject,
-        parentHashes: commit.parentHashes,
-        repositoryId: repo.id,
-      },
-    });
+    const studentID = await studentIdFor(commit.authorEmail, commit.author);
 
-    if (commit.fileChanges.length > 0) {
-      await db.orm.public.FileChange.createMany({
-        data: commit.fileChanges.map((fc) => ({
-          commitHash: commit.hash,
-          filepath: fc.filepath,
+    // Commit and its file changes go in together so a failed run can't leave a commit without files.
+    await db.transaction(async (tx) => {
+      await tx.orm.public.Commit.create({
+        commitHash: commit.commitHash,
+        isMerge: commit.parentHashes.length > 1 ? 1 : 0,
+        dateTime: Temporal.Instant.fromEpochMilliseconds(commit.committedAtMs),
+        commitSubject: commit.subject,
+        commitBody: commit.body || null,
+        refs: commit.refs || null,
+        committer: commit.committer || null,
+        author: commit.author || null,
+        studentID,
+      });
+
+      for (const fc of commit.fileChanges) {
+        await tx.orm.public.FileChange.create({
+          commitHash: commit.commitHash,
+          filePath: fc.filePath,
           additions: fc.additions,
           deletions: fc.deletions,
-        })),
-      });
-    }
+        });
+      }
+    });
   }
 
   console.log('Done.');

@@ -1,7 +1,23 @@
+import { useEffect, useState } from "react";
 import "../App.css";
 import { Link } from "react-router-dom";
 
 function TeamDashboard() {
+    const [commits, setCommits] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        fetch("/api/commits")
+            .then((r) => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then(setCommits)
+            .catch((err) => setError(err.message))
+            .finally(() => setLoading(false));
+    }, []);
+
     return (
         <div>
             <header className="nav-bar">
@@ -37,7 +53,7 @@ function TeamDashboard() {
                 <section className="stats-overview">
                     <div className="stat-card">
                         <span>COMMITS</span>
-                        <strong>900</strong>
+                        <strong>{loading || error ? "—" : commits.length}</strong>
                     </div>
 
                     <div className="stat-card">
@@ -154,6 +170,43 @@ function TeamDashboard() {
                             </div>
                         </div>
                     </div>
+                </section>
+
+                {/* Commit Log (live from /api/commits) */}
+                <section className="significant-commits">
+                    <h2>Commit log</h2>
+
+                    {loading && <p>Loading commits…</p>}
+                    {error && <p style={{ color: "red" }}>Could not load commits: {error}</p>}
+
+                    {!loading && !error && (
+                        <table className="categories-table">
+                            <thead>
+                                <tr>
+                                    <th>Hash</th>
+                                    <th>Subject</th>
+                                    <th>Author</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {commits.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4}>No commits ingested yet. Run <code>npm run ingest</code> in the backend.</td>
+                                    </tr>
+                                ) : (
+                                    commits.map((c) => (
+                                        <tr key={c.commitHash}>
+                                            <td><code>{c.commitHash.slice(0, 7)}</code></td>
+                                            <td>{c.commitSubject}</td>
+                                            <td>{c.author}</td>
+                                            <td>{new Date(c.dateTime).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    )}
                 </section>
 
                 {/* Major Contribution Categories */}
