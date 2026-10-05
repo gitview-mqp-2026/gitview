@@ -670,3 +670,29 @@ a {
         transition-duration: 0.01ms !important;
     }
 }
+
+.file-tree {
+    width: 100%;
+    max-width: 500px;
+    padding: 30px;
+    border-radius: 10px;
+    padding-top: 20px;
+}
+
+.file-tags {
+    flex: 1;
+    padding: 30px;
+    background-color: #1d304a;
+    border-radius: 10px;
+    padding-top: 20px;
+    height: 600px;
+    width: 800px;
+}
+
+.file-directory-title {
+    font-size: 20px;
+    font-weight: bold;
+    padding-top: 30px;
+    padding-bottom: 10px;
+    padding-left: 40px;
+}

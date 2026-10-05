@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import TeamDashboard from "./pages/TeamDashboard";
+import FileAlignment from "./pages/FileAlignment";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
 function App() {
@@ -24,6 +25,15 @@ function App() {
                 element={(
                     <ProtectedRoute>
                         <TeamDashboard />
+                    </ProtectedRoute>
+                )}
+            />
+
+            <Route
+                path="/alignment"
+                element={(
+                    <ProtectedRoute>
+                        <FileAlignment />
                     </ProtectedRoute>
                 )}
             />
