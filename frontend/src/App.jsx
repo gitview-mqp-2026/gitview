@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import TeamDashboard from "./pages/TeamDashboard";
+import TeamIndex from "./pages/TeamIndex";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
 function App() {
@@ -21,6 +22,15 @@ function App() {
 
             <Route
                 path="/team"
+                element={(
+                    <ProtectedRoute>
+                        <TeamIndex />
+                    </ProtectedRoute>
+                )}
+            />
+
+            <Route
+                path="/team/:teamId"
                 element={(
                     <ProtectedRoute>
                         <TeamDashboard />
