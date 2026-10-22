@@ -35,14 +35,14 @@ model Commit {
   author            String?
   studentID         Int
   student           Student       @relation(fields: [studentID], references: [userID], onDelete: Cascade)
-  feedback          Feedback[]
-  tags              Tag[]
+  feedback          Feedback[]?
+  tags              Tag[]?
   fileChanges       FileChange[]
-  alerts       Alert[]
+  alerts            Alert[]?
 }
 
 model Tag {
-  tagID             Int          @id @default(autoincrement())
+  tagID             Int           @id @default(autoincrement())
   categoryName      String
   commits           Commit[]
 }
@@ -50,42 +50,43 @@ model Tag {
 model CommitTag {
   commitHash     String
   tagID          Int
-  commit         Commit       @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
-  tag            Tag          @relation(fields: [tagID], references: [tagID], onDelete: Cascade)
+  commit         Commit           @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
+  tag            Tag              @relation(fields: [tagID], references: [tagID], onDelete: Cascade)
   @@id([commitHash, tagID])
 }
 
 model Feedback {
-  feedbackID        Int          @id @default(autoincrement())
+  feedbackID        Int           @id @default(autoincrement())
   comment           String
   authorID          Int
-  author            User         @relation(fields: [authorID], references: [userID], onDelete: Cascade)
+  dateTime          DateTime
+  author            User          @relation(fields: [authorID], references: [userID], onDelete: Cascade)
   commitHash        String
-  commit            Commit       @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
+  commit            Commit        @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
 }
 
 model FileChange {
-  fileID            Int          @id @default(autoincrement())
+  fileID            Int           @id @default(autoincrement())
   deletions         Int
   additions         Int
   filePath          String
   commitHash        String
-  commit            Commit       @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
+  commit            Commit        @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
 }
 
 model Repository {
-  teamID            Int          @id @default(autoincrement())
+  teamID            Int           @id @default(autoincrement())
   url               String
   name              String
   students          Student[]
 }
 
 model Alert {
-  alertID           Int          @id @default(autoincrement())
+  alertID           Int           @id @default(autoincrement())
   alertType         String
   alertStatus       String
   commitHash        String
-  commit            Commit       @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
+  commit            Commit        @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
   studentID         Int
-  student           Student      @relation(fields: [studentID], references: [userID], onDelete: Cascade)
+  student           Student       @relation(fields: [studentID], references: [userID], onDelete: Cascade)
 }
