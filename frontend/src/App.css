@@ -390,14 +390,14 @@ a {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 700px;
+    min-height: 700px;
     gap: 30px;
 }
 
 .repo-input {
     background-color: #1d304a;
     color: white;
-    width: 250px;
+    width: 340px;
     height: 30px;
     padding: 10px;
 }
@@ -669,6 +669,190 @@ a {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+.repo-error {
+    color: #ff8a8a;
+    margin: 0;
+}
+
+.repo-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.repo-widgets {
+    width: min(900px, 90%);
+}
+
+.repo-widgets h2 {
+    margin-bottom: 12px;
+}
+
+.repo-widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.repo-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    background-color: #1d304a;
+    border: 1px solid lightgray;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+}
+
+.repo-widget span {
+    color: #9fb3cc;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: #9fb3cc;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 12px;
+    color: #9fb3cc;
+    font-size: 14px;
+}
+
+.pager button {
+    background-color: #1d304a;
+    color: white;
+    border: 1px solid lightgray;
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.pager button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.repo-error {
+    color: #ff8a8a;
+    margin: 0;
+}
+
+.repo-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.repo-widgets {
+    width: min(900px, 90%);
+}
+
+.repo-widgets h2 {
+    margin-bottom: 12px;
+}
+
+.repo-widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.repo-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    background-color: #1d304a;
+    border: 1px solid lightgray;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+}
+
+.repo-widget span {
+    color: #9fb3cc;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: #9fb3cc;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 12px;
+    color: #9fb3cc;
+    font-size: 14px;
+}
+
+.pager button {
+    background-color: #1d304a;
+    color: white;
+    border: 1px solid lightgray;
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.pager button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.file-tree {
+    width: 100%;
+    max-width: 500px;
+    padding: 30px;
+    border-radius: 10px;
+    padding-top: 20px;
+}
+
+.file-tags {
+    flex: 1;
+    padding: 30px;
+    background-color: #1d304a;
+    border-radius: 10px;
+    padding-top: 20px;
+    height: 600px;
+    width: 800px;
+}
+
+.file-directory-title {
+    font-size: 20px;
+    font-weight: bold;
+    padding-top: 30px;
+    padding-bottom: 10px;
+    padding-left: 40px;
 }
 
 .file-tree {

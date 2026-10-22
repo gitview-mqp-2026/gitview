@@ -1,7 +1,48 @@
+import { useEffect, useState } from "react";
 import "../App.css";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+
+const PAGE_SIZE = 10;
+
+async function getJson(path) {
+    const response = await fetch(path);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    return data;
+}
 
 function TeamDashboard() {
+    const { teamId } = useParams();
+    const [commits, setCommits] = useState([]);
+    const [stats, setStats] = useState(null);
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        setLoading(true);
+        setError(null);
+        setPage(1);
+
+        Promise.all([
+            getJson(`/api/commits?teamId=${teamId}`),
+            getJson(`/api/repositories/${teamId}/stats`),
+        ])
+            .then(([commitRows, statRows]) => {
+                setCommits(commitRows);
+                setStats(statRows);
+            })
+            .catch((err) => setError(err.message))
+            .finally(() => setLoading(false));
+    }, [teamId]);
+
+    const stat = (value) => (loading || error || !stats ? "—" : value);
+
+    const pageCount = Math.max(1, Math.ceil(commits.length / PAGE_SIZE));
+    const firstShown = (page - 1) * PAGE_SIZE + 1;
+    const lastShown = Math.min(page * PAGE_SIZE, commits.length);
+    const visibleCommits = commits.slice(firstShown - 1, lastShown);
+
     return (
         <div>
             <header className="nav-bar">
@@ -26,8 +67,9 @@ function TeamDashboard() {
                 {/* Team Header */}
                 <section className="team-header">
                     <div>
-                        <h1>Team 1</h1>
-                        <p>4 members · github.com/cs3733-soft-eng/team-1</p>
+                        <Link to="/" className="back-link">← All repositories</Link>
+                        <h1>{stats?.name ?? "Team"}</h1>
+                        <p>{stats ? `${stats.members} ${stats.members === 1 ? "member" : "members"} · ${stats.url}` : ""}</p>
                     </div>
 
                     <button>last 30 days</button>
@@ -37,22 +79,22 @@ function TeamDashboard() {
                 <section className="stats-overview">
                     <div className="stat-card">
                         <span>COMMITS</span>
-                        <strong>900</strong>
+                        <strong>{stat(stats?.commits)}</strong>
                     </div>
 
                     <div className="stat-card">
                         <span>PRS MERGED</span>
-                        <strong>24</strong>
+                        <strong>{stat(stats?.prsMerged)}</strong>
                     </div>
 
                     <div className="stat-card">
                         <span>COMMENTS</span>
-                        <strong>31</strong>
+                        <strong>{stat(stats?.comments)}</strong>
                     </div>
 
                     <div className="stat-card">
                         <span>ISSUES CLOSED</span>
-                        <strong>47</strong>
+                        <strong>{stat(stats?.issuesClosed)}</strong>
                     </div>
 
                     <div className="stat-card">
@@ -154,6 +196,59 @@ function TeamDashboard() {
                             </div>
                         </div>
                     </div>
+                </section>
+
+                {/* Commit Log (live from /api/commits) */}
+                <section className="significant-commits">
+                    <h2>Commit log</h2>
+
+                    {loading && <p>Loading commits…</p>}
+                    {error && <p style={{ color: "red" }}>Could not load commits: {error}</p>}
+
+                    {!loading && !error && (
+                        <>
+                            <table className="categories-table">
+                                <thead>
+                                    <tr>
+                                        <th>Hash</th>
+                                        <th>Subject</th>
+                                        <th>Author</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {commits.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4}>No commits found for this repository.</td>
+                                        </tr>
+                                    ) : (
+                                        visibleCommits.map((c) => (
+                                            <tr key={c.commitHash}>
+                                                <td><code>{c.commitHash.slice(0, 7)}</code></td>
+                                                <td>{c.commitSubject}</td>
+                                                <td>{c.author}</td>
+                                                <td>{new Date(c.dateTime).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+
+                            {pageCount > 1 && (
+                                <div className="pager">
+                                    <button type="button" onClick={() => setPage(page - 1)} disabled={page === 1}>
+                                        Previous
+                                    </button>
+                                    <span>
+                                        Page {page} of {pageCount} · {firstShown}–{lastShown} of {commits.length}
+                                    </span>
+                                    <button type="button" onClick={() => setPage(page + 1)} disabled={page === pageCount}>
+                                        Next
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </section>
 
                 {/* Major Contribution Categories */}
