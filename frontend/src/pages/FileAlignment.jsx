@@ -1,8 +1,7 @@
 import "../App.css";
 import { Link } from "react-router-dom";
 
-import LogoutButton from "../components/auth/LogoutButton.jsx";
-import Profile from "../components/auth/Profile.jsx";
+import NavBar from "../components/NavBar.jsx";
 import FileList from "../components/FileList.jsx";
 
 // sample file directory structure
@@ -76,20 +75,7 @@ const fileDirectory = [
 function FileAlignment() {
     return (
         <div>
-            <header className="nav-bar">
-                <Link to="/" className="logo">GitView</Link>
-
-                <div className="file-path"></div>
-
-                <div className="nav-actions">
-                    <div className="inbox-button"></div>
-
-                    <div className="nav-account">
-                        <Profile />
-                        <LogoutButton />
-                    </div>
-                </div>
-            </header>
+            <NavBar />
 
             <div className="file-directory-title">File Directory</div>
 

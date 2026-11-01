@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
 import "../App.css";
 import { Link, useNavigate } from "react-router-dom";
+import NavBar from "../components/NavBar.jsx";
 
-import LogoutButton from "../components/auth/LogoutButton.jsx";
-import Profile from "../components/auth/Profile.jsx";
-
-function Home() {
+function SectionDashboard() {
     const navigate = useNavigate();
     const [url, setUrl] = useState("");
     const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState(null);
     const [repos, setRepos] = useState([]);
+    const [showAddCourseForm, setShowAddCourseForm] = useState(false);
 
     useEffect(() => {
         fetch("/api/repositories")
@@ -43,21 +42,12 @@ function Home() {
 
     return (
         <div>
-            <header className="nav-bar">
-                <div className="logo">GitView</div>
+            <NavBar />
 
-                <div className="file-path"></div>
-
-                <div className="nav-actions">
-                    <div className="inbox-button"></div>
-
-                    <div className="nav-account">
-                        <Profile />
-                        <LogoutButton />
-                    </div>
-                </div>
-            </header>
-
+            <div>
+                <Link to="/" className="back-link">← All Courses</Link>
+            </div>
+                    
             <div className="actions">
                 <form className="analyze-repo" onSubmit={analyze}>
                     <input
@@ -76,10 +66,6 @@ function Home() {
                 </form>
 
                 {error && <p className="repo-error" role="alert">{error}</p>}
-
-                <Link to="/team" className="link-button">
-                    Go to Team Dashboard
-                </Link>
 
                 {repos.length > 0 && (
                     <section className="repo-widgets">
@@ -108,4 +94,4 @@ function Home() {
     );
 }
 
-export default Home;
+export default SectionDashboard;

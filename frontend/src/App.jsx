@@ -1,11 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import Home from "./pages/Home";
+import InstructorDashboard from "./pages/InstructorDashboard";
 import Login from "./pages/Login";
 import TeamDashboard from "./pages/TeamDashboard";
 import TeamIndex from "./pages/TeamIndex";
 import FileAlignment from "./pages/FileAlignment";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
+import SectionDashboard from "./pages/SectionDashboard.jsx";
 
 function App() {
     return (
@@ -16,7 +17,16 @@ function App() {
                 path="/"
                 element={(
                     <ProtectedRoute>
-                        <Home />
+                        <InstructorDashboard />
+                    </ProtectedRoute>
+                )}
+            />
+
+            <Route
+                path="/section"
+                element={(
+                    <ProtectedRoute>
+                        <SectionDashboard />
                     </ProtectedRoute>
                 )}
             />

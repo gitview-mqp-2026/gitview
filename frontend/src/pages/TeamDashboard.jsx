@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import "../App.css";
 import { Link, useParams } from "react-router-dom";
 
+import NavBar from "../components/NavBar.jsx";
+
 const PAGE_SIZE = 10;
 
 async function getJson(path) {
@@ -45,29 +47,13 @@ function TeamDashboard() {
 
     return (
         <div>
-            <header className="nav-bar">
-                <Link to="/" className="logo">GitView</Link>
-                <div className="file-path">
-                    <span>CS3733 Software Engineering</span>
-                    <span>/</span>
-                    <span>A26</span>
-                    <span>/</span>
-                    <span>Section 02</span>
-                    <span>/</span>
-                    <strong>Team 1</strong>
-                </div>
-
-                <div className="nav-actions">
-                    <div className="inbox-button"></div>
-                    <div className="profile-button"></div>
-                </div>
-            </header>
+            <NavBar />
 
             <main className="team-page">
                 {/* Team Header */}
                 <section className="team-header">
                     <div>
-                        <Link to="/" className="back-link">← All repositories</Link>
+                        <Link to="/section" className="back-link">← All repositories</Link>
                         <h1>{stats?.name ?? "Team"}</h1>
                         <p>{stats ? `${stats.members} ${stats.members === 1 ? "member" : "members"} · ${stats.url}` : ""}</p>
                     </div>
