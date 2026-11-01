@@ -11,7 +11,7 @@ function FileNode({ directory }) {
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2 rounded hover:bg-gray-800 cursor-pointer text-lef"
+                    className="file-node-button"
                 >
                     {isOpen ? (
                         <FolderOpenIcon className="size-4 text-amber-500" /> 
