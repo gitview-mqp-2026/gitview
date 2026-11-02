@@ -12,7 +12,7 @@ function InstructorDashboard() {
     const [courses, setCourses] = useState([]);
 
     const loadCourses = () => {
-        fetch("/api/courses")
+        fetch("/courses")
             .then((r) => (r.ok ? r.json() : []))
             .then(setCourses)
             .catch(() => setCourses([]));

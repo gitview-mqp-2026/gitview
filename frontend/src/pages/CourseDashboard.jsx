@@ -25,18 +25,18 @@ function CourseDashboard() {
     const [notice, setNotice] = useState(null);
 
     const loadRepos = () => {
-        fetch(`/api/repositories?courseId=${courseId}`)
+        fetch(`/repositories?courseId=${courseId}`)
             .then((r) => (r.ok ? r.json() : []))
             .then(setRepos)
             .catch(() => setRepos([]));
     };
 
     useEffect(() => {
-        fetch("/api/courses")
+        fetch("/courses")
             .then((r) => (r.ok ? r.json() : []))
             .then((courses) => setCourse(courses.find((c) => String(c.courseID) === courseId) ?? null))
             .catch(() => setCourse(null));
-        fetch(`/api/courses/${courseId}/ingest`)
+        fetch(`/courses/${courseId}/ingest`)
             .then((r) => (r.ok ? r.json() : null))
             .then(setJob)
             .catch(() => setJob(null));
@@ -47,7 +47,7 @@ function CourseDashboard() {
     useEffect(() => {
         if (job?.status !== "running") return undefined;
         const timer = setInterval(() => {
-            fetch(`/api/courses/${courseId}/ingest`)
+            fetch(`/courses/${courseId}/ingest`)
                 .then((r) => r.json())
                 .then((next) => {
                     setJob(next);
@@ -63,7 +63,7 @@ function CourseDashboard() {
         setError(null);
         setNotice(null);
         try {
-            const result = await post(`/api/courses/${courseId}/sync`);
+            const result = await post(`/courses/${courseId}/sync`);
             setNotice(`Found ${result.matched} team repositories (${result.created} new).`);
             loadRepos();
         } catch (err) {
@@ -77,7 +77,7 @@ function CourseDashboard() {
         setError(null);
         setNotice(null);
         try {
-            setJob(await post(`/api/courses/${courseId}/ingest`));
+            setJob(await post(`/courses/${courseId}/ingest`));
         } catch (err) {
             setError(err.message);
         }
@@ -92,7 +92,7 @@ function CourseDashboard() {
         setError(null);
 
         try {
-            const response = await fetch("/api/repositories/analyze", {
+            const response = await fetch("/repositories/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url }),

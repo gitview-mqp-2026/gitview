@@ -24,7 +24,7 @@ function AddCourseForm({ onClose, onAddCourse }) {
     const [installUrl, setInstallUrl] = useState(null);
 
     useEffect(() => {
-        fetch("/api/github-app")
+        fetch("/github-app")
             .then((r) => (r.ok ? r.json() : {}))
             .then((data) => setInstallUrl(data.installUrl ?? null))
             .catch(() => setInstallUrl(null));
@@ -36,13 +36,13 @@ function AddCourseForm({ onClose, onAddCourse }) {
         setError(null);
 
         try {
-            const course = await post("/api/courses", { courseName, courseTerm, githubOrg });
+            const course = await post("/courses", { courseName, courseTerm, githubOrg });
 
             // The course is saved; linking its repositories can still fail (e.g. the App isn't installed yet).
             let note = null;
             try {
-                await post(`/api/courses/${course.courseID}/sync`);
-                await post(`/api/courses/${course.courseID}/ingest`);
+                await post(`/courses/${course.courseID}/sync`);
+                await post(`/courses/${course.courseID}/ingest`);
             } catch (err) {
                 note = `${course.courseName} was saved, but its repositories could not be loaded: ${err.message}`;
             }

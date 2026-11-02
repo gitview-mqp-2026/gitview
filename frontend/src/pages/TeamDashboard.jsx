@@ -27,8 +27,8 @@ function TeamDashboard() {
         setPage(1);
 
         Promise.all([
-            getJson(`/api/commits?teamId=${teamId}`),
-            getJson(`/api/repositories/${teamId}/stats`),
+            getJson(`/commits?teamId=${teamId}`),
+            getJson(`/repositories/${teamId}/stats`),
         ])
             .then(([commitRows, statRows]) => {
                 setCommits(commitRows);
@@ -184,7 +184,7 @@ function TeamDashboard() {
                     </div>
                 </section>
 
-                {/* Commit Log (live from /api/commits) */}
+                {/* Commit Log (live from /commits) */}
                 <section className="significant-commits">
                     <h2>Commit log</h2>
 

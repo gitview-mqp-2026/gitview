@@ -20,7 +20,7 @@ async function commitsForTeam(teamID: number) {
 }
 
 // Newest first, with a commit count and last-commit time for the Home widgets.
-app.get('/api/repositories', async (req, res) => {
+app.get('/repositories', async (req, res) => {
   try {
     const courseID = Number(req.query.courseId);
     const [repos, students, commits] = await Promise.all([
@@ -48,7 +48,7 @@ app.get('/api/repositories', async (req, res) => {
 });
 
 // Clones a public repo and ingests its log; the Repository row it creates is the "saved" repo.
-app.post('/api/repositories/analyze', async (req, res) => {
+app.post('/repositories/analyze', async (req, res) => {
   try {
     res.json(await analyzeRepo(req.body?.url));
   } catch (err) {
@@ -64,7 +64,7 @@ app.post('/api/repositories/analyze', async (req, res) => {
 });
 
 // Comments and issues closed aren't in git history; they stay 0 until a source (e.g. the GitHub API) is wired in.
-app.get('/api/repositories/:teamId/stats', async (req, res) => {
+app.get('/repositories/:teamId/stats', async (req, res) => {
   try {
     const teamID = Number(req.params.teamId);
     const repo = Number.isInteger(teamID) ? await db.orm.public.Repository.where({ teamID }).first() : null;
@@ -90,7 +90,7 @@ app.get('/api/repositories/:teamId/stats', async (req, res) => {
 });
 
 // Optional ?teamId= narrows to commits written by that team's students.
-app.get('/api/commits', async (req, res) => {
+app.get('/commits', async (req, res) => {
   try {
     if (req.query.teamId) {
       res.json((await commitsForTeam(Number(req.query.teamId))).commits);
@@ -102,7 +102,7 @@ app.get('/api/commits', async (req, res) => {
   }
 });
 
-app.get('/api/commits/:hash/files', async (req, res) => {
+app.get('/commits/:hash/files', async (req, res) => {
   try {
     res.json(await db.orm.public.FileChange.where({ commitHash: req.params.hash }).all());
   } catch (err) {
@@ -121,12 +121,12 @@ function sendError(res: express.Response, err: unknown) {
 }
 
 // Where an org owner installs the GitHub App; the Add Course form links here.
-app.get('/api/github-app', (_req, res) => {
+app.get('/github-app', (_req, res) => {
   res.json({ installUrl: installUrl() });
 });
 
 // Optional ?instructorId= narrows to one instructor's courses.
-app.get('/api/courses', async (req, res) => {
+app.get('/courses', async (req, res) => {
   try {
     const instructorID = Number(req.query.instructorId);
     const [courses, repos] = await Promise.all([
@@ -139,7 +139,7 @@ app.get('/api/courses', async (req, res) => {
   }
 });
 
-app.post('/api/courses', async (req, res) => {
+app.post('/courses', async (req, res) => {
   try {
     res.status(201).json(await createCourse(req.body ?? {}));
   } catch (err) {
@@ -148,7 +148,7 @@ app.post('/api/courses', async (req, res) => {
 });
 
 // Links the org's repos (filtered by the course's name pattern) to the course.
-app.post('/api/courses/:courseId/sync', async (req, res) => {
+app.post('/courses/:courseId/sync', async (req, res) => {
   try {
     res.json(await syncCourse(Number(req.params.courseId)));
   } catch (err) {
@@ -157,7 +157,7 @@ app.post('/api/courses/:courseId/sync', async (req, res) => {
 });
 
 // Starts a background ingest of every synced repo; poll the GET for progress.
-app.post('/api/courses/:courseId/ingest', async (req, res) => {
+app.post('/courses/:courseId/ingest', async (req, res) => {
   try {
     res.status(202).json(await startCourseIngest(Number(req.params.courseId)));
   } catch (err) {
@@ -165,7 +165,7 @@ app.post('/api/courses/:courseId/ingest', async (req, res) => {
   }
 });
 
-app.get('/api/courses/:courseId/ingest', (req, res) => {
+app.get('/courses/:courseId/ingest', (req, res) => {
   res.json(ingestStatus(Number(req.params.courseId)) ?? { status: 'idle' });
 });
 

@@ -6,7 +6,7 @@ function TeamIndex() {
     const [target, setTarget] = useState(null);
 
     useEffect(() => {
-        fetch("/api/repositories")
+        fetch("/repositories")
             .then((r) => (r.ok ? r.json() : []))
             .catch(() => [])
             .then((repos) => setTarget(repos.length ? `/team/${repos[0].teamID}` : "/"));
