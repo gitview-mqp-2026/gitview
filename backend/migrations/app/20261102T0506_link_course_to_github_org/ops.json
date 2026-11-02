@@ -1,0 +1,335 @@
+[
+  {
+    "id": "column.public.course.githubOrg",
+    "label": "Add column \"githubOrg\" to \"course\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "githubOrg",
+        "table": "course"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"githubOrg\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "course",
+          "githubOrg"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"githubOrg\"",
+        "sql": "ALTER TABLE \"public\".\"course\" ADD COLUMN \"githubOrg\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"githubOrg\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "course",
+          "githubOrg"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.course.installationId",
+    "label": "Add column \"installationId\" to \"course\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "installationId",
+        "table": "course"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"installationId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "course",
+          "installationId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"installationId\"",
+        "sql": "ALTER TABLE \"public\".\"course\" ADD COLUMN \"installationId\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"installationId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "course",
+          "installationId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.repository.courseID",
+    "label": "Add column \"courseID\" to \"repository\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "courseID",
+        "table": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"courseID\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "repository",
+          "courseID"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"courseID\"",
+        "sql": "ALTER TABLE \"public\".\"repository\" ADD COLUMN \"courseID\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"courseID\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "repository",
+          "courseID"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.repository.githubRepoId",
+    "label": "Add column \"githubRepoId\" to \"repository\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "githubRepoId",
+        "table": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"githubRepoId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "repository",
+          "githubRepoId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"githubRepoId\"",
+        "sql": "ALTER TABLE \"public\".\"repository\" ADD COLUMN \"githubRepoId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"githubRepoId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "repository",
+          "githubRepoId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.course.course_githubOrg_key",
+    "label": "Add unique constraint on \"course\" (githubOrg)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "course_githubOrg_key",
+        "table": "course"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"course_githubOrg_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "course_githubOrg_key",
+          "public",
+          "\"public\".\"course\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"course_githubOrg_key\"",
+        "sql": "ALTER TABLE \"public\".\"course\" ADD CONSTRAINT \"course_githubOrg_key\" UNIQUE (\"githubOrg\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"course_githubOrg_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "course_githubOrg_key",
+          "public",
+          "\"public\".\"course\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.repository.repository_githubRepoId_key",
+    "label": "Add unique constraint on \"repository\" (githubRepoId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "repository_githubRepoId_key",
+        "table": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"repository_githubRepoId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repository_githubRepoId_key",
+          "public",
+          "\"public\".\"repository\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"repository_githubRepoId_key\"",
+        "sql": "ALTER TABLE \"public\".\"repository\" ADD CONSTRAINT \"repository_githubRepoId_key\" UNIQUE (\"githubRepoId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"repository_githubRepoId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repository_githubRepoId_key",
+          "public",
+          "\"public\".\"repository\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.repository.repository_courseID_idx_7300c0bc",
+    "label": "Create index \"repository_courseID_idx_7300c0bc\" on \"repository\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "repository_courseID_idx_7300c0bc",
+        "table": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"repository_courseID_idx_7300c0bc\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repository_courseID_idx_7300c0bc\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"repository_courseID_idx_7300c0bc\"",
+        "sql": "CREATE INDEX \"repository_courseID_idx_7300c0bc\" ON \"public\".\"repository\" (\"courseID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"repository_courseID_idx_7300c0bc\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repository_courseID_idx_7300c0bc\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.repository.repository_courseID_fkey",
+    "label": "Add foreign key \"repository_courseID_fkey\" on \"repository\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "repository_courseID_fkey",
+        "table": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"repository_courseID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repository_courseID_fkey",
+          "public",
+          "\"public\".\"repository\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"repository_courseID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"repository\"\nADD CONSTRAINT \"repository_courseID_fkey\"\nFOREIGN KEY (\"courseID\")\nREFERENCES \"public\".\"course\" (\"courseID\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"repository_courseID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repository_courseID_fkey",
+          "public",
+          "\"public\".\"repository\""
+        ]
+      }
+    ]
+  }
+]

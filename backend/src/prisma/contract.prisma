@@ -79,6 +79,9 @@ model Repository {
   teamID            Int           @id @default(autoincrement())
   url               String
   name              String
+  githubRepoId      String?       @unique
+  courseID          Int?
+  course            Course?       @relation(fields: [courseID], references: [courseID])
   students          Student[]
 }
 
@@ -88,6 +91,10 @@ model Course {
   courseTerm        String
   instructorID      Int
   instructor        Instructor    @relation(fields: [instructorID], references: [userID], onDelete: Cascade)
+  githubOrg         String?       @unique
+  installationId    Int?
+  repoPattern       String?
+  repositories      Repository[]
 }
 
 model Alert {

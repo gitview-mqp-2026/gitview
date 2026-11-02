@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'59f7b52cef9c750c2fe209cc4f20f6ad51789575fecc0568e4701a5d3e3ded8c'>;
+  StorageHashBase<'f8d10ea49d961dafadd2599df44910ab7e8f24f9cafcbdd471d6e128f55e78fe'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -267,6 +267,9 @@ export type FieldOutputTypes = {
       readonly courseName: CodecTypes['pg/text@1']['output'];
       readonly courseTerm: CodecTypes['pg/text@1']['output'];
       readonly instructorID: CodecTypes['pg/int4@1']['output'];
+      readonly githubOrg: CodecTypes['pg/text@1']['output'] | null;
+      readonly installationId: CodecTypes['pg/int4@1']['output'] | null;
+      readonly repoPattern: CodecTypes['pg/text@1']['output'] | null;
     };
     readonly Feedback: {
       readonly feedbackID: CodecTypes['pg/int4@1']['output'];
@@ -287,6 +290,8 @@ export type FieldOutputTypes = {
       readonly teamID: CodecTypes['pg/int4@1']['output'];
       readonly url: CodecTypes['pg/text@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
+      readonly githubRepoId: CodecTypes['pg/text@1']['output'] | null;
+      readonly courseID: CodecTypes['pg/int4@1']['output'] | null;
     };
     readonly Student: {
       readonly userID: CodecTypes['pg/int4@1']['output'];
@@ -333,6 +338,9 @@ export type FieldInputTypes = {
       readonly courseName: CodecTypes['pg/text@1']['input'];
       readonly courseTerm: CodecTypes['pg/text@1']['input'];
       readonly instructorID: CodecTypes['pg/int4@1']['input'];
+      readonly githubOrg: CodecTypes['pg/text@1']['input'] | null;
+      readonly installationId: CodecTypes['pg/int4@1']['input'] | null;
+      readonly repoPattern: CodecTypes['pg/text@1']['input'] | null;
     };
     readonly Feedback: {
       readonly feedbackID: CodecTypes['pg/int4@1']['input'];
@@ -353,6 +361,8 @@ export type FieldInputTypes = {
       readonly teamID: CodecTypes['pg/int4@1']['input'];
       readonly url: CodecTypes['pg/text@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
+      readonly githubRepoId: CodecTypes['pg/text@1']['input'] | null;
+      readonly courseID: CodecTypes['pg/int4@1']['input'] | null;
     };
     readonly Student: {
       readonly userID: CodecTypes['pg/int4@1']['input'];
@@ -398,7 +408,10 @@ export type StorageColumnTypes = {
       readonly courseID: CodecTypes['pg/int4@1']['output'];
       readonly courseName: CodecTypes['pg/text@1']['output'];
       readonly courseTerm: CodecTypes['pg/text@1']['output'];
+      readonly githubOrg: CodecTypes['pg/text@1']['output'] | null;
+      readonly installationId: CodecTypes['pg/int4@1']['output'] | null;
       readonly instructorID: CodecTypes['pg/int4@1']['output'];
+      readonly repoPattern: CodecTypes['pg/text@1']['output'] | null;
     };
     readonly feedback: {
       readonly authorID: CodecTypes['pg/int4@1']['output'];
@@ -416,6 +429,8 @@ export type StorageColumnTypes = {
     };
     readonly instructor: { readonly userID: CodecTypes['pg/int4@1']['output'] };
     readonly repository: {
+      readonly courseID: CodecTypes['pg/int4@1']['output'] | null;
+      readonly githubRepoId: CodecTypes['pg/text@1']['output'] | null;
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly teamID: CodecTypes['pg/int4@1']['output'];
       readonly url: CodecTypes['pg/text@1']['output'];
@@ -464,7 +479,10 @@ export type StorageColumnInputTypes = {
       readonly courseID: CodecTypes['pg/int4@1']['input'];
       readonly courseName: CodecTypes['pg/text@1']['input'];
       readonly courseTerm: CodecTypes['pg/text@1']['input'];
+      readonly githubOrg: CodecTypes['pg/text@1']['input'] | null;
+      readonly installationId: CodecTypes['pg/int4@1']['input'] | null;
       readonly instructorID: CodecTypes['pg/int4@1']['input'];
+      readonly repoPattern: CodecTypes['pg/text@1']['input'] | null;
     };
     readonly feedback: {
       readonly authorID: CodecTypes['pg/int4@1']['input'];
@@ -482,6 +500,8 @@ export type StorageColumnInputTypes = {
     };
     readonly instructor: { readonly userID: CodecTypes['pg/int4@1']['input'] };
     readonly repository: {
+      readonly courseID: CodecTypes['pg/int4@1']['input'] | null;
+      readonly githubRepoId: CodecTypes['pg/text@1']['input'] | null;
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly teamID: CodecTypes['pg/int4@1']['input'];
       readonly url: CodecTypes['pg/text@1']['input'];
@@ -750,9 +770,24 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
                 };
+                readonly githubOrg: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly installationId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly repoPattern: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
               };
               primaryKey: { readonly columns: readonly ['courseID'] };
-              uniques: readonly [];
+              uniques: readonly [{ readonly columns: readonly ['githubOrg'] }];
               indexes: readonly [
                 {
                   readonly name: 'course_instructorID_idx_dc3c3202';
@@ -955,11 +990,41 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
+                readonly githubRepoId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly courseID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
               };
               primaryKey: { readonly columns: readonly ['teamID'] };
-              uniques: readonly [];
-              indexes: readonly [];
-              foreignKeys: readonly [];
+              uniques: readonly [{ readonly columns: readonly ['githubRepoId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'repository_courseID_idx_7300c0bc';
+                  readonly prefix: 'repository_courseID_idx';
+                  readonly columns: readonly ['courseID'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'repository';
+                    readonly columns: readonly ['courseID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'course';
+                    readonly columns: readonly ['courseID'];
+                  };
+                },
+              ];
             };
             readonly student: {
               columns: {
@@ -1338,6 +1403,18 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
+              readonly githubOrg: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly installationId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly repoPattern: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
             };
             readonly relations: {
               readonly instructor: {
@@ -1351,6 +1428,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['userID'];
                 };
               };
+              readonly repositories: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Repository';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['courseID'];
+                  readonly targetFields: readonly ['courseID'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'course';
@@ -1360,6 +1448,9 @@ type ContractBase = Omit<
                 readonly courseName: { readonly column: 'courseName' };
                 readonly courseTerm: { readonly column: 'courseTerm' };
                 readonly instructorID: { readonly column: 'instructorID' };
+                readonly githubOrg: { readonly column: 'githubOrg' };
+                readonly installationId: { readonly column: 'installationId' };
+                readonly repoPattern: { readonly column: 'repoPattern' };
               };
             };
           };
@@ -1518,8 +1609,27 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly githubRepoId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly courseID: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
             };
             readonly relations: {
+              readonly course: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Course';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['courseID'];
+                  readonly targetFields: readonly ['courseID'];
+                };
+              };
               readonly students: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -1539,6 +1649,8 @@ type ContractBase = Omit<
                 readonly teamID: { readonly column: 'teamID' };
                 readonly url: { readonly column: 'url' };
                 readonly name: { readonly column: 'name' };
+                readonly githubRepoId: { readonly column: 'githubRepoId' };
+                readonly courseID: { readonly column: 'courseID' };
               };
             };
           };
