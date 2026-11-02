@@ -20,17 +20,28 @@ export class AnalyzeError extends Error {
   }
 }
 
-// https only, no stored credentials, never prompt: this only ever reads public repositories.
+// https only, no stored credentials, never prompt. Private repos get a GitHub App installation token
+// per call (see authEnv), never a stored credential.
 const GIT_FLAGS = [
   '-c', 'protocol.allow=never',
   '-c', 'protocol.https.allow=always',
   '-c', 'credential.helper=',
 ];
 
-async function git(args: string[]): Promise<void> {
+// The token travels in git's environment config, so it is never in the URL, the argv or .git/config.
+function authEnv(token: string): Record<string, string> {
+  const basic = Buffer.from(`x-access-token:${token}`).toString('base64');
+  return {
+    GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_KEY_0: 'http.https://github.com/.extraheader',
+    GIT_CONFIG_VALUE_0: `Authorization: Basic ${basic}`,
+  };
+}
+
+async function git(args: string[], token?: string): Promise<void> {
   try {
     await run('git', [...GIT_FLAGS, ...args], {
-      env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...(token ? authEnv(token) : {}) },
       timeout: CLONE_TIMEOUT_MS,
       killSignal: 'SIGKILL',
       maxBuffer: 1024 * 1024,
@@ -39,13 +50,23 @@ async function git(args: string[]): Promise<void> {
     if (err.killed) {
       throw new AnalyzeError(504, 'Cloning took too long. Try a smaller repository.');
     }
-    throw new AnalyzeError(422, "Couldn't clone that repository. Check the URL and that it is public.");
+    throw new AnalyzeError(
+      422,
+      token
+        ? "Couldn't fetch that repository. Check that the GitHub App is installed on it."
+        : "Couldn't clone that repository. Check the URL and that it is public."
+    );
   }
 }
 
 const inFlight = new Set<string>();
 
-export async function analyzeRepo(input: unknown): Promise<IngestResult & { name: string; url: string }> {
+// Pass an installation token to read a private repository the GitHub App can see.
+export async function analyzeRepo(
+  input: unknown,
+  opts: { token?: string } = {}
+): Promise<IngestResult & { name: string; url: string }> {
+  const { token } = opts;
   const url = parseRepoUrl(input);
   await assertPublicHost(url);
 
@@ -59,10 +80,10 @@ export async function analyzeRepo(input: unknown): Promise<IngestResult & { name
     const dir = join(REPOS_DIR, `${createHash('sha1').update(url.canonical).digest('hex').slice(0, 16)}.git`);
 
     if (existsSync(dir)) {
-      await git(['--git-dir', dir, 'fetch', '--quiet', '--prune', url.cloneUrl, '+refs/heads/*:refs/heads/*']);
+      await git(['--git-dir', dir, 'fetch', '--quiet', '--prune', url.cloneUrl, '+refs/heads/*:refs/heads/*'], token);
     } else {
       try {
-        await git(['clone', '--bare', '--quiet', '--', url.cloneUrl, dir]);
+        await git(['clone', '--bare', '--quiet', '--', url.cloneUrl, dir], token);
       } catch (err) {
         rmSync(dir, { recursive: true, force: true });
         throw err;

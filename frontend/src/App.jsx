@@ -1,10 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import Home from "./pages/Home";
+import InstructorDashboard from "./pages/InstructorDashboard";
 import Login from "./pages/Login";
 import TeamDashboard from "./pages/TeamDashboard";
 import TeamIndex from "./pages/TeamIndex";
+import FileAlignment from "./pages/FileAlignment";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
+import CourseDashboard from "./pages/CourseDashboard.jsx";
 
 function App() {
     return (
@@ -15,7 +17,16 @@ function App() {
                 path="/"
                 element={(
                     <ProtectedRoute>
-                        <Home />
+                        <InstructorDashboard />
+                    </ProtectedRoute>
+                )}
+            />
+
+            <Route
+                path="/course/:courseId"
+                element={(
+                    <ProtectedRoute>
+                        <CourseDashboard />
                     </ProtectedRoute>
                 )}
             />
@@ -34,6 +45,15 @@ function App() {
                 element={(
                     <ProtectedRoute>
                         <TeamDashboard />
+                    </ProtectedRoute>
+                )}
+            />
+
+            <Route
+                path="/alignment"
+                element={(
+                    <ProtectedRoute>
+                        <FileAlignment />
                     </ProtectedRoute>
                 )}
             />

@@ -16,6 +16,10 @@
       "model": "CommitTag",
       "namespace": "public"
     },
+    "course": {
+      "model": "Course",
+      "namespace": "public"
+    },
     "feedback": {
       "model": "Feedback",
       "namespace": "public"
@@ -393,6 +397,118 @@
               "table": "commitTag"
             }
           },
+          "Course": {
+            "fields": {
+              "courseID": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "courseName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "courseTerm": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "githubOrg": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "installationId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "instructorID": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "repoPattern": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "instructor": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "instructorID"
+                  ],
+                  "targetFields": [
+                    "userID"
+                  ]
+                },
+                "to": {
+                  "model": "Instructor",
+                  "namespace": "public"
+                }
+              },
+              "repositories": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "courseID"
+                  ],
+                  "targetFields": [
+                    "courseID"
+                  ]
+                },
+                "to": {
+                  "model": "Repository",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "courseID": {
+                  "column": "courseID"
+                },
+                "courseName": {
+                  "column": "courseName"
+                },
+                "courseTerm": {
+                  "column": "courseTerm"
+                },
+                "githubOrg": {
+                  "column": "githubOrg"
+                },
+                "installationId": {
+                  "column": "installationId"
+                },
+                "instructorID": {
+                  "column": "instructorID"
+                },
+                "repoPattern": {
+                  "column": "repoPattern"
+                }
+              },
+              "namespaceId": "public",
+              "table": "course"
+            }
+          },
           "Feedback": {
             "fields": {
               "authorID": {
@@ -413,6 +529,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "dateTime": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
                   "kind": "scalar"
                 }
               },
@@ -466,6 +589,9 @@
                 },
                 "commitHash": {
                   "column": "commitHash"
+                },
+                "dateTime": {
+                  "column": "dateTime"
                 },
                 "feedbackID": {
                   "column": "feedbackID"
@@ -563,6 +689,21 @@
               }
             },
             "relations": {
+              "courses": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "userID"
+                  ],
+                  "targetFields": [
+                    "instructorID"
+                  ]
+                },
+                "to": {
+                  "model": "Course",
+                  "namespace": "public"
+                }
+              },
               "user": {
                 "cardinality": "N:1",
                 "on": {
@@ -591,6 +732,20 @@
           },
           "Repository": {
             "fields": {
+              "courseID": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "githubRepoId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "name": {
                 "nullable": false,
                 "type": {
@@ -614,6 +769,21 @@
               }
             },
             "relations": {
+              "course": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "courseID"
+                  ],
+                  "targetFields": [
+                    "courseID"
+                  ]
+                },
+                "to": {
+                  "model": "Course",
+                  "namespace": "public"
+                }
+              },
               "students": {
                 "cardinality": "1:N",
                 "on": {
@@ -632,6 +802,12 @@
             },
             "storage": {
               "fields": {
+                "courseID": {
+                  "column": "courseID"
+                },
+                "githubRepoId": {
+                  "column": "githubRepoId"
+                },
                 "name": {
                   "column": "name"
                 },
@@ -1156,6 +1332,90 @@
               },
               "uniques": []
             },
+            "course": {
+              "columns": {
+                "courseID": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "courseName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "courseTerm": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "githubOrg": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "installationId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "instructorID": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "repoPattern": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "instructorID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "course"
+                  },
+                  "target": {
+                    "columns": [
+                      "userID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "instructor"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "instructorID"
+                  ],
+                  "name": "course_instructorID_idx_dc3c3202",
+                  "prefix": "course_instructorID_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "courseID"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "githubOrg"
+                  ]
+                }
+              ]
+            },
             "feedback": {
               "columns": {
                 "authorID": {
@@ -1171,6 +1431,11 @@
                 "commitHash": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
+                  "nullable": false
+                },
+                "dateTime": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
                   "nullable": false
                 },
                 "feedbackID": {
@@ -1349,6 +1614,16 @@
             },
             "repository": {
               "columns": {
+                "courseID": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "githubRepoId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "name": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -1369,14 +1644,46 @@
                   "nullable": false
                 }
               },
-              "foreignKeys": [],
-              "indexes": [],
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "courseID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repository"
+                  },
+                  "target": {
+                    "columns": [
+                      "courseID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "course"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "courseID"
+                  ],
+                  "name": "repository_courseID_idx_7300c0bc",
+                  "prefix": "repository_courseID_idx",
+                  "unique": false
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "teamID"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "githubRepoId"
+                  ]
+                }
+              ]
             },
             "student": {
               "columns": {
@@ -1517,7 +1824,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "1e007f9d123be96a73b31ad198af174b0a9c99feab3fbb943cee488972ad5730"
+    "storageHash": "f8d10ea49d961dafadd2599df44910ab7e8f24f9cafcbdd471d6e128f55e78fe"
   },
   "capabilities": {
     "postgres": {
