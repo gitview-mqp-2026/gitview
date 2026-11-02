@@ -33,6 +33,9 @@ export interface IngestJob {
   results: { teamID: number; name: string; ok: boolean; ingested?: number; error?: string }[];
 }
 
+// Team repos are always the ones named team-*, so instructors never have to enter a pattern.
+const DEFAULT_REPO_PATTERN = '^team-';
+
 const ORG = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
 
 function compilePattern(pattern: string): RegExp {
@@ -59,7 +62,7 @@ export async function createCourse(input: CourseInput) {
   if (!courseName || !courseTerm) throw new CourseError(400, 'A course needs a name and a term.');
   const githubOrg = input.githubOrg?.trim() || undefined;
   if (githubOrg && !ORG.test(githubOrg)) throw new CourseError(400, 'That is not a valid GitHub organization name.');
-  const repoPattern = input.repoPattern?.trim() || undefined;
+  const repoPattern = input.repoPattern?.trim() || DEFAULT_REPO_PATTERN;
   if (repoPattern) compilePattern(repoPattern);
 
   let installationId: number | undefined;
@@ -110,7 +113,7 @@ async function installationFor(course: { courseID: number; githubOrg?: string | 
 // pattern, and links each to the course. Repos that stop matching are left as they are.
 export async function syncCourse(courseID: number): Promise<SyncResult> {
   const course = await courseById(courseID);
-  const pattern = course.repoPattern ? compilePattern(course.repoPattern) : null;
+  const pattern = compilePattern(course.repoPattern ?? DEFAULT_REPO_PATTERN);
   const org = course.githubOrg?.toLowerCase();
 
   const all = await listInstallationRepos(await installationToken(await installationFor(course)));
@@ -118,7 +121,7 @@ export async function syncCourse(courseID: number): Promise<SyncResult> {
     if (r.archived) return false;
     const [owner, name] = r.fullName.split('/');
     if (org && owner.toLowerCase() !== org) return false;
-    return !pattern || pattern.test(name);
+    return pattern.test(name);
   });
 
   let created = 0;
