@@ -53,7 +53,7 @@ function TeamDashboard() {
                 {/* Team Header */}
                 <section className="team-header">
                     <div>
-                        <Link to="/section" className="back-link">← All repositories</Link>
+                        <Link to="/course" className="back-link">← All repositories</Link>
                         <h1>{stats?.name ?? "Team"}</h1>
                         <p>{stats ? `${stats.members} ${stats.members === 1 ? "member" : "members"} · ${stats.url}` : ""}</p>
                     </div>

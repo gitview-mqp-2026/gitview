@@ -9,26 +9,44 @@ function InstructorDashboard() {
     const navigate = useNavigate();
     const [error, setError] = useState(null);
     const [showAddCourseForm, setShowAddCourseForm] = useState(false);
+    const [courses, setCourses] = useState([]);
+
+    const handleAddCourse = (newCourse) => {
+        setCourses([...courses, newCourse]);
+        setShowAddCourseForm(false);
+    }
 
     return (
         <div>
             <NavBar />
 
-            <div className="actions">
+            <div className="courses">
                 <div className="add-course">
                     <button onClick={() => setShowAddCourseForm(true)}>
                         Add Course
                     </button>
                 </div>
 
+                <div className="course-list">
+                    {courses.map((course, index) => (
+                        <div className="course-widget" key={index}>
+                            <h2>{course.courseName}</h2>
+                            <p>{course.courseTerm}</p>
+                        </div>
+                    ))}
+                </div>
+
                 {showAddCourseForm && (
                     <AddCourseForm  
                         onClose={() => setShowAddCourseForm(false)}
+                        onAddCourse={handleAddCourse}
                     />
                 )}
-            
-                <Link to="/section" className="link-button">
-                    Go to Section Dashboard
+            </div>
+
+            <div className="actions">
+                <Link to="/course" className="link-button">
+                    Go to Course Dashboard
                 </Link>
 
                 <Link to="/alignment" className="link-button">

@@ -8,7 +8,7 @@ function NavBar() {
     const location = useLocation();
 
     const pathNames = {
-        section: "Section",
+        course: "Course",
         team: "Team",
         alignment: "Alignment",
     }

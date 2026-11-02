@@ -918,3 +918,43 @@ a {
     cursor: pointer;
     border: none;
 }
+
+.courses {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px;
+}
+
+.course-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+}
+
+.course-widget {
+    width: 250px;
+    padding: 20px;
+    background-color: #1d304a;
+    border: 1px solid lightgray;
+    border-radius: 8px;
+}
+
+.course-widget:hover {
+    background-color: #263e5e;
+}
+
+.course-widget h2 {
+    margin-top: 0;
+}
+
+.course-widget p {
+    color: #9fb3cc;
+}
+
+.add-course {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}

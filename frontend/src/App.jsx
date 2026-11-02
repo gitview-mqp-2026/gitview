@@ -6,7 +6,7 @@ import TeamDashboard from "./pages/TeamDashboard";
 import TeamIndex from "./pages/TeamIndex";
 import FileAlignment from "./pages/FileAlignment";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
-import SectionDashboard from "./pages/SectionDashboard.jsx";
+import CourseDashboard from "./pages/CourseDashboard.jsx";
 
 function App() {
     return (
@@ -23,10 +23,10 @@ function App() {
             />
 
             <Route
-                path="/section"
+                path="/course"
                 element={(
                     <ProtectedRoute>
-                        <SectionDashboard />
+                        <CourseDashboard />
                     </ProtectedRoute>
                 )}
             />

@@ -3,7 +3,7 @@ import "../App.css";
 import { Link, useNavigate } from "react-router-dom";
 import NavBar from "../components/NavBar.jsx";
 
-function SectionDashboard() {
+function CourseDashboard() {
     const navigate = useNavigate();
     const [url, setUrl] = useState("");
     const [analyzing, setAnalyzing] = useState(false);
@@ -94,4 +94,4 @@ function SectionDashboard() {
     );
 }
 
-export default SectionDashboard;
+export default CourseDashboard;

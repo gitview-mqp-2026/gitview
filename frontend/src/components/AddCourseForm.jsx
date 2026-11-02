@@ -2,17 +2,17 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import "./AddCourseForm.css";
 
-function AddCourseForm({ onClose }) {
+function AddCourseForm({ onClose, onAddCourse }) {
     const [courseName, setCourseName] = useState("");
     const [courseTerm, setCourseTerm] = useState("");
     
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        onAddCourse({ courseName, courseTerm });
+
         setCourseName("");
         setCourseTerm("");
-
-        onClose();
     }
 
     return (
