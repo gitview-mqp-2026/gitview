@@ -125,9 +125,14 @@ app.get('/api/github-app', (_req, res) => {
   res.json({ installUrl: installUrl() });
 });
 
-app.get('/api/courses', async (_req, res) => {
+// Optional ?instructorId= narrows to one instructor's courses.
+app.get('/api/courses', async (req, res) => {
   try {
-    const [courses, repos] = await Promise.all([db.orm.public.Course.all(), db.orm.public.Repository.all()]);
+    const instructorID = Number(req.query.instructorId);
+    const [courses, repos] = await Promise.all([
+      req.query.instructorId ? db.orm.public.Course.where({ instructorID }).all() : db.orm.public.Course.all(),
+      db.orm.public.Repository.all(),
+    ]);
     res.json(courses.map((c) => ({ ...c, repoCount: repos.filter((r) => r.courseID === c.courseID).length })));
   } catch (err) {
     sendError(res, err);
