@@ -4,6 +4,8 @@ import cors from 'cors';
 import { db } from './prisma/db.js';
 import { analyzeRepo, AnalyzeError, RepoUrlError } from './lib/analyze.js';
 import { countPullRequestsMerged } from './lib/stats.js';
+import { CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
+import { GithubAppError, installUrl } from './lib/githubApp.js';
 
 const app = express();
 app.use(cors());
@@ -18,10 +20,11 @@ async function commitsForTeam(teamID: number) {
 }
 
 // Newest first, with a commit count and last-commit time for the Home widgets.
-app.get('/api/repositories', async (_req, res) => {
+app.get('/api/repositories', async (req, res) => {
   try {
+    const courseID = Number(req.query.courseId);
     const [repos, students, commits] = await Promise.all([
-      db.orm.public.Repository.all(),
+      req.query.courseId ? db.orm.public.Repository.where({ courseID }).all() : db.orm.public.Repository.all(),
       db.orm.public.Student.all(),
       db.orm.public.Commit.orderBy((c) => c.dateTime.desc()).all(),
     ]);
@@ -72,6 +75,7 @@ app.get('/api/repositories/:teamId/stats', async (req, res) => {
     const { students, commits } = await commitsForTeam(teamID);
     res.json({
       teamID,
+      courseID: repo.courseID ?? null,
       name: repo.name,
       url: repo.url,
       members: students.length,
@@ -104,6 +108,60 @@ app.get('/api/commits/:hash/files', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }
+});
+
+// Maps the errors the course/GitHub code throws onto HTTP statuses; anything else is a 500.
+function sendError(res: express.Response, err: unknown) {
+  if (err instanceof CourseError || err instanceof GithubAppError || err instanceof AnalyzeError || err instanceof RepoUrlError) {
+    res.status('status' in err ? err.status : 400).json({ error: err.message });
+    return;
+  }
+  console.error(err);
+  res.status(500).json({ error: 'Something went wrong.' });
+}
+
+// Where an org owner installs the GitHub App; the Add Course form links here.
+app.get('/api/github-app', (_req, res) => {
+  res.json({ installUrl: installUrl() });
+});
+
+app.get('/api/courses', async (_req, res) => {
+  try {
+    const [courses, repos] = await Promise.all([db.orm.public.Course.all(), db.orm.public.Repository.all()]);
+    res.json(courses.map((c) => ({ ...c, repoCount: repos.filter((r) => r.courseID === c.courseID).length })));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+app.post('/api/courses', async (req, res) => {
+  try {
+    res.status(201).json(await createCourse(req.body ?? {}));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Links the org's repos (filtered by the course's name pattern) to the course.
+app.post('/api/courses/:courseId/sync', async (req, res) => {
+  try {
+    res.json(await syncCourse(Number(req.params.courseId)));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Starts a background ingest of every synced repo; poll the GET for progress.
+app.post('/api/courses/:courseId/ingest', async (req, res) => {
+  try {
+    res.status(202).json(await startCourseIngest(Number(req.params.courseId)));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+app.get('/api/courses/:courseId/ingest', (req, res) => {
+  res.json(ingestStatus(Number(req.params.courseId)) ?? { status: 'idle' });
 });
 
 const PORT = process.env.PORT ?? 3001;
