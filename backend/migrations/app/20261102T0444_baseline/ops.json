@@ -1,0 +1,1264 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.alert",
+    "label": "Create table \"alert\"",
+    "summary": "Creates table \"alert\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "alert"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"alert\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"alert\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"alert\"",
+        "sql": "CREATE TABLE \"public\".\"alert\" (\n  \"alertID\" SERIAL NOT NULL,\n  \"alertStatus\" text NOT NULL,\n  \"alertType\" text NOT NULL,\n  \"commitHash\" text NOT NULL,\n  \"studentID\" int4 NOT NULL,\n  PRIMARY KEY (\"alertID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"alert\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"alert\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.commit",
+    "label": "Create table \"commit\"",
+    "summary": "Creates table \"commit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "commit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"commit\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"commit\"",
+        "sql": "CREATE TABLE \"public\".\"commit\" (\n  \"author\" text,\n  \"commitBody\" text,\n  \"commitHash\" text NOT NULL,\n  \"commitSubject\" text NOT NULL,\n  \"committer\" text,\n  \"dateTime\" timestamptz NOT NULL,\n  \"isMerge\" int4 NOT NULL,\n  \"refs\" text,\n  \"studentID\" int4 NOT NULL,\n  PRIMARY KEY (\"commitHash\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"commit\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.commitTag",
+    "label": "Create table \"commitTag\"",
+    "summary": "Creates table \"commitTag\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "commitTag"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"commitTag\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commitTag\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"commitTag\"",
+        "sql": "CREATE TABLE \"public\".\"commitTag\" (\n  \"commitHash\" text NOT NULL,\n  \"tagID\" int4 NOT NULL,\n  PRIMARY KEY (\"commitHash\", \"tagID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"commitTag\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commitTag\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.feedback",
+    "label": "Create table \"feedback\"",
+    "summary": "Creates table \"feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"feedback\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"feedback\"",
+        "sql": "CREATE TABLE \"public\".\"feedback\" (\n  \"authorID\" int4 NOT NULL,\n  \"comment\" text NOT NULL,\n  \"commitHash\" text NOT NULL,\n  \"feedbackID\" SERIAL NOT NULL,\n  PRIMARY KEY (\"feedbackID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"feedback\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedback\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.fileChange",
+    "label": "Create table \"fileChange\"",
+    "summary": "Creates table \"fileChange\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "fileChange"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"fileChange\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"fileChange\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"fileChange\"",
+        "sql": "CREATE TABLE \"public\".\"fileChange\" (\n  \"additions\" int4 NOT NULL,\n  \"commitHash\" text NOT NULL,\n  \"deletions\" int4 NOT NULL,\n  \"fileID\" SERIAL NOT NULL,\n  \"filePath\" text NOT NULL,\n  PRIMARY KEY (\"fileID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"fileChange\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"fileChange\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.instructor",
+    "label": "Create table \"instructor\"",
+    "summary": "Creates table \"instructor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "instructor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"instructor\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"instructor\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"instructor\"",
+        "sql": "CREATE TABLE \"public\".\"instructor\" (\n  \"userID\" int4 NOT NULL,\n  PRIMARY KEY (\"userID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"instructor\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"instructor\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.repository",
+    "label": "Create table \"repository\"",
+    "summary": "Creates table \"repository\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "repository"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"repository\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repository\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"repository\"",
+        "sql": "CREATE TABLE \"public\".\"repository\" (\n  \"name\" text NOT NULL,\n  \"teamID\" SERIAL NOT NULL,\n  \"url\" text NOT NULL,\n  PRIMARY KEY (\"teamID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"repository\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repository\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.student",
+    "label": "Create table \"student\"",
+    "summary": "Creates table \"student\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "student"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"student\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"student\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"student\"",
+        "sql": "CREATE TABLE \"public\".\"student\" (\n  \"teamID\" int4 NOT NULL,\n  \"userID\" int4 NOT NULL,\n  PRIMARY KEY (\"userID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"student\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"student\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.tag",
+    "label": "Create table \"tag\"",
+    "summary": "Creates table \"tag\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "tag"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"tag\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tag\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"tag\"",
+        "sql": "CREATE TABLE \"public\".\"tag\" (\n  \"categoryName\" text NOT NULL,\n  \"tagID\" SERIAL NOT NULL,\n  PRIMARY KEY (\"tagID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"tag\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tag\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user",
+    "label": "Create table \"user\"",
+    "summary": "Creates table \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user\"",
+        "sql": "CREATE TABLE \"public\".\"user\" (\n  \"email\" text NOT NULL,\n  \"name\" text,\n  \"userID\" SERIAL NOT NULL,\n  \"username\" text,\n  PRIMARY KEY (\"userID\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user.user_email_key",
+    "label": "Add unique constraint on \"user\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_email_key",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_email_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD CONSTRAINT \"user_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_email_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.alert.alert_commitHash_idx_a57efd78",
+    "label": "Create index \"alert_commitHash_idx_a57efd78\" on \"alert\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "alert_commitHash_idx_a57efd78",
+        "table": "alert"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"alert_commitHash_idx_a57efd78\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"alert_commitHash_idx_a57efd78\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"alert_commitHash_idx_a57efd78\"",
+        "sql": "CREATE INDEX \"alert_commitHash_idx_a57efd78\" ON \"public\".\"alert\" (\"commitHash\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"alert_commitHash_idx_a57efd78\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"alert_commitHash_idx_a57efd78\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.alert.alert_studentID_idx_af8ad155",
+    "label": "Create index \"alert_studentID_idx_af8ad155\" on \"alert\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "alert_studentID_idx_af8ad155",
+        "table": "alert"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"alert_studentID_idx_af8ad155\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"alert_studentID_idx_af8ad155\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"alert_studentID_idx_af8ad155\"",
+        "sql": "CREATE INDEX \"alert_studentID_idx_af8ad155\" ON \"public\".\"alert\" (\"studentID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"alert_studentID_idx_af8ad155\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"alert_studentID_idx_af8ad155\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.commit.commit_studentID_idx_af8ad155",
+    "label": "Create index \"commit_studentID_idx_af8ad155\" on \"commit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "commit_studentID_idx_af8ad155",
+        "table": "commit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"commit_studentID_idx_af8ad155\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commit_studentID_idx_af8ad155\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"commit_studentID_idx_af8ad155\"",
+        "sql": "CREATE INDEX \"commit_studentID_idx_af8ad155\" ON \"public\".\"commit\" (\"studentID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"commit_studentID_idx_af8ad155\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commit_studentID_idx_af8ad155\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.commitTag.commitTag_commitHash_idx_a57efd78",
+    "label": "Create index \"commitTag_commitHash_idx_a57efd78\" on \"commitTag\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "commitTag_commitHash_idx_a57efd78",
+        "table": "commitTag"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"commitTag_commitHash_idx_a57efd78\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commitTag_commitHash_idx_a57efd78\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"commitTag_commitHash_idx_a57efd78\"",
+        "sql": "CREATE INDEX \"commitTag_commitHash_idx_a57efd78\" ON \"public\".\"commitTag\" (\"commitHash\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"commitTag_commitHash_idx_a57efd78\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commitTag_commitHash_idx_a57efd78\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.commitTag.commitTag_tagID_idx_061c18c6",
+    "label": "Create index \"commitTag_tagID_idx_061c18c6\" on \"commitTag\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "commitTag_tagID_idx_061c18c6",
+        "table": "commitTag"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"commitTag_tagID_idx_061c18c6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commitTag_tagID_idx_061c18c6\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"commitTag_tagID_idx_061c18c6\"",
+        "sql": "CREATE INDEX \"commitTag_tagID_idx_061c18c6\" ON \"public\".\"commitTag\" (\"tagID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"commitTag_tagID_idx_061c18c6\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"commitTag_tagID_idx_061c18c6\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.feedback.feedback_authorID_idx_65a4ffa8",
+    "label": "Create index \"feedback_authorID_idx_65a4ffa8\" on \"feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "feedback_authorID_idx_65a4ffa8",
+        "table": "feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"feedback_authorID_idx_65a4ffa8\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedback_authorID_idx_65a4ffa8\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"feedback_authorID_idx_65a4ffa8\"",
+        "sql": "CREATE INDEX \"feedback_authorID_idx_65a4ffa8\" ON \"public\".\"feedback\" (\"authorID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"feedback_authorID_idx_65a4ffa8\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedback_authorID_idx_65a4ffa8\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.feedback.feedback_commitHash_idx_a57efd78",
+    "label": "Create index \"feedback_commitHash_idx_a57efd78\" on \"feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "feedback_commitHash_idx_a57efd78",
+        "table": "feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"feedback_commitHash_idx_a57efd78\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedback_commitHash_idx_a57efd78\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"feedback_commitHash_idx_a57efd78\"",
+        "sql": "CREATE INDEX \"feedback_commitHash_idx_a57efd78\" ON \"public\".\"feedback\" (\"commitHash\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"feedback_commitHash_idx_a57efd78\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"feedback_commitHash_idx_a57efd78\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.fileChange.fileChange_commitHash_idx_a57efd78",
+    "label": "Create index \"fileChange_commitHash_idx_a57efd78\" on \"fileChange\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "fileChange_commitHash_idx_a57efd78",
+        "table": "fileChange"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"fileChange_commitHash_idx_a57efd78\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"fileChange_commitHash_idx_a57efd78\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"fileChange_commitHash_idx_a57efd78\"",
+        "sql": "CREATE INDEX \"fileChange_commitHash_idx_a57efd78\" ON \"public\".\"fileChange\" (\"commitHash\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"fileChange_commitHash_idx_a57efd78\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"fileChange_commitHash_idx_a57efd78\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.student.student_teamID_idx_fe196944",
+    "label": "Create index \"student_teamID_idx_fe196944\" on \"student\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "student_teamID_idx_fe196944",
+        "table": "student"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"student_teamID_idx_fe196944\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"student_teamID_idx_fe196944\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"student_teamID_idx_fe196944\"",
+        "sql": "CREATE INDEX \"student_teamID_idx_fe196944\" ON \"public\".\"student\" (\"teamID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"student_teamID_idx_fe196944\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"student_teamID_idx_fe196944\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.alert.alert_commitHash_fkey",
+    "label": "Add foreign key \"alert_commitHash_fkey\" on \"alert\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "alert_commitHash_fkey",
+        "table": "alert"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"alert_commitHash_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "alert_commitHash_fkey",
+          "public",
+          "\"public\".\"alert\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"alert_commitHash_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"alert\"\nADD CONSTRAINT \"alert_commitHash_fkey\"\nFOREIGN KEY (\"commitHash\")\nREFERENCES \"public\".\"commit\" (\"commitHash\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"alert_commitHash_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "alert_commitHash_fkey",
+          "public",
+          "\"public\".\"alert\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.alert.alert_studentID_fkey",
+    "label": "Add foreign key \"alert_studentID_fkey\" on \"alert\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "alert_studentID_fkey",
+        "table": "alert"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"alert_studentID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "alert_studentID_fkey",
+          "public",
+          "\"public\".\"alert\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"alert_studentID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"alert\"\nADD CONSTRAINT \"alert_studentID_fkey\"\nFOREIGN KEY (\"studentID\")\nREFERENCES \"public\".\"student\" (\"userID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"alert_studentID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "alert_studentID_fkey",
+          "public",
+          "\"public\".\"alert\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.commit.commit_studentID_fkey",
+    "label": "Add foreign key \"commit_studentID_fkey\" on \"commit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "commit_studentID_fkey",
+        "table": "commit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"commit_studentID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "commit_studentID_fkey",
+          "public",
+          "\"public\".\"commit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"commit_studentID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"commit\"\nADD CONSTRAINT \"commit_studentID_fkey\"\nFOREIGN KEY (\"studentID\")\nREFERENCES \"public\".\"student\" (\"userID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"commit_studentID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "commit_studentID_fkey",
+          "public",
+          "\"public\".\"commit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.commitTag.commitTag_commitHash_fkey",
+    "label": "Add foreign key \"commitTag_commitHash_fkey\" on \"commitTag\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "commitTag_commitHash_fkey",
+        "table": "commitTag"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"commitTag_commitHash_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "commitTag_commitHash_fkey",
+          "public",
+          "\"public\".\"commitTag\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"commitTag_commitHash_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"commitTag\"\nADD CONSTRAINT \"commitTag_commitHash_fkey\"\nFOREIGN KEY (\"commitHash\")\nREFERENCES \"public\".\"commit\" (\"commitHash\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"commitTag_commitHash_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "commitTag_commitHash_fkey",
+          "public",
+          "\"public\".\"commitTag\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.commitTag.commitTag_tagID_fkey",
+    "label": "Add foreign key \"commitTag_tagID_fkey\" on \"commitTag\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "commitTag_tagID_fkey",
+        "table": "commitTag"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"commitTag_tagID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "commitTag_tagID_fkey",
+          "public",
+          "\"public\".\"commitTag\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"commitTag_tagID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"commitTag\"\nADD CONSTRAINT \"commitTag_tagID_fkey\"\nFOREIGN KEY (\"tagID\")\nREFERENCES \"public\".\"tag\" (\"tagID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"commitTag_tagID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "commitTag_tagID_fkey",
+          "public",
+          "\"public\".\"commitTag\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.feedback.feedback_authorID_fkey",
+    "label": "Add foreign key \"feedback_authorID_fkey\" on \"feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "feedback_authorID_fkey",
+        "table": "feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"feedback_authorID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "feedback_authorID_fkey",
+          "public",
+          "\"public\".\"feedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"feedback_authorID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"feedback\"\nADD CONSTRAINT \"feedback_authorID_fkey\"\nFOREIGN KEY (\"authorID\")\nREFERENCES \"public\".\"user\" (\"userID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"feedback_authorID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "feedback_authorID_fkey",
+          "public",
+          "\"public\".\"feedback\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.feedback.feedback_commitHash_fkey",
+    "label": "Add foreign key \"feedback_commitHash_fkey\" on \"feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "feedback_commitHash_fkey",
+        "table": "feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"feedback_commitHash_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "feedback_commitHash_fkey",
+          "public",
+          "\"public\".\"feedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"feedback_commitHash_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"feedback\"\nADD CONSTRAINT \"feedback_commitHash_fkey\"\nFOREIGN KEY (\"commitHash\")\nREFERENCES \"public\".\"commit\" (\"commitHash\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"feedback_commitHash_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "feedback_commitHash_fkey",
+          "public",
+          "\"public\".\"feedback\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.fileChange.fileChange_commitHash_fkey",
+    "label": "Add foreign key \"fileChange_commitHash_fkey\" on \"fileChange\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "fileChange_commitHash_fkey",
+        "table": "fileChange"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"fileChange_commitHash_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "fileChange_commitHash_fkey",
+          "public",
+          "\"public\".\"fileChange\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"fileChange_commitHash_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"fileChange\"\nADD CONSTRAINT \"fileChange_commitHash_fkey\"\nFOREIGN KEY (\"commitHash\")\nREFERENCES \"public\".\"commit\" (\"commitHash\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"fileChange_commitHash_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "fileChange_commitHash_fkey",
+          "public",
+          "\"public\".\"fileChange\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.instructor.instructor_userID_fkey",
+    "label": "Add foreign key \"instructor_userID_fkey\" on \"instructor\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "instructor_userID_fkey",
+        "table": "instructor"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"instructor_userID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "instructor_userID_fkey",
+          "public",
+          "\"public\".\"instructor\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"instructor_userID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"instructor\"\nADD CONSTRAINT \"instructor_userID_fkey\"\nFOREIGN KEY (\"userID\")\nREFERENCES \"public\".\"user\" (\"userID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"instructor_userID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "instructor_userID_fkey",
+          "public",
+          "\"public\".\"instructor\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.student.student_userID_fkey",
+    "label": "Add foreign key \"student_userID_fkey\" on \"student\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "student_userID_fkey",
+        "table": "student"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"student_userID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "student_userID_fkey",
+          "public",
+          "\"public\".\"student\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"student_userID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"student\"\nADD CONSTRAINT \"student_userID_fkey\"\nFOREIGN KEY (\"userID\")\nREFERENCES \"public\".\"user\" (\"userID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"student_userID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "student_userID_fkey",
+          "public",
+          "\"public\".\"student\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.student.student_teamID_fkey",
+    "label": "Add foreign key \"student_teamID_fkey\" on \"student\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "student_teamID_fkey",
+        "table": "student"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"student_teamID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "student_teamID_fkey",
+          "public",
+          "\"public\".\"student\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"student_teamID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"student\"\nADD CONSTRAINT \"student_teamID_fkey\"\nFOREIGN KEY (\"teamID\")\nREFERENCES \"public\".\"repository\" (\"teamID\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"student_teamID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "student_teamID_fkey",
+          "public",
+          "\"public\".\"student\""
+        ]
+      }
+    ]
+  }
+]

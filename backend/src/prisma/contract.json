@@ -16,6 +16,10 @@
       "model": "CommitTag",
       "namespace": "public"
     },
+    "course": {
+      "model": "Course",
+      "namespace": "public"
+    },
     "feedback": {
       "model": "Feedback",
       "namespace": "public"
@@ -393,6 +397,73 @@
               "table": "commitTag"
             }
           },
+          "Course": {
+            "fields": {
+              "courseID": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "courseName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "courseTerm": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "instructorID": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "instructor": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "instructorID"
+                  ],
+                  "targetFields": [
+                    "userID"
+                  ]
+                },
+                "to": {
+                  "model": "Instructor",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "courseID": {
+                  "column": "courseID"
+                },
+                "courseName": {
+                  "column": "courseName"
+                },
+                "courseTerm": {
+                  "column": "courseTerm"
+                },
+                "instructorID": {
+                  "column": "instructorID"
+                }
+              },
+              "namespaceId": "public",
+              "table": "course"
+            }
+          },
           "Feedback": {
             "fields": {
               "authorID": {
@@ -413,6 +484,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "dateTime": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
                   "kind": "scalar"
                 }
               },
@@ -466,6 +544,9 @@
                 },
                 "commitHash": {
                   "column": "commitHash"
+                },
+                "dateTime": {
+                  "column": "dateTime"
                 },
                 "feedbackID": {
                   "column": "feedbackID"
@@ -563,6 +644,21 @@
               }
             },
             "relations": {
+              "courses": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "userID"
+                  ],
+                  "targetFields": [
+                    "instructorID"
+                  ]
+                },
+                "to": {
+                  "model": "Course",
+                  "namespace": "public"
+                }
+              },
               "user": {
                 "cardinality": "N:1",
                 "on": {
@@ -1156,6 +1252,69 @@
               },
               "uniques": []
             },
+            "course": {
+              "columns": {
+                "courseID": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "courseName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "courseTerm": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "instructorID": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "instructorID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "course"
+                  },
+                  "target": {
+                    "columns": [
+                      "userID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "instructor"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "instructorID"
+                  ],
+                  "name": "course_instructorID_idx_dc3c3202",
+                  "prefix": "course_instructorID_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "courseID"
+                ]
+              },
+              "uniques": []
+            },
             "feedback": {
               "columns": {
                 "authorID": {
@@ -1171,6 +1330,11 @@
                 "commitHash": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
+                  "nullable": false
+                },
+                "dateTime": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
                   "nullable": false
                 },
                 "feedbackID": {
@@ -1517,7 +1681,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "1e007f9d123be96a73b31ad198af174b0a9c99feab3fbb943cee488972ad5730"
+    "storageHash": "59f7b52cef9c750c2fe209cc4f20f6ad51789575fecc0568e4701a5d3e3ded8c"
   },
   "capabilities": {
     "postgres": {
