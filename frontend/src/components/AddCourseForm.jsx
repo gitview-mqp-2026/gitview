@@ -19,7 +19,6 @@ function AddCourseForm({ onClose, onAddCourse }) {
     const [courseName, setCourseName] = useState("");
     const [courseTerm, setCourseTerm] = useState("");
     const [githubOrg, setGithubOrg] = useState("");
-    const [repoPattern, setRepoPattern] = useState("");
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [installUrl, setInstallUrl] = useState(null);
@@ -37,7 +36,7 @@ function AddCourseForm({ onClose, onAddCourse }) {
         setError(null);
 
         try {
-            const course = await post("/api/courses", { courseName, courseTerm, githubOrg, repoPattern });
+            const course = await post("/api/courses", { courseName, courseTerm, githubOrg });
 
             // The course is saved; linking its repositories can still fail (e.g. the App isn't installed yet).
             let note = null;
@@ -71,7 +70,7 @@ function AddCourseForm({ onClose, onAddCourse }) {
                 <form onSubmit={handleSubmit}>
                     <div>
                         <label htmlFor="courseName">
-                            Course Name
+                            Course Name:
                         </label>
                         <input
                             type="text"
@@ -83,7 +82,7 @@ function AddCourseForm({ onClose, onAddCourse }) {
                         />
 
                         <label htmlFor="courseTerm">
-                            Course Term
+                            Course Term:
                         </label>
                         <input
                             type="text"
@@ -100,13 +99,15 @@ function AddCourseForm({ onClose, onAddCourse }) {
 
                         {installUrl && (
                             <p>
-                                1. <a href={installUrl} target="_blank" rel="noreferrer">Install the GitView GitHub App</a> on
-                                your organization and choose the repositories it can read. Then come back here.
+                                <strong>Step 1:</strong>{" "}
+                                <a href={installUrl} target="_blank" rel="noreferrer">Install the GitView GitHub App</a>{" "}
+                                on your organization and choose which repositories it can read.
                             </p>
                         )}
 
                         <label htmlFor="githubOrg">
-                            GitHub Organization
+                            {installUrl && <strong>Step 2: </strong>}
+                            Enter the name of the organization you installed it on:
                         </label>
                         <input
                             type="text"
@@ -115,18 +116,6 @@ function AddCourseForm({ onClose, onAddCourse }) {
                             onChange={(e) => setGithubOrg(e.target.value)}
                             placeholder="e.g. WPI-CS3733-2026C"
                             required
-                        />
-                        <p>{installUrl && "2. "}Enter the organization you installed the app on.</p>
-
-                        <label htmlFor="repoPattern">
-                            Team Repository Name Pattern (optional)
-                        </label>
-                        <input
-                            type="text"
-                            id="repoPattern"
-                            value={repoPattern}
-                            onChange={(e) => setRepoPattern(e.target.value)}
-                            placeholder="e.g. ^team-"
                         />
                     </div>
 
