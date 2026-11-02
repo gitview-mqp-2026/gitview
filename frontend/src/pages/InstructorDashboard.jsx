@@ -11,9 +11,19 @@ function InstructorDashboard() {
     const [showAddCourseForm, setShowAddCourseForm] = useState(false);
     const [courses, setCourses] = useState([]);
 
-    const handleAddCourse = (newCourse) => {
-        setCourses([...courses, newCourse]);
+    const loadCourses = () => {
+        fetch("/api/courses")
+            .then((r) => (r.ok ? r.json() : []))
+            .then(setCourses)
+            .catch(() => setCourses([]));
+    };
+
+    useEffect(loadCourses, []);
+
+    const handleAddCourse = (_course, note) => {
+        setError(note);
         setShowAddCourseForm(false);
+        loadCourses();
     }
 
     return (
@@ -27,12 +37,20 @@ function InstructorDashboard() {
                     </button>
                 </div>
 
+                {error && <p className="repo-error" role="alert">{error}</p>}
+
                 <div className="course-list">
-                    {courses.map((course, index) => (
-                        <div className="course-widget" key={index}>
+                    {courses.map((course) => (
+                        <Link
+                            className="course-widget"
+                            key={course.courseID}
+                            to={`/course/${course.courseID}`}
+                        >
                             <h2>{course.courseName}</h2>
                             <p>{course.courseTerm}</p>
-                        </div>
+                            {course.githubOrg && <p>{course.githubOrg}</p>}
+                            <p>{course.repoCount} {course.repoCount === 1 ? "team" : "teams"}</p>
+                        </Link>
                     ))}
                 </div>
 
@@ -45,10 +63,6 @@ function InstructorDashboard() {
             </div>
 
             <div className="actions">
-                <Link to="/course" className="link-button">
-                    Go to Course Dashboard
-                </Link>
-
                 <Link to="/alignment" className="link-button">
                     Go to File Alignment
                 </Link>

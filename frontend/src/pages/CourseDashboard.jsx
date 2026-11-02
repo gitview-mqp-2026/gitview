@@ -1,22 +1,90 @@
 import { useEffect, useState } from "react";
 import "../App.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar.jsx";
 
+async function post(path) {
+    const response = await fetch(path, { method: "POST" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(data.error || `Request failed (HTTP ${response.status})`);
+    }
+    return data;
+}
+
 function CourseDashboard() {
+    const { courseId } = useParams();
     const navigate = useNavigate();
     const [url, setUrl] = useState("");
     const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState(null);
     const [repos, setRepos] = useState([]);
-    const [showAddCourseForm, setShowAddCourseForm] = useState(false);
+    const [course, setCourse] = useState(null);
+    const [job, setJob] = useState(null);
+    const [syncing, setSyncing] = useState(false);
+    const [notice, setNotice] = useState(null);
 
-    useEffect(() => {
-        fetch("/api/repositories")
+    const loadRepos = () => {
+        fetch(`/api/repositories?courseId=${courseId}`)
             .then((r) => (r.ok ? r.json() : []))
             .then(setRepos)
             .catch(() => setRepos([]));
-    }, []);
+    };
+
+    useEffect(() => {
+        fetch("/api/courses")
+            .then((r) => (r.ok ? r.json() : []))
+            .then((courses) => setCourse(courses.find((c) => String(c.courseID) === courseId) ?? null))
+            .catch(() => setCourse(null));
+        fetch(`/api/courses/${courseId}/ingest`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then(setJob)
+            .catch(() => setJob(null));
+        loadRepos();
+    }, [courseId]);
+
+    // While an ingest runs, poll its progress and refresh the repo widgets as commits arrive.
+    useEffect(() => {
+        if (job?.status !== "running") return undefined;
+        const timer = setInterval(() => {
+            fetch(`/api/courses/${courseId}/ingest`)
+                .then((r) => r.json())
+                .then((next) => {
+                    setJob(next);
+                    loadRepos();
+                })
+                .catch(() => {});
+        }, 3000);
+        return () => clearInterval(timer);
+    }, [job?.status, courseId]);
+
+    const syncRepos = async () => {
+        setSyncing(true);
+        setError(null);
+        setNotice(null);
+        try {
+            const result = await post(`/api/courses/${courseId}/sync`);
+            setNotice(`Found ${result.matched} team repositories (${result.created} new).`);
+            loadRepos();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSyncing(false);
+        }
+    };
+
+    const ingestAll = async () => {
+        setError(null);
+        setNotice(null);
+        try {
+            setJob(await post(`/api/courses/${courseId}/ingest`));
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const running = job?.status === "running";
+    const failed = job?.results?.filter((r) => !r.ok) ?? [];
 
     const analyze = async (event) => {
         event.preventDefault();
@@ -48,7 +116,31 @@ function CourseDashboard() {
                 <Link to="/" className="back-link">← All Courses</Link>
             </div>
                     
-            <div className="actions">
+            <div className="course-page">
+                <div className="course-header">
+                    <div>
+                        {course && <h1>{course.courseName}</h1>}
+                        {course && <p>{course.courseTerm}{course.githubOrg && ` · ${course.githubOrg}`}</p>}
+                    </div>
+
+                    <div className="course-actions">
+                        <button className="repo-button" type="button" onClick={syncRepos} disabled={syncing || running}>
+                            {syncing ? "Syncing..." : "Sync from GitHub"}
+                        </button>
+                        <button className="repo-button" type="button" onClick={ingestAll} disabled={syncing || running || repos.length === 0}>
+                            {running ? `Ingesting ${job.completed} / ${job.total}...` : "Ingest all"}
+                        </button>
+                    </div>
+                </div>
+
+                {notice && <p className="course-status">{notice}</p>}
+                {job?.status === "done" && (
+                    <p className="course-status">
+                        Last ingest finished: {job.results.length - failed.length} of {job.results.length} repositories
+                        {failed.length > 0 && `, ${failed.length} failed`}.
+                    </p>
+                )}
+
                 <form className="analyze-repo" onSubmit={analyze}>
                     <input
                         className="repo-input"
@@ -69,7 +161,7 @@ function CourseDashboard() {
 
                 {repos.length > 0 && (
                     <section className="repo-widgets">
-                        <h2>Analyzed repositories</h2>
+                        <h2>Team repositories</h2>
 
                         <div className="repo-widget-grid">
                             {repos.map((repo) => (

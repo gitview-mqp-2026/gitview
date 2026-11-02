@@ -958,3 +958,97 @@ a {
     justify-content: flex-end;
     width: 100%;
 }
+
+.course-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.course-status {
+    margin: 0.5rem 0;
+    opacity: 0.8;
+}
+
+
+/* Course dashboard: top-aligned so the team widgets are in view, four columns wide. */
+.course-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 0 30px 30px;
+}
+
+.course-page > * {
+    width: min(1400px, 100%);
+}
+
+.course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+}
+
+.course-header h1 {
+    margin: 0;
+}
+
+.course-header p {
+    margin: 2px 0 0;
+}
+
+.course-page .course-actions {
+    margin: 0;
+}
+
+.course-page .course-status {
+    margin: 0;
+}
+
+.course-page .analyze-repo {
+    margin: 0;
+}
+
+.course-page .repo-widgets {
+    width: min(1400px, 100%);
+}
+
+.course-page .repo-widgets h2 {
+    margin: 0 0 12px;
+}
+
+.course-page .repo-widget-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.course-page .repo-widget {
+    min-height: 120px;
+    padding: 22px;
+    gap: 8px;
+}
+
+.course-page .repo-widget strong {
+    font-size: 17px;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+    .course-page .repo-widget-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 800px) {
+    .course-page .repo-widget-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .course-page .repo-widget-grid {
+        grid-template-columns: 1fr;
+    }
+}
