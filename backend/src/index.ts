@@ -106,5 +106,40 @@ app.get('/api/commits/:hash/files', async (req, res) => {
   }
 });
 
+// endpoints for add course form
+// get all courses for an instructor
+app.get('/api/courses', async (req, res) => {
+  try {
+    const instructorID = Number(req.query.instructorId ?? 6); // default 6 for now
+
+    const courses = await db.orm.public.Course
+      .where({ instructorID })
+      .all();
+
+    res.json(courses);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to retrieve courses' });
+  }
+});
+
+// create a new course
+app.post('/api/courses', async (req, res) => {
+  try {
+    const { courseName, courseTerm } = req.body;
+
+    const course = await db.orm.public.Course.create({ 
+      courseName: courseName.trim(), 
+      courseTerm: courseTerm.trim(),
+      instructorID: 6, // default 6 for now
+    });
+
+    res.status(201).json(course);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create course' });
+  }
+});
+
 const PORT = process.env.PORT ?? 3001;
 app.listen(PORT, () => console.log(`API running on :${PORT}`));

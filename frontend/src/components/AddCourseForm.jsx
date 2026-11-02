@@ -5,14 +5,25 @@ import "./AddCourseForm.css";
 function AddCourseForm({ onClose, onAddCourse }) {
     const [courseName, setCourseName] = useState("");
     const [courseTerm, setCourseTerm] = useState("");
-    
-    const handleSubmit = (e) => {
+    const [error, setError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
+        setIsSubmitting(true);
 
-        onAddCourse({ courseName, courseTerm });
+        try {
+            await onAddCourse({ courseName, courseTerm });
 
-        setCourseName("");
-        setCourseTerm("");
+            setCourseName("");
+            setCourseTerm("");
+            onClose();
+        } catch (err) {
+            setError(err.message || "Failed to add course.");
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -61,12 +72,14 @@ function AddCourseForm({ onClose, onAddCourse }) {
                         {/* to be implemented */}
                     </div>
 
+                    {error && <p className="error-message">{error}</p>}
+
                     <div className="popup-actions">
                         <button type="button" onClick={onClose}>
                             Cancel
                         </button>
-                        <button type="submit">
-                            Add Course
+                        <button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "Adding..." : "Add Course"}
                         </button>
                     </div>
                 </form>
