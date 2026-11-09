@@ -1,0 +1,122 @@
+[
+  {
+    "id": "table.repositoryDirectoryLabel",
+    "label": "Create table \"repositoryDirectoryLabel\"",
+    "summary": "Creates table \"repositoryDirectoryLabel\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "repositoryDirectoryLabel"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"repositoryDirectoryLabel\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryDirectoryLabel\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"repositoryDirectoryLabel\"",
+        "sql": "CREATE TABLE \"public\".\"repositoryDirectoryLabel\" (\n  \"category\" text NOT NULL,\n  \"path\" text NOT NULL,\n  \"teamID\" int4 NOT NULL,\n  PRIMARY KEY (\"teamID\", \"path\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"repositoryDirectoryLabel\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryDirectoryLabel\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.repositoryDirectoryLabel.repositoryDirectoryLabel_teamID_idx_fe196944",
+    "label": "Create index \"repositoryDirectoryLabel_teamID_idx_fe196944\" on \"repositoryDirectoryLabel\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "repositoryDirectoryLabel_teamID_idx_fe196944",
+        "table": "repositoryDirectoryLabel"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"repositoryDirectoryLabel_teamID_idx_fe196944\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryDirectoryLabel_teamID_idx_fe196944\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"repositoryDirectoryLabel_teamID_idx_fe196944\"",
+        "sql": "CREATE INDEX \"repositoryDirectoryLabel_teamID_idx_fe196944\" ON \"public\".\"repositoryDirectoryLabel\" (\"teamID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"repositoryDirectoryLabel_teamID_idx_fe196944\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryDirectoryLabel_teamID_idx_fe196944\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.repositoryDirectoryLabel.repositoryDirectoryLabel_teamID_fkey",
+    "label": "Add foreign key \"repositoryDirectoryLabel_teamID_fkey\" on \"repositoryDirectoryLabel\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "repositoryDirectoryLabel_teamID_fkey",
+        "table": "repositoryDirectoryLabel"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"repositoryDirectoryLabel_teamID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repositoryDirectoryLabel_teamID_fkey",
+          "public",
+          "\"public\".\"repositoryDirectoryLabel\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"repositoryDirectoryLabel_teamID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"repositoryDirectoryLabel\"\nADD CONSTRAINT \"repositoryDirectoryLabel_teamID_fkey\"\nFOREIGN KEY (\"teamID\")\nREFERENCES \"public\".\"repository\" (\"teamID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"repositoryDirectoryLabel_teamID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repositoryDirectoryLabel_teamID_fkey",
+          "public",
+          "\"public\".\"repositoryDirectoryLabel\""
+        ]
+      }
+    ]
+  }
+]

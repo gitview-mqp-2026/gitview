@@ -27,3 +27,9 @@ frontend.
 Auth0 must have database sign-ups enabled for the **Create an account** action
 to work. If the application is invite-only, remove that button or disable
 sign-ups in Auth0.
+
+## Prototype API authorization
+
+Repository file labels are currently a local prototype. The React routes require
+an Auth0 login, but the backend does not yet validate access tokens or instructor roles.
+Do not deploy the file-label write endpoints until the API enforces both checks.

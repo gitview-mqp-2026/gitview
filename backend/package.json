@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "tsx --test src/lib/repositoryTree.test.ts src/lib/fileLabels.test.ts",
     "dev": "tsx watch src/index.ts",
     "contract:emit": "prisma contract emit",
     "ingest": "tsx src/scripts/ingest-git-log.ts"
@@ -14,7 +14,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@prisma/orm-postgres": "^8.0.0-rc.9",
+    "@prisma/orm-postgres": "8.0.0-rc.9",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -24,11 +24,13 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^22.20.2",
-    "prisma": "^8.0.0-rc.10",
+    "prisma": "8.0.0-rc.10",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   },
   "allowScripts": {
-    "esbuild@0.28.2": true
+    "esbuild@0.28.2": true,
+    "msgpackr-extract@3.0.4": true,
+    "workerd@1.20260704.1": true
   }
 }

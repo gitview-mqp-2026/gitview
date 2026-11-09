@@ -59,7 +59,6 @@ model Feedback {
   feedbackID        Int           @id @default(autoincrement())
   comment           String
   authorID          Int
-  dateTime          DateTime
   author            User          @relation(fields: [authorID], references: [userID], onDelete: Cascade)
   commitHash        String
   commit            Commit        @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
@@ -79,6 +78,26 @@ model Repository {
   url               String
   name              String
   students          Student[]
+  directoryLabels   RepositoryDirectoryLabel[]
+  fileLabels        RepositoryFileLabel[]
+}
+
+model RepositoryDirectoryLabel {
+  teamID             Int
+  path               String
+  category           String
+  repository         Repository   @relation(fields: [teamID], references: [teamID], onDelete: Cascade)
+
+  @@id([teamID, path])
+}
+
+model RepositoryFileLabel {
+  teamID             Int
+  path               String
+  category           String
+  repository         Repository   @relation(fields: [teamID], references: [teamID], onDelete: Cascade)
+
+  @@id([teamID, path])
 }
 
 model Alert {
