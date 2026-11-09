@@ -21,6 +21,35 @@ interface ParsedCommit {
   fileChanges: ParsedFileChange[];
 }
 
+function usernameFromEmail(email: string): string | null {
+  const match = email.trim().match(
+    /^(?:\d+\+)?([^@]+)@users\.noreply\.github\.com$/i
+  );
+
+  return match ? match[1].toLowerCase() : null;
+}
+
+function isBotAuthor(name: string, email: string): boolean {
+  const username = usernameFromEmail(email);
+
+  return (
+    /\[bot\]/i.test(name) ||
+    /\[bot\]/i.test(email) ||
+    (username !== null && /\[bot\]$/i.test(username)) ||
+    /^(github-actions|github-classroom|dependabot)(?:\[bot\])?$/i.test(
+      username ?? ''
+    )
+  );
+}
+
+function normalizeIdentity(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function normalizeName(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
 export interface IngestResult {
   teamID: number;
   parsed: number;
@@ -100,40 +129,136 @@ export async function ingestRepo(opts: {
   }
   const teamID = repo.teamID;
 
-  // Every Commit needs a Student, and every Student needs a User, so build both from commit authors.
-  const studentIdByEmail = new Map<string, number>();
+    // Load existing users and students for this team.
+  const existingUsers = await db.orm.public.User
+    .select('userID', 'email', 'username', 'name')
+    .all();
+
+  const existingStudents = await db.orm.public.Student
+    .select('userID', 'teamID')
+    .all();
+
+  const studentsOnTeam: {
+    userID: number;
+    email: string;
+    username: string | null;
+    name: string | null;
+  }[] = existingStudents
+    .filter((student) => student.teamID === teamID)
+    .flatMap((student) => {
+      const user = existingUsers.find(
+        (u) => u.userID === student.userID
+      );
+
+      return user ? [user] : [];
+    });
+
+  const studentIdByIdentity = new Map<string, number>();
+
   async function studentIdFor(email: string, name: string): Promise<number> {
-    const key = email || `${name}@unknown`;
-    const cached = studentIdByEmail.get(key);
+    const githubUsername = usernameFromEmail(email);
+    const emailIdentity = normalizeIdentity(email.split('@')[0]);
+    const authorName = normalizeName(name);
+
+    const cacheKey = githubUsername
+      ? `github:${githubUsername}`
+      : `email:${email.toLowerCase()}`;
+
+    const cached = studentIdByIdentity.get(cacheKey);
     if (cached !== undefined) return cached;
 
-    let user = await db.orm.public.User.where({ email: key }).first();
-    let student = user ? await db.orm.public.Student.where({ userID: user.userID }).first() : null;
+    // First, match by GitHub username.
+    let matches = githubUsername
+      ? studentsOnTeam.filter(
+          (student) =>
+            student.username?.toLowerCase() === githubUsername ||
+            usernameFromEmail(student.email) === githubUsername
+        )
+      : [];
 
-    // Student.userID is the primary key, so a user can be on only one team. When this author is
-    // already on another team, give them a per-team identity rather than moving their commits.
-    if (user && student && student.teamID !== teamID) {
-      const scoped = `${key}#team${teamID}`;
-      user = (await db.orm.public.User.where({ email: scoped }).first())
-        ?? (await db.orm.public.User.create({ email: scoped, name }));
-      student = await db.orm.public.Student.where({ userID: user.userID }).first();
-    } else if (!user) {
-      user = await db.orm.public.User.create({ email: key, name });
+    // If there is no username match, compare the email prefix
+    // against existing GitHub usernames.
+    if (matches.length === 0 && emailIdentity) {
+      matches = studentsOnTeam.filter(
+        (student) =>
+          student.username &&
+          normalizeIdentity(student.username) === emailIdentity
+      );
     }
+
+    // Finally, use the author name only if there is one unique match.
+    if (matches.length === 0 && authorName) {
+      matches = studentsOnTeam.filter(
+        (student) =>
+          student.name &&
+          normalizeName(student.name) === authorName
+      );
+    }
+
+    if (matches.length === 1) {
+      const matchedUser = matches[0];
+
+      // Save a newly discovered GitHub username.
+      if (githubUsername && !matchedUser.username) {
+        await db.orm.public.User.update(
+          { userID: matchedUser.userID },
+          { username: githubUsername }
+        );
+
+        matchedUser.username = githubUsername;
+      }
+
+      studentIdByIdentity.set(cacheKey, matchedUser.userID);
+      return matchedUser.userID;
+    }
+
+    // No unique match: create or reuse a user by email.
+    const key = email || `${name}@unknown`;
+
+    let user = await db.orm.public.User.where({ email: key }).first();
+
+    if (!user) {
+      user = await db.orm.public.User.create({
+        email: key,
+        name,
+        username: githubUsername,
+      });
+    }
+
+    let student = await db.orm.public.Student
+      .where({ userID: user.userID })
+      .first();
 
     if (!student) {
-      await db.orm.public.Student.create({ userID: user.userID, teamID });
+      await db.orm.public.Student.create({
+        userID: user.userID,
+        teamID,
+      });
     }
-    studentIdByEmail.set(key, user.userID);
+
+    studentIdByIdentity.set(cacheKey, user.userID);
+
+    studentsOnTeam.push({
+      ...user,
+      username: user.username ?? githubUsername,
+    });
+
     return user.userID;
   }
 
   // commitHash is the global primary key, so dedupe against every stored commit, not just this repo's.
+  const humanCommits = commits.filter(
+  (commit) => !isBotAuthor(commit.author, commit.authorEmail)
+  );
+
   const existingHashes = new Set(
     (await db.orm.public.Commit.select('commitHash').all()).map((c) => c.commitHash)
   );
-  const newCommits = commits.filter((c) => !existingHashes.has(c.commitHash));
 
+  const newCommits = humanCommits.filter(
+    (commit) => !existingHashes.has(commit.commitHash)
+  );
+  
   for (const commit of newCommits) {
     const studentID = await studentIdFor(commit.authorEmail, commit.author);
 

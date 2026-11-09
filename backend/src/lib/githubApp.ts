@@ -16,6 +16,13 @@ export interface InstallationRepo {
   archived: boolean;
 }
 
+export interface GithubOrgMember {
+  id: number;
+  login: string;
+  avatarUrl: string;
+  htmlUrl: string;
+}
+
 // The App's identity is a short-lived JWT signed with its private key; it is only used to ask for installation tokens.
 function appJwt(): string {
   const appId = process.env['GITHUB_APP_ID'];
@@ -86,6 +93,45 @@ export async function listInstallationRepos(token: string): Promise<Installation
     }>(`/installation/repositories?per_page=100&page=${page}`, token);
     repos.push(...body.repositories.map((r) => ({ id: r.id, fullName: r.full_name, htmlUrl: r.html_url, archived: r.archived })));
     if (body.repositories.length < 100) return repos;
+  }
+}
+
+// List all members of an organization. 
+export async function listOrganizationMembers(
+  org: string,
+  token: string
+): Promise<GithubOrgMember[]> {
+  const members: GithubOrgMember[] = [];
+
+  for (let page = 1; ; page++) {
+    const body = await github<
+      {
+        id: number;
+        login: string;
+        avatar_url: string;
+        html_url: string;
+      }[]
+    >(
+      `/orgs/${encodeURIComponent(org)}/members?filter=all&per_page=100&page=${page}`,
+      token
+    );
+
+    console.log('GitHub members API response:', {
+      page,
+      count: body.length,
+      firstMember: body[0],
+    });
+
+    members.push(
+      ...body.map((member) => ({
+        id: member.id,
+        login: member.login,
+        avatarUrl: member.avatar_url,
+        htmlUrl: member.html_url,
+      }))
+    );
+
+    if (body.length < 100) return members;
   }
 }
 
