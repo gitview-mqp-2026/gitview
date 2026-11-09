@@ -373,6 +373,9 @@ app.get('/courses/:courseId/roster', async (req, res) => {
 
     const repositories = await db.orm.public.Repository.where({ courseID }).all();
     const teamIDs = new Set(repositories.map((repo) => repo.teamID));
+    const teamNamesById = new Map(
+      repositories.map((repo) => [repo.teamID, repo.name])
+    );
 
     const [students, users] = await Promise.all([
       db.orm.public.Student.all(),
@@ -395,6 +398,7 @@ app.get('/courses/:courseId/roster', async (req, res) => {
             email: user?.email ?? null,
             username: user?.username ?? null,
             teamID: student.teamID,
+            teamName: teamNamesById.get(student.teamID) ?? null,
             role: 'Student',
           });
         }
