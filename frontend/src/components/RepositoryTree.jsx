@@ -1,15 +1,47 @@
 import { useCallback, useState } from "react";
+import { inheritedDirectoryCategory } from "../utils/fileLabels.js";
+
+function CategoryEditor({ paletteId, path, categories, directCategory, inheritedCategory, saving, error, onCategoryChange }) {
+    return (
+        <div className="tree-file-editor">
+            <div id={paletteId} className="tree-tag-palette" role="group" aria-label={`Category for ${path}`}>
+                <button
+                    type="button"
+                    aria-pressed={!directCategory}
+                    disabled={saving}
+                    onClick={() => onCategoryChange("")}
+                >
+                    {inheritedCategory ? "Use inherited" : "Unlabeled"}
+                </button>
+                {categories.map((choice) => (
+                    <button
+                        key={choice}
+                        type="button"
+                        aria-pressed={directCategory === choice}
+                        disabled={saving}
+                        onClick={() => onCategoryChange(choice)}
+                    >
+                        {choice}
+                    </button>
+                ))}
+            </div>
+            {saving && <span className="tree-save-status" role="status">Saving…</span>}
+            {error && <span className="tree-save-error" role="alert">{error}</span>}
+        </div>
+    );
+}
 
 function TreeNode({
     node,
     categories,
-    labelsByPath,
+    fileLabelsByPath,
+    directoryLabelsByPath,
     savingPaths,
     labelErrors,
     expandedPaths,
-    activeFilePath,
+    activePath,
     onDirectoryToggle,
-    onFileToggle,
+    onEntryToggle,
     onCategoryChange,
 }) {
     if (node.kind === "submodule") {
@@ -23,8 +55,10 @@ function TreeNode({
     }
 
     if (node.kind === "file") {
-        const category = labelsByPath.get(node.path) ?? "";
-        const active = activeFilePath === node.path;
+        const directCategory = fileLabelsByPath.get(node.path) ?? "";
+        const inheritedCategory = inheritedDirectoryCategory(directoryLabelsByPath, node.path);
+        const category = directCategory || inheritedCategory;
+        const active = activePath === node.path;
         const saving = savingPaths.has(node.path);
         const error = labelErrors.get(node.path);
         const paletteId = `file-category-${encodeURIComponent(node.path)}`;
@@ -39,7 +73,7 @@ function TreeNode({
                         aria-expanded={active}
                         aria-controls={active ? paletteId : undefined}
                         disabled={saving}
-                        onClick={() => onFileToggle(node.path)}
+                        onClick={() => onEntryToggle(node.path)}
                     >
                         <span className="tree-file-name">{node.name}</span>
                         <span className="sr-only">
@@ -50,44 +84,66 @@ function TreeNode({
                 </div>
 
                 {active && (
-                    <div className="tree-file-editor">
-                        <div id={paletteId} className="tree-tag-palette" role="group" aria-label={`Category for ${node.path}`}>
-                            <button
-                                type="button"
-                                aria-pressed={!category}
-                                disabled={saving}
-                                onClick={() => onCategoryChange(node.path, "")}
-                            >
-                                Unlabeled
-                            </button>
-                            {categories.map((choice) => (
-                                <button
-                                    key={choice}
-                                    type="button"
-                                    aria-pressed={category === choice}
-                                    disabled={saving}
-                                    onClick={() => onCategoryChange(node.path, choice)}
-                                >
-                                    {choice}
-                                </button>
-                            ))}
-                        </div>
-                        {saving && <span className="tree-save-status" role="status">Saving…</span>}
-                        {error && <span className="tree-save-error" role="alert">{error}</span>}
-                    </div>
+                    <CategoryEditor
+                        paletteId={paletteId}
+                        path={node.path}
+                        categories={categories}
+                        directCategory={directCategory}
+                        inheritedCategory={inheritedCategory}
+                        saving={saving}
+                        error={error}
+                        onCategoryChange={(choice) => onCategoryChange("file", node.path, choice)}
+                    />
                 )}
             </li>
         );
     }
 
+    const directCategory = directoryLabelsByPath.get(node.path) ?? "";
+    const inheritedCategory = inheritedDirectoryCategory(directoryLabelsByPath, node.path);
+    const category = directCategory || inheritedCategory;
     const expanded = expandedPaths.has(node.path);
+    const active = activePath === node.path;
+    const saving = savingPaths.has(node.path);
+    const error = labelErrors.get(node.path);
+    const paletteId = `directory-category-${encodeURIComponent(node.path)}`;
+
     return (
         <li className="tree-directory">
             <details
                 open={expanded}
                 onToggle={(event) => onDirectoryToggle(node.path, event.currentTarget.open)}
             >
-                <summary>{node.name}</summary>
+                <summary>
+                    <span>{node.name}</span>
+                    {category && <span className="file-category-badge">{category}</span>}
+                    <span className="sr-only">
+                        {category ? `, categorized as ${category}` : ", uncategorized"}
+                    </span>
+                </summary>
+                <div className="tree-directory-toolbar">
+                    <button
+                        type="button"
+                        aria-expanded={active}
+                        aria-controls={active ? paletteId : undefined}
+                        disabled={saving}
+                        onClick={() => onEntryToggle(node.path)}
+                    >
+                        Tag directory
+                    </button>
+                </div>
+                {active && (
+                    <CategoryEditor
+                        paletteId={paletteId}
+                        path={node.path}
+                        categories={categories}
+                        directCategory={directCategory}
+                        inheritedCategory={inheritedCategory}
+                        saving={saving}
+                        error={error}
+                        onCategoryChange={(choice) => onCategoryChange("directory", node.path, choice)}
+                    />
+                )}
                 {expanded && (
                     <ul>
                         {node.children.map((child) => (
@@ -95,13 +151,14 @@ function TreeNode({
                                 key={child.path}
                                 node={child}
                                 categories={categories}
-                                labelsByPath={labelsByPath}
+                                fileLabelsByPath={fileLabelsByPath}
+                                directoryLabelsByPath={directoryLabelsByPath}
                                 savingPaths={savingPaths}
                                 labelErrors={labelErrors}
                                 expandedPaths={expandedPaths}
-                                activeFilePath={activeFilePath}
+                                activePath={activePath}
                                 onDirectoryToggle={onDirectoryToggle}
-                                onFileToggle={onFileToggle}
+                                onEntryToggle={onEntryToggle}
                                 onCategoryChange={onCategoryChange}
                             />
                         ))}
@@ -112,9 +169,17 @@ function TreeNode({
     );
 }
 
-function RepositoryTree({ nodes, categories, labelsByPath, savingPaths, labelErrors, onCategoryChange }) {
+function RepositoryTree({
+    nodes,
+    categories,
+    fileLabelsByPath,
+    directoryLabelsByPath,
+    savingPaths,
+    labelErrors,
+    onCategoryChange,
+}) {
     const [expandedPaths, setExpandedPaths] = useState(() => new Set());
-    const [activeFilePath, setActiveFilePath] = useState(null);
+    const [activePath, setActivePath] = useState(null);
 
     const handleDirectoryToggle = useCallback((path, expanded) => {
         setExpandedPaths((current) => {
@@ -126,8 +191,8 @@ function RepositoryTree({ nodes, categories, labelsByPath, savingPaths, labelErr
         });
     }, []);
 
-    const handleFileToggle = useCallback((path) => {
-        setActiveFilePath((current) => current === path ? null : path);
+    const handleEntryToggle = useCallback((path) => {
+        setActivePath((current) => current === path ? null : path);
     }, []);
 
     if (nodes.length === 0) return <p>This branch has no tracked files.</p>;
@@ -139,13 +204,14 @@ function RepositoryTree({ nodes, categories, labelsByPath, savingPaths, labelErr
                     key={node.path}
                     node={node}
                     categories={categories}
-                    labelsByPath={labelsByPath}
+                    fileLabelsByPath={fileLabelsByPath}
+                    directoryLabelsByPath={directoryLabelsByPath}
                     savingPaths={savingPaths}
                     labelErrors={labelErrors}
                     expandedPaths={expandedPaths}
-                    activeFilePath={activeFilePath}
+                    activePath={activePath}
                     onDirectoryToggle={handleDirectoryToggle}
-                    onFileToggle={handleFileToggle}
+                    onEntryToggle={handleEntryToggle}
                     onCategoryChange={onCategoryChange}
                 />
             ))}

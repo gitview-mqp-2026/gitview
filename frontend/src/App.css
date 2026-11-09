@@ -429,6 +429,14 @@ button:hover {
     overflow-wrap: anywhere;
 }
 
+.tree-directory summary .file-category-badge {
+    margin-left: 8px;
+}
+
+.tree-directory-toolbar {
+    margin: 0 4px 4px 20px;
+}
+
 .tree-file,
 .tree-submodule {
     min-width: 0;
@@ -538,7 +546,8 @@ button:hover {
 }
 
 .tree-tag-palette button:disabled,
-.category-paths button:disabled {
+.category-paths button:disabled,
+.tree-directory-toolbar button:disabled {
     opacity: 0.6;
     cursor: wait;
 }
@@ -572,13 +581,22 @@ button:hover {
     overflow-wrap: anywhere;
 }
 
-.category-paths button {
+.category-paths button,
+.tree-directory-toolbar button {
     padding: 4px 8px;
     color: white;
     background-color: #182b43;
     border: 1px solid #7186a1;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.path-kind {
+    padding: 2px 6px;
+    color: #9fb3cc;
+    border: 1px solid #536b88;
+    border-radius: 999px;
+    font-size: 11px;
 }
 
 .missing-path {

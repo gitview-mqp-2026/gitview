@@ -11,7 +11,7 @@ import {
   parseFilePath,
   parseTeamId,
 } from './lib/fileLabels.js';
-import { filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
+import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged } from './lib/stats.js';
 import { CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import { GithubAppError, installUrl } from './lib/githubApp.js';
@@ -112,11 +112,13 @@ app.get('/repositories/:teamId/tree', async (req, res) => {
       return;
     }
 
-    const [tree, labels] = await Promise.all([
+    const [tree, labels, directoryLabels] = await Promise.all([
       readRepositoryTree(repo.url),
       db.orm.public.RepositoryFileLabel.where({ teamID }).all(),
+      db.orm.public.RepositoryDirectoryLabel.where({ teamID }).all(),
     ]);
     const presentPaths = filePaths(tree.nodes);
+    const presentDirectoryPaths = directoryPaths(tree.nodes);
     res.json({
       ...tree,
       categories: FILE_CATEGORIES,
@@ -124,6 +126,11 @@ app.get('/repositories/:teamId/tree', async (req, res) => {
         path: label.path,
         category: normalizeFileCategory(label.category) ?? label.category,
         present: presentPaths.has(label.path),
+      })),
+      directoryLabels: directoryLabels.map((label) => ({
+        path: label.path,
+        category: normalizeFileCategory(label.category) ?? label.category,
+        present: presentDirectoryPaths.has(label.path),
       })),
     });
   } catch (err) {
@@ -196,6 +203,66 @@ app.delete('/repositories/:teamId/file-labels', async (req, res) => {
   }
 });
 
+app.put('/repositories/:teamId/directory-labels', async (req, res) => {
+  try {
+    const teamID = parseTeamId(req.params.teamId);
+    const input = parseFileLabelInput(req.body);
+    if (!teamID || !input) {
+      res.status(400).json({ error: 'Enter a valid directory path and category.' });
+      return;
+    }
+
+    const repo = await db.orm.public.Repository.where({ teamID }).first();
+    if (!repo) {
+      res.status(404).json({ error: 'Repository not found' });
+      return;
+    }
+
+    const tree = await readRepositoryTree(repo.url);
+    if (!directoryPaths(tree.nodes).has(input.path)) {
+      res.status(404).json({ error: 'Directory not found on the repository default branch.' });
+      return;
+    }
+
+    await db.orm.public.RepositoryDirectoryLabel.upsert({
+      create: { teamID, ...input },
+      update: { category: input.category },
+    });
+    res.json({ ...input, present: true });
+  } catch (err) {
+    if (err instanceof RepositoryTreeError) {
+      res.status(err.status).json({ error: err.message });
+    } else {
+      console.error(err);
+      res.status(500).json({ error: 'Something went wrong saving that directory label.' });
+    }
+  }
+});
+
+app.delete('/repositories/:teamId/directory-labels', async (req, res) => {
+  try {
+    const teamID = parseTeamId(req.params.teamId);
+    const path = parseFilePath(req.query.path);
+    if (!teamID || !path) {
+      res.status(400).json({ error: 'Enter a valid directory path.' });
+      return;
+    }
+
+    const repo = await db.orm.public.Repository.where({ teamID }).first();
+    if (!repo) {
+      res.status(404).json({ error: 'Repository not found' });
+      return;
+    }
+
+    const labels = db.orm.public.RepositoryDirectoryLabel.where({ teamID, path });
+    if (await labels.first()) await labels.delete();
+    res.status(204).end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong removing that directory label.' });
+  }
+});
+
 // Optional ?teamId= narrows to commits written by that team's students.
 app.get('/commits', async (req, res) => {
   try {
@@ -207,13 +274,14 @@ app.get('/commits', async (req, res) => {
     const teamID = Number(req.query.teamId);
     const commits = (await commitsForTeam(teamID)).commits;
     const commitHashes = new Set(commits.map((commit) => commit.commitHash));
-    const [labels, fileChanges] = await Promise.all([
+    const [labels, directoryLabels, fileChanges] = await Promise.all([
       db.orm.public.RepositoryFileLabel.where({ teamID }).all(),
+      db.orm.public.RepositoryDirectoryLabel.where({ teamID }).all(),
       commitHashes.size === 0
         ? Promise.resolve([])
         : db.orm.public.FileChange.where((change) => change.commitHash.in([...commitHashes])).all(),
     ]);
-    const tagsByHash = commitTagsByHash(labels, fileChanges);
+    const tagsByHash = commitTagsByHash(labels, directoryLabels, fileChanges);
     res.json(commits.map((commit) => ({ ...commit, tags: tagsByHash.get(commit.commitHash) ?? [] })));
   } catch (err) {
     res.status(500).json({ error: String(err) });

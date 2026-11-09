@@ -82,19 +82,25 @@ function TeamDashboard() {
         };
     }, [teamId]);
 
-    const labelsByPath = useMemo(
+    const fileLabelsByPath = useMemo(
         () => new Map((tree?.labels ?? []).map((label) => [label.path, label.category])),
         [tree],
     );
+    const directoryLabelsByPath = useMemo(
+        () => new Map((tree?.directoryLabels ?? []).map((label) => [label.path, label.category])),
+        [tree],
+    );
 
-    const saveFileCategory = async (path, category) => {
+    const saveCategory = async (labelType, path, category) => {
         if (!tree || savingPaths.has(path)) return;
 
-        const previousLabel = tree.labels.find((label) => label.path === path) ?? null;
+        const labelsKey = labelType === "directory" ? "directoryLabels" : "labels";
+        const endpoint = labelType === "directory" ? "directory-labels" : "file-labels";
+        const previousLabel = (tree[labelsKey] ?? []).find((label) => label.path === path) ?? null;
         const optimisticLabel = category ? { path, category, present: true } : null;
         setTree((current) => current && ({
             ...current,
-            labels: replaceFileLabel(current.labels, path, optimisticLabel),
+            [labelsKey]: replaceFileLabel(current[labelsKey] ?? [], path, optimisticLabel),
         }));
         setSavingPaths((current) => new Set(current).add(path));
         setLabelErrors((current) => {
@@ -105,12 +111,12 @@ function TeamDashboard() {
 
         try {
             const response = category
-                ? await fetch(`/repositories/${teamId}/file-labels`, {
+                ? await fetch(`/repositories/${teamId}/${endpoint}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ path, category }),
                 })
-                : await fetch(`/repositories/${teamId}/file-labels?${new URLSearchParams({ path })}`, {
+                : await fetch(`/repositories/${teamId}/${endpoint}?${new URLSearchParams({ path })}`, {
                     method: "DELETE",
                 });
             const data = response.status === 204 ? null : await response.json().catch(() => ({}));
@@ -118,7 +124,7 @@ function TeamDashboard() {
             if (data) {
                 setTree((current) => current && ({
                     ...current,
-                    labels: replaceFileLabel(current.labels, path, data),
+                    [labelsKey]: replaceFileLabel(current[labelsKey] ?? [], path, data),
                 }));
             }
             getJson(`/commits?teamId=${teamId}`)
@@ -130,7 +136,7 @@ function TeamDashboard() {
         } catch (err) {
             setTree((current) => current && ({
                 ...current,
-                labels: replaceFileLabel(current.labels, path, previousLabel),
+                [labelsKey]: replaceFileLabel(current[labelsKey] ?? [], path, previousLabel),
             }));
             setLabelErrors((current) => new Map(current).set(path, err.message));
         } finally {
@@ -215,10 +221,11 @@ function TeamDashboard() {
                             key={tree.commitHash}
                             nodes={tree.nodes}
                             categories={tree.categories}
-                            labelsByPath={labelsByPath}
+                            fileLabelsByPath={fileLabelsByPath}
+                            directoryLabelsByPath={directoryLabelsByPath}
                             savingPaths={savingPaths}
                             labelErrors={labelErrors}
-                            onCategoryChange={saveFileCategory}
+                            onCategoryChange={saveCategory}
                         />
                     )}
                 </div>
@@ -383,13 +390,20 @@ function TeamDashboard() {
                         <thead>
                             <tr>
                                 <th>Category</th>
-                                <th>Directly labeled files</th>
+                                <th>Directly labeled paths</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {(tree?.categories ?? []).map((category) => {
-                                const labels = tree.labels.filter((label) => label.category === category);
+                                const labels = [
+                                    ...(tree.directoryLabels ?? [])
+                                        .filter((label) => label.category === category)
+                                        .map((label) => ({ ...label, labelType: "directory" })),
+                                    ...tree.labels
+                                        .filter((label) => label.category === category)
+                                        .map((label) => ({ ...label, labelType: "file" })),
+                                ];
                                 return (
                                     <tr key={category}>
                                         <td>{category}</td>
@@ -399,13 +413,14 @@ function TeamDashboard() {
                                             ) : (
                                                 <ul className="category-paths">
                                                     {labels.map((label) => (
-                                                        <li key={label.path}>
+                                                        <li key={`${label.labelType}:${label.path}`}>
                                                             <code>{label.path}</code>
+                                                            <span className="path-kind">{label.labelType}</span>
                                                             {!label.present && <span className="missing-path">Missing from branch</span>}
                                                             <button
                                                                 type="button"
                                                                 disabled={savingPaths.has(label.path)}
-                                                                onClick={() => saveFileCategory(label.path, "")}
+                                                                onClick={() => saveCategory(label.labelType, label.path, "")}
                                                             >
                                                                 Remove
                                                             </button>

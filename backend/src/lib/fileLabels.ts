@@ -37,19 +37,30 @@ export function normalizeFileCategory(value: string): FileCategory | null {
 }
 
 export function commitTagsByHash(
-  labels: readonly { path: string; category: string }[],
+  fileLabels: readonly { path: string; category: string }[],
+  directoryLabels: readonly { path: string; category: string }[],
   fileChanges: readonly { commitHash: string; filePath: string }[],
 ): Map<string, FileCategory[]> {
-  const categoryByPath = new Map<string, FileCategory>();
-  for (const label of labels) {
+  const fileCategoryByPath = new Map<string, FileCategory>();
+  for (const label of fileLabels) {
     const category = normalizeFileCategory(label.category);
-    if (category) categoryByPath.set(label.path, category);
+    if (category) fileCategoryByPath.set(label.path, category);
+  }
+  const directoryCategoryByPath = new Map<string, FileCategory>();
+  for (const label of directoryLabels) {
+    const category = normalizeFileCategory(label.category);
+    if (category) directoryCategoryByPath.set(label.path, category);
   }
   const result = new Map<string, FileCategory[]>();
 
   for (const change of fileChanges) {
     // shortcut: labels match recorded paths exactly, follow Git rename history when categories must span renames.
-    const category = categoryByPath.get(change.filePath);
+    let category = fileCategoryByPath.get(change.filePath);
+    let parentEnd = change.filePath.lastIndexOf('/');
+    while (!category && parentEnd !== -1) {
+      category = directoryCategoryByPath.get(change.filePath.slice(0, parentEnd));
+      parentEnd = change.filePath.lastIndexOf('/', parentEnd - 1);
+    }
     if (!category) continue;
     const categories = result.get(change.commitHash) ?? [];
     if (!categories.includes(category)) categories.push(category);

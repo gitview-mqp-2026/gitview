@@ -136,3 +136,16 @@ export function filePaths(nodes: RepositoryTreeNode[]): Set<string> {
   visit(nodes);
   return paths;
 }
+
+export function directoryPaths(nodes: RepositoryTreeNode[]): Set<string> {
+  const paths = new Set<string>();
+  const visit = (children: RepositoryTreeNode[]): void => {
+    for (const node of children) {
+      if (node.kind !== 'directory') continue;
+      paths.add(node.path);
+      visit(node.children);
+    }
+  };
+  visit(nodes);
+  return paths;
+}

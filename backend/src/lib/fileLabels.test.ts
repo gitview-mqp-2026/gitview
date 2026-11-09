@@ -42,6 +42,7 @@ test('commitTagsByHash derives distinct, ordered categories from changed file la
         { path: 'schema.sql', category: 'Database' },
         { path: 'legacy.txt', category: 'Legacy' },
       ],
+      [],
       [
         { commitHash: hash, filePath: 'src/App.test.jsx' },
         { commitHash: hash, filePath: 'schema.sql' },
@@ -54,6 +55,25 @@ test('commitTagsByHash derives distinct, ordered categories from changed file la
   );
 });
 
+test('commit tags use file overrides and the nearest labeled directory', () => {
+  const hash = 'b'.repeat(40);
+  assert.deepEqual(
+    commitTagsByHash(
+      [{ path: 'src/routes/form.ts', category: 'Forms' }],
+      [
+        { path: 'src', category: 'App-setup' },
+        { path: 'src/routes', category: 'Routes/Endpoints' },
+      ],
+      [
+        { commitHash: hash, filePath: 'src/index.ts' },
+        { commitHash: hash, filePath: 'src/routes/api.ts' },
+        { commitHash: hash, filePath: 'src/routes/form.ts' },
+      ],
+    ).get(hash),
+    ['Routes/Endpoints', 'Forms', 'App-setup'],
+  );
+});
+
 test('labels saved under a renamed category still resolve to the current name', () => {
   const hash = 'c'.repeat(40);
   assert.equal(normalizeFileCategory('Templates/components'), 'Templates/Components');
@@ -62,6 +82,7 @@ test('labels saved under a renamed category still resolve to the current name', 
   assert.deepEqual(
     commitTagsByHash(
       [{ path: 'src/App.jsx', category: 'Templates/components' }],
+      [],
       [{ commitHash: hash, filePath: 'src/App.jsx' }],
     ).get(hash),
     ['Templates/Components'],

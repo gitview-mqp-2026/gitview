@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import {
   MAX_TREE_ENTRIES,
+  directoryPaths,
   filePaths,
   parseGitTree,
   readRepositoryTreeFromMirror,
@@ -46,6 +47,8 @@ test('parseGitTree nests entries and sorts directories before files', () => {
   assert.equal(files.has('z.txt'), true);
   assert.equal(files.has('src/file with spaces.ts'), true);
   assert.equal(files.has('src/nested/line\nbreak.txt'), true);
+
+  assert.deepEqual([...directoryPaths(nodes)].sort(), ['src', 'src/nested']);
 });
 
 test('parseGitTree rejects malformed and oversized output', () => {
