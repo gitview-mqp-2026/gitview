@@ -7,6 +7,7 @@ import TeamIndex from "./pages/TeamIndex";
 import FileAlignment from "./pages/FileAlignment";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import CourseDashboard from "./pages/CourseDashboard.jsx";
+import Roster from "./pages/Roster.jsx";
 
 function App() {
     return (
@@ -54,6 +55,15 @@ function App() {
                 element={(
                     <ProtectedRoute>
                         <FileAlignment />
+                    </ProtectedRoute>
+                )}
+            />
+
+             <Route
+                path="/course/:courseId/roster"
+                element={(
+                    <ProtectedRoute>
+                        <Roster />
                     </ProtectedRoute>
                 )}
             />

@@ -13,7 +13,12 @@ import {
 import { filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged } from './lib/stats.js';
 import { CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
-import { GithubAppError, installUrl } from './lib/githubApp.js';
+import {
+  GithubAppError,
+  installUrl,
+  installationToken,
+  listOrganizationMembers,
+} from './lib/githubApp.js';
 
 const app = express();
 app.use(cors());
@@ -284,6 +289,87 @@ app.post('/courses/:courseId/ingest', async (req, res) => {
 
 app.get('/courses/:courseId/ingest', (req, res) => {
   res.json(ingestStatus(Number(req.params.courseId)) ?? { status: 'idle' });
+});
+
+// returns all students assigned to repositories in a course
+app.get('/courses/:courseId/roster', async (req, res) => {
+  try {
+    const courseID = Number(req.params.courseId);
+    const course = await db.orm.public.Course.where({ courseID }).first();
+
+    if (!course) {
+      res.status(404).json({ error: 'Course not found' });
+      return;
+    }
+
+    const repositories = await db.orm.public.Repository.where({ courseID }).all();
+    const teamIDs = new Set(repositories.map((repo) => repo.teamID));
+
+    const [students, users] = await Promise.all([
+      db.orm.public.Student.all(),
+      db.orm.public.User.all(),
+    ]);
+
+    const usersById = new Map(users.map((user) => [user.userID, user]));
+
+    const rosterMap = new Map();
+
+    students
+      .filter((student) => teamIDs.has(student.teamID))
+      .forEach((student) => {
+        const user = usersById.get(student.userID);
+
+        if (!rosterMap.has(student.userID)) {
+          rosterMap.set(student.userID, {
+            ...student,
+            name: user?.name ?? null,
+            email: user?.email ?? null,
+            username: user?.username ?? null,
+            teamID: student.teamID,
+            role: 'Student',
+          });
+        }
+      });
+
+    const roster = Array.from(rosterMap.values())
+      .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+
+    res.json(roster);
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// retrieves all members of a GitHub organization connected to a course
+app.get('/courses/:courseId/github-members', async (req, res) => {
+  try {
+    const courseID = Number(req.params.courseId);
+    const course = await db.orm.public.Course.where({ courseID }).first();
+
+    if (!course) {
+      res.status(404).json({ error: 'Course not found' });
+      return;
+    }
+
+    if (!course.githubOrg || !course.installationId) {
+      res.status(400).json({ error: 'Course is not connected to a GitHub organization.' });
+      return;
+    }
+
+    const token = await installationToken(course.installationId);
+    const members = await listOrganizationMembers(course.githubOrg, token);
+
+    console.log('GitHub roster debug:', {
+      organization: course.githubOrg,
+      installationId: course.installationId,
+      memberCount: members.length,
+      members,
+    });
+
+    res.json(members);
+  } catch (err) {
+    sendError(res, err);
+  }
 });
 
 const PORT = process.env.PORT ?? 3001;
