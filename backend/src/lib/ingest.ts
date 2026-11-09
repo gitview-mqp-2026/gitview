@@ -1,6 +1,7 @@
 import { execFileSync } from 'child_process';
 import { Temporal } from 'temporal-polyfill';
 import { db } from '../prisma/db.js';
+import { getGithubUser } from './githubApp.js';
 
 interface ParsedFileChange {
   filePath: string;
@@ -27,6 +28,17 @@ function usernameFromEmail(email: string): string | null {
   );
 
   return match ? match[1].toLowerCase() : null;
+}
+
+function usernameFromAuthor(name: string): string | null {
+  const username = name.trim();
+
+  // Only try names that could be GitHub usernames.
+  if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/.test(username)) {
+    return null;
+  }
+
+  return username.toLowerCase();
 }
 
 function isBotAuthor(name: string, email: string): boolean {
@@ -155,10 +167,31 @@ export async function ingestRepo(opts: {
 
   const studentIdByIdentity = new Map<string, number>();
 
+  // Cache GitHub user profiles to avoid repeated API calls.
+  const githubProfileCache = new Map<
+    string,
+    { username: string; name: string | null } | null
+  >();
+
+  async function getCachedGithubUser(username: string) {
+    if (!githubProfileCache.has(username)) {
+      const profile = await getGithubUser(username);
+      githubProfileCache.set(username, profile);
+    }
+
+    return githubProfileCache.get(username) ?? null;
+  }
+
   async function studentIdFor(email: string, name: string): Promise<number> {
-    const githubUsername = usernameFromEmail(email);
+    const githubUsername = usernameFromEmail(email) ?? usernameFromAuthor(name);
     const emailIdentity = normalizeIdentity(email.split('@')[0]);
     const authorName = normalizeName(name);
+
+    const githubProfile = githubUsername
+      ? await getCachedGithubUser(githubUsername)
+      : null;
+
+    const githubName = githubProfile?.name?.trim() || null;
 
     const cacheKey = githubUsername
       ? `github:${githubUsername}`
@@ -167,7 +200,7 @@ export async function ingestRepo(opts: {
     const cached = studentIdByIdentity.get(cacheKey);
     if (cached !== undefined) return cached;
 
-    // First, match by GitHub username.
+    // Match by GitHub username.
     let matches = githubUsername
       ? studentsOnTeam.filter(
           (student) =>
@@ -176,8 +209,7 @@ export async function ingestRepo(opts: {
         )
       : [];
 
-    // If there is no username match, compare the email prefix
-    // against existing GitHub usernames.
+    // If there is no username match, compare the email prefix against existing GitHub usernames.
     if (matches.length === 0 && emailIdentity) {
       matches = studentsOnTeam.filter(
         (student) =>
@@ -186,7 +218,7 @@ export async function ingestRepo(opts: {
       );
     }
 
-    // Finally, use the author name only if there is one unique match.
+    // Else, use the author name only if there is one unique match.
     if (matches.length === 0 && authorName) {
       matches = studentsOnTeam.filter(
         (student) =>
@@ -198,14 +230,32 @@ export async function ingestRepo(opts: {
     if (matches.length === 1) {
       const matchedUser = matches[0];
 
+      const updates: {
+        username?: string;
+        name?: string;
+      } = {};
+
       // Save a newly discovered GitHub username.
       if (githubUsername && !matchedUser.username) {
+        updates.username = githubUsername;
+        matchedUser.username = githubUsername;
+      }
+
+      // Use GitHub profile name if existing name is missing or just the GitHub username.
+      if (
+        githubName &&
+        (!matchedUser.name ||
+          normalizeName(matchedUser.name) === normalizeName(githubUsername ?? ''))
+      ) {
+        updates.name = githubName;
+        matchedUser.name = githubName;
+      }
+
+      if (Object.keys(updates).length > 0) {
         await db.orm.public.User.update(
           { userID: matchedUser.userID },
-          { username: githubUsername }
+          updates
         );
-
-        matchedUser.username = githubUsername;
       }
 
       studentIdByIdentity.set(cacheKey, matchedUser.userID);
@@ -220,7 +270,7 @@ export async function ingestRepo(opts: {
     if (!user) {
       user = await db.orm.public.User.create({
         email: key,
-        name,
+        name: githubName ?? name,
         username: githubUsername,
       });
     }

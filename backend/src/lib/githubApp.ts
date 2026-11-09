@@ -151,3 +151,27 @@ export function installUrl(): string | null {
   const slug = process.env['GITHUB_APP_SLUG'];
   return slug ? `https://github.com/apps/${encodeURIComponent(slug)}/installations/new` : null;
 }
+
+// Get GitHub user info by username.
+export async function getGithubUser(username: string) {
+  const response = await fetch(
+    `https://api.github.com/users/${encodeURIComponent(username)}`,
+    {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const user = await response.json();
+
+  return {
+    username: user.login,
+    name: user.name ?? null,
+  };
+}
