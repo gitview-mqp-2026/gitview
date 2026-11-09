@@ -1859,6 +1859,12 @@
 }
 
 /* Roster Table */
+.roster-team h2 {
+    margin: 0 0 8px;
+    padding-top: 20px;
+    font-weight: bold;
+}
+
 .roster-table {
     width: 100%;
     border-collapse: separate;

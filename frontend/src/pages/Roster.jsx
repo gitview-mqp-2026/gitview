@@ -37,6 +37,26 @@ function Roster() {
         fetchRoster();
     }, [courseId]);
 
+    // group students by teamID
+    const groupedRoster = roster.reduce((teams, student) => {
+        const teamID = student.teamID || "unassigned";
+
+        if (!teams[teamID]) {
+            teams[teamID] = [];
+        }
+
+        teams[teamID].push(student);
+        return teams;
+    }, {});
+
+    // sort teams by teamID, with unassigned students at the end
+    const sortedTeams = Object.entries(groupedRoster).sort(([a], [b]) => {
+        if (a === "unassigned") return 1;
+        if (b === "unassigned") return -1;
+
+        return a.localeCompare(b);
+    });
+
     return (
         <div>
             <NavBar />
@@ -59,27 +79,33 @@ function Roster() {
                 {error && <p className="repo-error" role="alert">{error}</p>}
 
                 {!loading && !error && (
-                    <div>
-                        <table className="roster-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>GitHub Username</th>
-                                    <th>Role</th>
-                                    <th>Last Login</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {roster.map((student) => (
-                                    <tr key={student.userID}>
-                                        <td>{student.name || "Unknown"}</td>
-                                        <td>{student.username || "Unknown"}</td>
-                                        <td>{student.role}</td>
-                                        <td></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="roster-teams">
+                        {sortedTeams.map(([teamID, students]) => (
+                            <section key={teamID} className="roster-team">
+                                <h2>{teamID === "unassigned" ? "Unassigned Students" : students[0].teamName ||`Team ${teamID}`}</h2>
+                                
+                                <table className="roster-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>GitHub Username</th>
+                                            <th>Role</th>
+                                            <th>Last Login</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {students.map((student) => (
+                                            <tr key={student.userID}>
+                                                <td>{student.name || "Unknown"}</td>
+                                                <td>{student.username || "Unknown"}</td>
+                                                <td>{student.role}</td>
+                                                <td></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </section>
+                        ))}
                     </div>
                 )}
             </div>
