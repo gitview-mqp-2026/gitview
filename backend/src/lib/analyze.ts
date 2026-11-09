@@ -25,10 +25,20 @@ const GIT_FLAGS = [
   '-c', 'credential.helper=',
 ];
 
-async function git(args: string[]): Promise<string> {
+// The token travels in git's environment config, so it is never in the URL, the argv or .git/config.
+export function authEnv(token: string): Record<string, string> {
+  const basic = Buffer.from(`x-access-token:${token}`).toString('base64');
+  return {
+    GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_KEY_0: 'http.https://github.com/.extraheader',
+    GIT_CONFIG_VALUE_0: `Authorization: Basic ${basic}`,
+  };
+}
+
+async function git(args: string[], token?: string): Promise<string> {
   try {
     const { stdout } = await run('git', [...GIT_FLAGS, ...args], {
-      env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...(token ? authEnv(token) : {}) },
       encoding: 'utf8',
       timeout: CLONE_TIMEOUT_MS,
       killSignal: 'SIGKILL',
@@ -69,8 +79,8 @@ export async function analyzeRepo(
     const dir = repositoryMirrorPath(url.canonical);
 
     if (existsSync(dir)) {
-      const remoteHead = await git(['ls-remote', '--symref', '--', url.cloneUrl, 'HEAD']);
-      await git(['--git-dir', dir, 'fetch', '--quiet', '--prune', url.cloneUrl, '+refs/heads/*:refs/heads/*']);
+      const remoteHead = await git(['ls-remote', '--symref', '--', url.cloneUrl, 'HEAD'], token);
+      await git(['--git-dir', dir, 'fetch', '--quiet', '--prune', url.cloneUrl, '+refs/heads/*:refs/heads/*'], token);
       const defaultBranch = remoteHead.match(/^ref: refs\/heads\/(.+)\tHEAD$/m)?.[1];
       if (defaultBranch) await git(['--git-dir', dir, 'symbolic-ref', 'HEAD', `refs/heads/${defaultBranch}`]);
     } else {
