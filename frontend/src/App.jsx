@@ -6,6 +6,7 @@ import TeamDashboard from "./pages/TeamDashboard";
 import TeamIndex from "./pages/TeamIndex";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import CourseDashboard from "./pages/CourseDashboard.jsx";
+import Roster from "./pages/Roster.jsx";
 
 function App() {
     return (
@@ -44,6 +45,15 @@ function App() {
                 element={(
                     <ProtectedRoute>
                         <TeamDashboard />
+                    </ProtectedRoute>
+                )}
+            />
+
+            <Route
+                path="/course/:courseId/roster"
+                element={(
+                    <ProtectedRoute>
+                        <Roster />
                     </ProtectedRoute>
                 )}
             />

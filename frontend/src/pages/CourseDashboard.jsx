@@ -124,9 +124,14 @@ function CourseDashboard() {
                     </div>
 
                     <div className="course-actions">
+                        <button className="repo-button" type="button" onClick={() => navigate(`/course/${courseId}/roster`)}>
+                            View Roster
+                        </button>
+
                         <button className="repo-button" type="button" onClick={syncRepos} disabled={syncing || running}>
                             {syncing ? "Syncing..." : "Sync from GitHub"}
                         </button>
+
                         <button className="repo-button" type="button" onClick={ingestAll} disabled={syncing || running || repos.length === 0}>
                             {running ? `Ingesting ${job.completed} / ${job.total}...` : "Ingest all"}
                         </button>
