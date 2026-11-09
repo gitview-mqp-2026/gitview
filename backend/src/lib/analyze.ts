@@ -1,16 +1,13 @@
 import { execFile } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { ingestRepo, type IngestResult } from './ingest.js';
+import { repositoryMirrorPath, REPOS_DIR } from './repositoryMirror.js';
 import { assertPublicHost, parseRepoUrl, RepoUrlError } from './repoUrl.js';
 
 export { RepoUrlError };
 
 const run = promisify(execFile);
-const REPOS_DIR = fileURLToPath(new URL('../../.repos/', import.meta.url));
 const CLONE_TIMEOUT_MS = 120_000;
 const MAX_COMMITS = 2000;
 
@@ -28,24 +25,16 @@ const GIT_FLAGS = [
   '-c', 'credential.helper=',
 ];
 
-// The token travels in git's environment config, so it is never in the URL, the argv or .git/config.
-function authEnv(token: string): Record<string, string> {
-  const basic = Buffer.from(`x-access-token:${token}`).toString('base64');
-  return {
-    GIT_CONFIG_COUNT: '1',
-    GIT_CONFIG_KEY_0: 'http.https://github.com/.extraheader',
-    GIT_CONFIG_VALUE_0: `Authorization: Basic ${basic}`,
-  };
-}
-
-async function git(args: string[], token?: string): Promise<void> {
+async function git(args: string[]): Promise<string> {
   try {
-    await run('git', [...GIT_FLAGS, ...args], {
-      env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...(token ? authEnv(token) : {}) },
+    const { stdout } = await run('git', [...GIT_FLAGS, ...args], {
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+      encoding: 'utf8',
       timeout: CLONE_TIMEOUT_MS,
       killSignal: 'SIGKILL',
       maxBuffer: 1024 * 1024,
     });
+    return stdout;
   } catch (err: any) {
     if (err.killed) {
       throw new AnalyzeError(504, 'Cloning took too long. Try a smaller repository.');
@@ -77,10 +66,13 @@ export async function analyzeRepo(
 
   try {
     mkdirSync(REPOS_DIR, { recursive: true });
-    const dir = join(REPOS_DIR, `${createHash('sha1').update(url.canonical).digest('hex').slice(0, 16)}.git`);
+    const dir = repositoryMirrorPath(url.canonical);
 
     if (existsSync(dir)) {
-      await git(['--git-dir', dir, 'fetch', '--quiet', '--prune', url.cloneUrl, '+refs/heads/*:refs/heads/*'], token);
+      const remoteHead = await git(['ls-remote', '--symref', '--', url.cloneUrl, 'HEAD']);
+      await git(['--git-dir', dir, 'fetch', '--quiet', '--prune', url.cloneUrl, '+refs/heads/*:refs/heads/*']);
+      const defaultBranch = remoteHead.match(/^ref: refs\/heads\/(.+)\tHEAD$/m)?.[1];
+      if (defaultBranch) await git(['--git-dir', dir, 'symbolic-ref', 'HEAD', `refs/heads/${defaultBranch}`]);
     } else {
       try {
         await git(['clone', '--bare', '--quiet', '--', url.cloneUrl, dir], token);

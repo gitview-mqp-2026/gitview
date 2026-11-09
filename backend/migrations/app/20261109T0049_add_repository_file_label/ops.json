@@ -1,0 +1,122 @@
+[
+  {
+    "id": "table.repositoryFileLabel",
+    "label": "Create table \"repositoryFileLabel\"",
+    "summary": "Creates table \"repositoryFileLabel\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "repositoryFileLabel"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"repositoryFileLabel\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryFileLabel\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"repositoryFileLabel\"",
+        "sql": "CREATE TABLE \"public\".\"repositoryFileLabel\" (\n  \"category\" text NOT NULL,\n  \"path\" text NOT NULL,\n  \"teamID\" int4 NOT NULL,\n  PRIMARY KEY (\"teamID\", \"path\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"repositoryFileLabel\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryFileLabel\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.repositoryFileLabel.repositoryFileLabel_teamID_idx_fe196944",
+    "label": "Create index \"repositoryFileLabel_teamID_idx_fe196944\" on \"repositoryFileLabel\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "repositoryFileLabel_teamID_idx_fe196944",
+        "table": "repositoryFileLabel"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"repositoryFileLabel_teamID_idx_fe196944\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryFileLabel_teamID_idx_fe196944\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"repositoryFileLabel_teamID_idx_fe196944\"",
+        "sql": "CREATE INDEX \"repositoryFileLabel_teamID_idx_fe196944\" ON \"public\".\"repositoryFileLabel\" (\"teamID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"repositoryFileLabel_teamID_idx_fe196944\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"repositoryFileLabel_teamID_idx_fe196944\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.repositoryFileLabel.repositoryFileLabel_teamID_fkey",
+    "label": "Add foreign key \"repositoryFileLabel_teamID_fkey\" on \"repositoryFileLabel\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "repositoryFileLabel_teamID_fkey",
+        "table": "repositoryFileLabel"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"repositoryFileLabel_teamID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repositoryFileLabel_teamID_fkey",
+          "public",
+          "\"public\".\"repositoryFileLabel\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"repositoryFileLabel_teamID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"repositoryFileLabel\"\nADD CONSTRAINT \"repositoryFileLabel_teamID_fkey\"\nFOREIGN KEY (\"teamID\")\nREFERENCES \"public\".\"repository\" (\"teamID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"repositoryFileLabel_teamID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "repositoryFileLabel_teamID_fkey",
+          "public",
+          "\"public\".\"repositoryFileLabel\""
+        ]
+      }
+    ]
+  }
+]

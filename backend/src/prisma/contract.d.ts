@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'f8d10ea49d961dafadd2599df44910ab7e8f24f9cafcbdd471d6e128f55e78fe'>;
+  StorageHashBase<'35cd349abfa99026ba67308d69e77d7f0ffe4f41f728f049c45784bee73427db'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -290,8 +290,16 @@ export type FieldOutputTypes = {
       readonly teamID: CodecTypes['pg/int4@1']['output'];
       readonly url: CodecTypes['pg/text@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
-      readonly githubRepoId: CodecTypes['pg/text@1']['output'] | null;
-      readonly courseID: CodecTypes['pg/int4@1']['output'] | null;
+    };
+    readonly RepositoryDirectoryLabel: {
+      readonly teamID: CodecTypes['pg/int4@1']['output'];
+      readonly path: CodecTypes['pg/text@1']['output'];
+      readonly category: CodecTypes['pg/text@1']['output'];
+    };
+    readonly RepositoryFileLabel: {
+      readonly teamID: CodecTypes['pg/int4@1']['output'];
+      readonly path: CodecTypes['pg/text@1']['output'];
+      readonly category: CodecTypes['pg/text@1']['output'];
     };
     readonly Student: {
       readonly userID: CodecTypes['pg/int4@1']['output'];
@@ -361,8 +369,16 @@ export type FieldInputTypes = {
       readonly teamID: CodecTypes['pg/int4@1']['input'];
       readonly url: CodecTypes['pg/text@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
-      readonly githubRepoId: CodecTypes['pg/text@1']['input'] | null;
-      readonly courseID: CodecTypes['pg/int4@1']['input'] | null;
+    };
+    readonly RepositoryDirectoryLabel: {
+      readonly teamID: CodecTypes['pg/int4@1']['input'];
+      readonly path: CodecTypes['pg/text@1']['input'];
+      readonly category: CodecTypes['pg/text@1']['input'];
+    };
+    readonly RepositoryFileLabel: {
+      readonly teamID: CodecTypes['pg/int4@1']['input'];
+      readonly path: CodecTypes['pg/text@1']['input'];
+      readonly category: CodecTypes['pg/text@1']['input'];
     };
     readonly Student: {
       readonly userID: CodecTypes['pg/int4@1']['input'];
@@ -435,6 +451,16 @@ export type StorageColumnTypes = {
       readonly teamID: CodecTypes['pg/int4@1']['output'];
       readonly url: CodecTypes['pg/text@1']['output'];
     };
+    readonly repositoryDirectoryLabel: {
+      readonly category: CodecTypes['pg/text@1']['output'];
+      readonly path: CodecTypes['pg/text@1']['output'];
+      readonly teamID: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly repositoryFileLabel: {
+      readonly category: CodecTypes['pg/text@1']['output'];
+      readonly path: CodecTypes['pg/text@1']['output'];
+      readonly teamID: CodecTypes['pg/int4@1']['output'];
+    };
     readonly student: {
       readonly teamID: CodecTypes['pg/int4@1']['output'];
       readonly userID: CodecTypes['pg/int4@1']['output'];
@@ -505,6 +531,16 @@ export type StorageColumnInputTypes = {
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly teamID: CodecTypes['pg/int4@1']['input'];
       readonly url: CodecTypes['pg/text@1']['input'];
+    };
+    readonly repositoryDirectoryLabel: {
+      readonly category: CodecTypes['pg/text@1']['input'];
+      readonly path: CodecTypes['pg/text@1']['input'];
+      readonly teamID: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly repositoryFileLabel: {
+      readonly category: CodecTypes['pg/text@1']['input'];
+      readonly path: CodecTypes['pg/text@1']['input'];
+      readonly teamID: CodecTypes['pg/int4@1']['input'];
     };
     readonly student: {
       readonly teamID: CodecTypes['pg/int4@1']['input'];
@@ -1002,12 +1038,35 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['teamID'] };
-              uniques: readonly [{ readonly columns: readonly ['githubRepoId'] }];
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly repositoryDirectoryLabel: {
+              columns: {
+                readonly teamID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly path: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly category: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['teamID', 'path'] };
+              uniques: readonly [];
               indexes: readonly [
                 {
-                  readonly name: 'repository_courseID_idx_7300c0bc';
-                  readonly prefix: 'repository_courseID_idx';
-                  readonly columns: readonly ['courseID'];
+                  readonly name: 'repositoryDirectoryLabel_teamID_idx_fe196944';
+                  readonly prefix: 'repositoryDirectoryLabel_teamID_idx';
+                  readonly columns: readonly ['teamID'];
                   readonly unique: false;
                 },
               ];
@@ -1015,13 +1074,56 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'repository';
-                    readonly columns: readonly ['courseID'];
+                    readonly tableName: 'repositoryDirectoryLabel';
+                    readonly columns: readonly ['teamID'];
                   };
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'course';
-                    readonly columns: readonly ['courseID'];
+                    readonly tableName: 'repository';
+                    readonly columns: readonly ['teamID'];
+                  };
+                },
+              ];
+            };
+            readonly repositoryFileLabel: {
+              columns: {
+                readonly teamID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly path: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly category: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['teamID', 'path'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'repositoryFileLabel_teamID_idx_fe196944';
+                  readonly prefix: 'repositoryFileLabel_teamID_idx';
+                  readonly columns: readonly ['teamID'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'repositoryFileLabel';
+                    readonly columns: readonly ['teamID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'repository';
+                    readonly columns: readonly ['teamID'];
                   };
                 },
               ];
@@ -1159,7 +1261,14 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'Repository';
     };
-    readonly course: { readonly namespace: 'public' & NamespaceId; readonly model: 'Course' };
+    readonly repositoryDirectoryLabel: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RepositoryDirectoryLabel';
+    };
+    readonly repositoryFileLabel: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RepositoryFileLabel';
+    };
     readonly alert: { readonly namespace: 'public' & NamespaceId; readonly model: 'Alert' };
   };
   readonly domain: {
@@ -1619,15 +1728,26 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly course: {
+              readonly directoryLabels: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Course';
+                  readonly model: 'RepositoryDirectoryLabel';
                 };
-                readonly cardinality: 'N:1';
+                readonly cardinality: '1:N';
                 readonly on: {
-                  readonly localFields: readonly ['courseID'];
-                  readonly targetFields: readonly ['courseID'];
+                  readonly localFields: readonly ['teamID'];
+                  readonly targetFields: readonly ['teamID'];
+                };
+              };
+              readonly fileLabels: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'RepositoryFileLabel';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['teamID'];
+                  readonly targetFields: readonly ['teamID'];
                 };
               };
               readonly students: {
@@ -1649,8 +1769,82 @@ type ContractBase = Omit<
                 readonly teamID: { readonly column: 'teamID' };
                 readonly url: { readonly column: 'url' };
                 readonly name: { readonly column: 'name' };
-                readonly githubRepoId: { readonly column: 'githubRepoId' };
-                readonly courseID: { readonly column: 'courseID' };
+              };
+            };
+          };
+          readonly RepositoryDirectoryLabel: {
+            readonly fields: {
+              readonly teamID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly path: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly category: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly repository: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Repository';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['teamID'];
+                  readonly targetFields: readonly ['teamID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'repositoryDirectoryLabel';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly teamID: { readonly column: 'teamID' };
+                readonly path: { readonly column: 'path' };
+                readonly category: { readonly column: 'category' };
+              };
+            };
+          };
+          readonly RepositoryFileLabel: {
+            readonly fields: {
+              readonly teamID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly path: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly category: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly repository: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Repository';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['teamID'];
+                  readonly targetFields: readonly ['teamID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'repositoryFileLabel';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly teamID: { readonly column: 'teamID' };
+                readonly path: { readonly column: 'path' };
+                readonly category: { readonly column: 'category' };
               };
             };
           };
