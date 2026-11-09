@@ -540,13 +540,6 @@
                   "kind": "scalar"
                 }
               },
-              "dateTime": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz-temporal@1",
-                  "kind": "scalar"
-                }
-              },
               "feedbackID": {
                 "nullable": false,
                 "type": {
@@ -597,9 +590,6 @@
                 },
                 "commitHash": {
                   "column": "commitHash"
-                },
-                "dateTime": {
-                  "column": "dateTime"
                 },
                 "feedbackID": {
                   "column": "feedbackID"
@@ -777,6 +767,21 @@
               }
             },
             "relations": {
+              "course": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "courseID"
+                  ],
+                  "targetFields": [
+                    "courseID"
+                  ]
+                },
+                "to": {
+                  "model": "Course",
+                  "namespace": "public"
+                }
+              },
               "directoryLabels": {
                 "cardinality": "1:N",
                 "on": {
@@ -1570,11 +1575,6 @@
                   "nativeType": "text",
                   "nullable": false
                 },
-                "dateTime": {
-                  "codecId": "pg/timestamptz-temporal@1",
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
                 "feedbackID": {
                   "codecId": "pg/int4@1",
                   "default": {
@@ -1814,7 +1814,13 @@
                   "teamID"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "githubRepoId"
+                  ]
+                }
+              ]
             },
             "repositoryDirectoryLabel": {
               "columns": {
@@ -2065,7 +2071,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "35cd349abfa99026ba67308d69e77d7f0ffe4f41f728f049c45784bee73427db"
+    "storageHash": "0cb708c2bf15ed6a0a426db2f5241a9b60f73ae6615aad2a63a3a10ed1060927"
   },
   "capabilities": {
     "postgres": {
