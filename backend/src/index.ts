@@ -97,7 +97,7 @@ app.get('/repositories/:teamId/stats', async (req, res) => {
   }
 });
 
-app.get('/api/repositories/:teamId/tree', async (req, res) => {
+app.get('/repositories/:teamId/tree', async (req, res) => {
   try {
     const teamID = parseTeamId(req.params.teamId);
     if (!teamID) {
@@ -135,7 +135,7 @@ app.get('/api/repositories/:teamId/tree', async (req, res) => {
   }
 });
 
-app.put('/api/repositories/:teamId/file-labels', async (req, res) => {
+app.put('/repositories/:teamId/file-labels', async (req, res) => {
   try {
     const teamID = parseTeamId(req.params.teamId);
     const input = parseFileLabelInput(req.body);
@@ -171,7 +171,7 @@ app.put('/api/repositories/:teamId/file-labels', async (req, res) => {
   }
 });
 
-app.delete('/api/repositories/:teamId/file-labels', async (req, res) => {
+app.delete('/repositories/:teamId/file-labels', async (req, res) => {
   try {
     const teamID = parseTeamId(req.params.teamId);
     const path = parseFilePath(req.query.path);

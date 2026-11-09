@@ -66,7 +66,7 @@ function TeamDashboard() {
         setSavingPaths(new Set());
         setLabelErrors(new Map());
 
-        getJson(`/api/repositories/${teamId}/tree`)
+        getJson(`/repositories/${teamId}/tree`)
             .then((data) => {
                 if (!cancelled) setTree(data);
             })
@@ -105,12 +105,12 @@ function TeamDashboard() {
 
         try {
             const response = category
-                ? await fetch(`/api/repositories/${teamId}/file-labels`, {
+                ? await fetch(`/repositories/${teamId}/file-labels`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ path, category }),
                 })
-                : await fetch(`/api/repositories/${teamId}/file-labels?${new URLSearchParams({ path })}`, {
+                : await fetch(`/repositories/${teamId}/file-labels?${new URLSearchParams({ path })}`, {
                     method: "DELETE",
                 });
             const data = response.status === 204 ? null : await response.json().catch(() => ({}));
@@ -121,7 +121,7 @@ function TeamDashboard() {
                     labels: replaceFileLabel(current.labels, path, data),
                 }));
             }
-            getJson(`/api/commits?teamId=${teamId}`)
+            getJson(`/commits?teamId=${teamId}`)
                 .then((rows) => {
                     setCommits(rows);
                     setError(null);
@@ -310,7 +310,7 @@ function TeamDashboard() {
                     </div>
                 </section>
 
-                {/* Commit Log (live from /api/commits) */}
+                {/* Commit Log (live from /commits) */}
                 <section className="significant-commits">
                     <h2>Commit log</h2>
 
