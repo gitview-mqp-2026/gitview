@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  commitTagsByHash,
   FILE_CATEGORIES,
   parseFileLabelInput,
   parseFilePath,
@@ -28,4 +29,25 @@ test('parseFilePath rejects roots and traversal without changing valid names', (
 test('parseTeamId accepts positive decimal ids only', () => {
   assert.equal(parseTeamId('12'), 12);
   for (const value of ['0', '-1', '1.5', 'team', '', undefined]) assert.equal(parseTeamId(value), null);
+});
+
+test('commitTagsByHash derives distinct, ordered categories from changed file labels', () => {
+  const hash = 'a'.repeat(40);
+  assert.deepEqual(
+    commitTagsByHash(
+      [
+        { path: 'src/App.test.jsx', category: 'Testing' },
+        { path: 'schema.sql', category: 'Database' },
+        { path: 'legacy.txt', category: 'Legacy' },
+      ],
+      [
+        { commitHash: hash, filePath: 'src/App.test.jsx' },
+        { commitHash: hash, filePath: 'schema.sql' },
+        { commitHash: hash, filePath: 'schema.sql' },
+        { commitHash: hash, filePath: 'legacy.txt' },
+        { commitHash: 'b'.repeat(40), filePath: 'unlabeled.txt' },
+      ],
+    ).get(hash),
+    ['Database', 'Testing'],
+  );
 });

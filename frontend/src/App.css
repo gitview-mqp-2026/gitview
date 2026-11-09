@@ -282,68 +282,6 @@ button {
     flex-direction: column;
 }
 
-.commits-container {
-    display: flex;
-    flex-direction: column;
-    padding: 8px 16px;
-    background-color: #263e5e;
-    border: 2px solid #5d7594;
-    border-radius: 10px;
-}
-
-.commit {
-    min-height: 86px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #536b88;
-}
-
-.commit-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.commit-info h3 {
-    margin: 0 0 5px;
-    font-size: 17px;
-    font-weight: normal;
-}
-
-.commit-info p {
-    margin: 0 0 5px;
-    color: #7e92aa;
-    font-size: 13px;
-}
-
-.commit-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.commit-actions button {
-    padding: 7px 10px;
-    background-color: #182b43;
-    border: 1px solid #7186a1;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.tags {
-    display: flex;
-    gap: 5px;
-}
-
-.tags span {
-    padding: 3px 8px;
-    border-radius: 5px;
-    background-color: #6494c9;
-    font-size: 11px;
-    font-weight: bold;
-}
-
 .contribution-categories {
     display: flex;
     flex-direction: column;
@@ -674,6 +612,17 @@ button {
 
 .categories-table td {
     font-size: 14px;
+}
+
+.commit-tags-cell {
+    min-width: 260px;
+}
+
+.commit-tag-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 @media (max-width: 760px) {

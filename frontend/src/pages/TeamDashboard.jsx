@@ -121,6 +121,12 @@ function TeamDashboard() {
                     labels: replaceFileLabel(current.labels, path, data),
                 }));
             }
+            getJson(`/api/commits?teamId=${teamId}`)
+                .then((rows) => {
+                    setCommits(rows);
+                    setError(null);
+                })
+                .catch((err) => setError(err.message));
         } catch (err) {
             setTree((current) => current && ({
                 ...current,
@@ -304,55 +310,6 @@ function TeamDashboard() {
                     </div>
                 </section>
 
-                {/* Recent Significant Commits */}
-                <section className="significant-commits">
-                    <h2>Recent significant commits</h2>
-
-                    <div className="commits-container">
-                        <div className="commit">
-                            <div className="commit-info">
-                                <div className="profile-button"></div>
-
-                                <div>
-                                    <h3>Implemented OAuth login</h3>
-                                    <p>Student 1  · src/auth</p>
-
-                                    <div className="tags">
-                                        <span>Core</span>
-                                        <span>High Impact</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="commit-actions">
-                                <button>Feedback</button>
-                                <button>Tag</button>
-                            </div>
-                        </div>
-
-                        <div className="commit">
-                            <div className="commit-info">
-                                <div className="profile-button"></div>
-
-                                <div>
-                                    <h3>Updated database schema</h3>
-                                    <p>Student 2  · src/backend</p>
-
-                                    <div className="tags">
-                                        <span>Core</span>
-                                        <span>High Impact</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="commit-actions">
-                                <button>Feedback</button>
-                                <button>Tag</button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
                 {/* Commit Log (live from /api/commits) */}
                 <section className="significant-commits">
                     <h2>Commit log</h2>
@@ -369,12 +326,13 @@ function TeamDashboard() {
                                         <th>Subject</th>
                                         <th>Author</th>
                                         <th>Date</th>
+                                        <th>Categories from files</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {commits.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4}>No commits found for this repository.</td>
+                                            <td colSpan={5}>No commits found for this repository.</td>
                                         </tr>
                                     ) : (
                                         visibleCommits.map((c) => (
@@ -383,6 +341,17 @@ function TeamDashboard() {
                                                 <td>{c.commitSubject}</td>
                                                 <td>{c.author}</td>
                                                 <td>{new Date(c.dateTime).toLocaleDateString()}</td>
+                                                <td className="commit-tags-cell">
+                                                    <div
+                                                        className="commit-tag-summary"
+                                                        title="Derived from labeled files changed by this commit"
+                                                    >
+                                                        {(c.tags ?? []).map((tag) => (
+                                                            <span className="file-category-badge" key={tag}>{tag}</span>
+                                                        ))}
+                                                        {(c.tags ?? []).length === 0 && <span className="empty-category">None</span>}
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))
                                     )}

@@ -4,6 +4,7 @@ import cors from 'cors';
 import { db } from './prisma/db.js';
 import { analyzeRepo, AnalyzeError, RepoUrlError } from './lib/analyze.js';
 import {
+  commitTagsByHash,
   FILE_CATEGORIES,
   parseFileLabelInput,
   parseFilePath,
@@ -193,11 +194,22 @@ app.delete('/api/repositories/:teamId/file-labels', async (req, res) => {
 // Optional ?teamId= narrows to commits written by that team's students.
 app.get('/api/commits', async (req, res) => {
   try {
-    if (req.query.teamId) {
-      res.json((await commitsForTeam(Number(req.query.teamId))).commits);
-    } else {
+    if (!req.query.teamId) {
       res.json(await db.orm.public.Commit.orderBy((c) => c.dateTime.desc()).all());
+      return;
     }
+
+    const teamID = Number(req.query.teamId);
+    const commits = (await commitsForTeam(teamID)).commits;
+    const commitHashes = new Set(commits.map((commit) => commit.commitHash));
+    const [labels, fileChanges] = await Promise.all([
+      db.orm.public.RepositoryFileLabel.where({ teamID }).all(),
+      commitHashes.size === 0
+        ? Promise.resolve([])
+        : db.orm.public.FileChange.where((change) => change.commitHash.in([...commitHashes])).all(),
+    ]);
+    const tagsByHash = commitTagsByHash(labels, fileChanges);
+    res.json(commits.map((commit) => ({ ...commit, tags: tagsByHash.get(commit.commitHash) ?? [] })));
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }

@@ -25,6 +25,30 @@ export function isFileCategory(value: unknown): value is FileCategory {
   return typeof value === 'string' && FILE_CATEGORIES.some((allowed) => allowed === value);
 }
 
+export function commitTagsByHash(
+  labels: readonly { path: string; category: string }[],
+  fileChanges: readonly { commitHash: string; filePath: string }[],
+): Map<string, FileCategory[]> {
+  const categoryByPath = new Map(
+    labels.filter((label) => isFileCategory(label.category)).map((label) => [label.path, label.category as FileCategory]),
+  );
+  const result = new Map<string, FileCategory[]>();
+
+  for (const change of fileChanges) {
+    // shortcut: labels match recorded paths exactly, follow Git rename history when categories must span renames.
+    const category = categoryByPath.get(change.filePath);
+    if (!category) continue;
+    const categories = result.get(change.commitHash) ?? [];
+    if (!categories.includes(category)) categories.push(category);
+    result.set(change.commitHash, categories);
+  }
+
+  for (const categories of result.values()) {
+    categories.sort((a, b) => FILE_CATEGORIES.indexOf(a) - FILE_CATEGORIES.indexOf(b));
+  }
+  return result;
+}
+
 export function parseFilePath(value: unknown): string | null {
   if (typeof value !== 'string' || value.length === 0 || value.length > 4096 || value.includes('\0')) {
     return null;
