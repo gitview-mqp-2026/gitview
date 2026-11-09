@@ -3,16 +3,18 @@ import test from 'node:test';
 import {
   commitTagsByHash,
   FILE_CATEGORIES,
+  normalizeFileCategory,
   parseFileLabelInput,
   parseFilePath,
   parseTeamId,
 } from './fileLabels.js';
 
 test('parseFileLabelInput accepts only known categories and normalized Git paths', () => {
-  assert.deepEqual(parseFileLabelInput({ path: 'frontend/src/components/App.jsx', category: 'Templates/components' }), {
+  assert.deepEqual(parseFileLabelInput({ path: 'frontend/src/components/App.jsx', category: 'Templates/Components' }), {
     path: 'frontend/src/components/App.jsx',
-    category: 'Templates/components',
+    category: 'Templates/Components',
   });
+  assert.equal(parseFileLabelInput({ path: 'frontend/src/App.jsx', category: 'Templates/components' }), null);
   assert.equal(parseFileLabelInput({ path: 'frontend/src/App.jsx', category: 'Unknown' }), null);
   assert.equal(parseFileLabelInput({ path: '../frontend/App.jsx', category: 'Styling' }), null);
   assert.equal(FILE_CATEGORIES.length, 7);
@@ -49,5 +51,19 @@ test('commitTagsByHash derives distinct, ordered categories from changed file la
       ],
     ).get(hash),
     ['Database', 'Testing'],
+  );
+});
+
+test('labels saved under a renamed category still resolve to the current name', () => {
+  const hash = 'c'.repeat(40);
+  assert.equal(normalizeFileCategory('Templates/components'), 'Templates/Components');
+  assert.equal(normalizeFileCategory('Templates/Components'), 'Templates/Components');
+  assert.equal(normalizeFileCategory('toString'), null);
+  assert.deepEqual(
+    commitTagsByHash(
+      [{ path: 'src/App.jsx', category: 'Templates/components' }],
+      [{ commitHash: hash, filePath: 'src/App.jsx' }],
+    ).get(hash),
+    ['Templates/Components'],
   );
 });

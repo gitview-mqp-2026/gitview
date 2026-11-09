@@ -13,12 +13,12 @@ test("replaceFileLabel creates, replaces, and removes one exact file label", () 
 
     const replaced = replaceFileLabel(created, "src/App.jsx", {
         path: "src/App.jsx",
-        category: "Templates/components",
+        category: "Templates/Components",
         present: true,
     });
     assert.deepEqual(replaced.find((label) => label.path === "src/App.jsx"), {
         path: "src/App.jsx",
-        category: "Templates/components",
+        category: "Templates/Components",
         present: true,
     });
 

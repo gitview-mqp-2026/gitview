@@ -1,7 +1,7 @@
 export const FILE_CATEGORIES = [
   'Database',
   'Routes/Endpoints',
-  'Templates/components',
+  'Templates/Components',
   'Forms',
   'Styling',
   'Testing',
@@ -9,6 +9,11 @@ export const FILE_CATEGORIES = [
 ] as const;
 
 export type FileCategory = (typeof FILE_CATEGORIES)[number];
+
+// Labels saved before a category was renamed keep their old stored value; they read as the new name.
+const LEGACY_CATEGORY_ALIASES: Readonly<Record<string, FileCategory>> = {
+  'Templates/components': 'Templates/Components',
+};
 
 export interface FileLabelInput {
   path: string;
@@ -25,13 +30,21 @@ export function isFileCategory(value: unknown): value is FileCategory {
   return typeof value === 'string' && FILE_CATEGORIES.some((allowed) => allowed === value);
 }
 
+// Current category for a stored value, following renames; null when it is not a known category.
+export function normalizeFileCategory(value: string): FileCategory | null {
+  if (isFileCategory(value)) return value;
+  return Object.hasOwn(LEGACY_CATEGORY_ALIASES, value) ? LEGACY_CATEGORY_ALIASES[value] : null;
+}
+
 export function commitTagsByHash(
   labels: readonly { path: string; category: string }[],
   fileChanges: readonly { commitHash: string; filePath: string }[],
 ): Map<string, FileCategory[]> {
-  const categoryByPath = new Map(
-    labels.filter((label) => isFileCategory(label.category)).map((label) => [label.path, label.category as FileCategory]),
-  );
+  const categoryByPath = new Map<string, FileCategory>();
+  for (const label of labels) {
+    const category = normalizeFileCategory(label.category);
+    if (category) categoryByPath.set(label.path, category);
+  }
   const result = new Map<string, FileCategory[]>();
 
   for (const change of fileChanges) {

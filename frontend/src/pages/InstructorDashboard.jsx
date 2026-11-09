@@ -61,12 +61,6 @@ function InstructorDashboard() {
                     />
                 )}
             </div>
-
-            <div className="actions">
-                <Link to="/alignment" className="link-button">
-                    Go to File Alignment
-                </Link>
-            </div>
         </div>
     );
 }

@@ -6,6 +6,7 @@ import { analyzeRepo, AnalyzeError, RepoUrlError } from './lib/analyze.js';
 import {
   commitTagsByHash,
   FILE_CATEGORIES,
+  normalizeFileCategory,
   parseFileLabelInput,
   parseFilePath,
   parseTeamId,
@@ -121,7 +122,7 @@ app.get('/repositories/:teamId/tree', async (req, res) => {
       categories: FILE_CATEGORIES,
       labels: labels.map((label) => ({
         path: label.path,
-        category: label.category,
+        category: normalizeFileCategory(label.category) ?? label.category,
         present: presentPaths.has(label.path),
       })),
     });

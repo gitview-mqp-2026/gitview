@@ -4,7 +4,6 @@ import InstructorDashboard from "./pages/InstructorDashboard";
 import Login from "./pages/Login";
 import TeamDashboard from "./pages/TeamDashboard";
 import TeamIndex from "./pages/TeamIndex";
-import FileAlignment from "./pages/FileAlignment";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import CourseDashboard from "./pages/CourseDashboard.jsx";
 
@@ -45,15 +44,6 @@ function App() {
                 element={(
                     <ProtectedRoute>
                         <TeamDashboard />
-                    </ProtectedRoute>
-                )}
-            />
-
-            <Route
-                path="/alignment"
-                element={(
-                    <ProtectedRoute>
-                        <FileAlignment />
                     </ProtectedRoute>
                 )}
             />

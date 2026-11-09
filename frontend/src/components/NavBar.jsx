@@ -10,7 +10,6 @@ function NavBar() {
     const pathNames = {
         course: "Course",
         team: "Team",
-        alignment: "Alignment",
     }
 
     const pathSegments = location.pathname.split("/").filter(Boolean);
