@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "tsx --test src/lib/repositoryTree.test.ts src/lib/fileLabels.test.ts",
+    "test": "tsx --test src/lib/repositoryTree.test.ts src/lib/fileLabels.test.ts src/lib/analyze.test.ts",
     "dev": "tsx watch src/index.ts",
     "contract:emit": "prisma contract emit",
     "ingest": "tsx src/scripts/ingest-git-log.ts"
