@@ -15,6 +15,7 @@ import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } fr
 import { countPullRequestsMerged } from './lib/stats.js';
 import { CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import { GithubAppError, installUrl } from './lib/githubApp.js';
+import { buildTeamAlerts } from './lib/alerts.js';
 
 const app = express();
 app.use(cors());
@@ -23,9 +24,14 @@ app.use(express.json());
 // Commits written by a team's students, newest first.
 async function commitsForTeam(teamID: number) {
   const students = await db.orm.public.Student.where({ teamID }).all();
-  const studentIds = new Set(students.map((s) => s.userID));
-  const commits = await db.orm.public.Commit.orderBy((c) => c.dateTime.desc()).all();
-  return { students, commits: commits.filter((c) => studentIds.has(c.studentID)) };
+  const studentIds = students.map((student) => student.userID);
+  const commits = studentIds.length === 0
+    ? []
+    : await db.orm.public.Commit
+      .where((commit) => commit.studentID.in(studentIds))
+      .orderBy((commit) => commit.dateTime.desc())
+      .all();
+  return { students, commits };
 }
 
 // Newest first, with a commit count and last-commit time for the Home widgets.
@@ -92,6 +98,7 @@ app.get('/repositories/:teamId/stats', async (req, res) => {
       prsMerged: countPullRequestsMerged(commits.map((c) => c.commitSubject)),
       comments: 0,
       issuesClosed: 0,
+      alerts: buildTeamAlerts(students, commits),
     });
   } catch (err) {
     res.status(500).json({ error: String(err) });

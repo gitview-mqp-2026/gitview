@@ -267,30 +267,22 @@ function TeamDashboard() {
 
                     <div className="stat-card">
                         <span>ALERTS</span>
-                        <strong>9</strong>
+                        <strong>{stat(stats?.alerts.length)}</strong>
                     </div>
                 </section>
 
                 <section className="two-columns">
-                    {/* Alerts (MOCKED) */}
                     <div className="container">
                         <h2>Alerts</h2>
 
                         <div className="content">
-                            <div className="alert">
-                                <div className="profile-button"></div>
-                                <span>Student 2 - no commits in 12 days</span>
-                            </div>
-
-                            <div className="alert">
-                                <div className="profile-button"></div>
-                                <span>Student 4 - work below team's average amount</span>
-                            </div>
-
-                            <div className="alert">
-                                <div className="profile-button"></div>
-                                <span>Student 3 - all commits made near deadline</span>
-                            </div>
+                            {!loading && !error && stats?.alerts.length === 0 && <span>No alerts</span>}
+                            {stats?.alerts.map((alert) => (
+                                <div className="alert" key={`${alert.type}-${alert.studentID}`}>
+                                    <div className="profile-button"></div>
+                                    <span>{alert.message}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
