@@ -1899,3 +1899,23 @@
 .roster-table tbody tr:hover {
     background-color: #315070;
 }
+/* Team page tabs and Members tab (dark navy theme, same palette as the stat cards and tables) */
+.team-tabs { display: flex; gap: 24px; border-bottom: 1px solid #536b88; margin: 0 0 4px; }
+.team-tab { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 2px; font-size: 16px; color: #9fb3cc; cursor: pointer; }
+.team-tab:hover { color: #fff; }
+.team-tab.is-active { color: #fff; border-bottom-color: #72adff; }
+.team-tab:focus-visible, .member-card-header:focus-visible { outline: 2px solid #72adff; outline-offset: 2px; }
+.members-tab { display: flex; flex-direction: column; gap: 14px; }
+.member-card { background-color: #263e5e; border: 2px solid #5d7594; border-radius: 12px; padding: 14px 18px; color: #fff; }
+.member-card.is-expanded { border-color: #72adff; }
+.member-card-header { display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: none; padding: 0; cursor: pointer; text-align: left; font: inherit; font-size: 17px; color: #fff; }
+.member-avatar { width: 34px; height: 34px; border-radius: 50%; background-color: #182b43; border: 1px solid #637995; color: #dcecff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex: none; }
+.member-identity { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.member-username { font-size: 13px; color: #9fb3cc; }
+.member-chevron { color: #9fb3cc; }
+.member-stats { display: flex; flex-wrap: wrap; gap: 10px 36px; margin: 14px 0 0; }
+.member-stats dt { font-size: 13px; font-weight: bold; color: #72adff; text-transform: uppercase; }
+.member-stats dd { margin: 2px 0 0; font-size: 24px; color: #fff; }
+.member-commits { margin-top: 18px; overflow-x: auto; }
+.member-commits h3 { margin: 0 0 8px; font-size: 18px; font-weight: normal; color: #fff; }
+.member-commits .categories-table { background-color: #1d304a; border-color: #536b88; }

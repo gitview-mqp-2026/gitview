@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../App.css";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { PanelLeftOpen } from "lucide-react";
 import AppHeader from "../components/AppHeader.jsx";
 import LogoutButton from "../components/auth/LogoutButton.jsx";
 import Profile from "../components/auth/Profile.jsx";
+import MembersTab from "../components/MembersTab.jsx";
 import CommitLog from "../components/team/CommitLog.jsx";
 import ContributionCategories from "../components/team/ContributionCategories.jsx";
 import ProjectStructurePanel from "../components/team/ProjectStructurePanel.jsx";
@@ -12,6 +13,11 @@ import TeamOverview from "../components/team/TeamOverview.jsx";
 import { replaceFileLabel } from "../utils/fileLabels.js";
 
 const PAGE_SIZE = 10;
+
+const TABS = [
+    { id: "overview", label: "Overview" },
+    { id: "members", label: "Members" },
+];
 
 async function getJson(path) {
     const response = await fetch(path);
@@ -25,6 +31,9 @@ function TeamDashboard() {
     const [commits, setCommits] = useState([]);
     const [stats, setStats] = useState(null);
     const [page, setPage] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "overview";
+    const [commitsVersion, setCommitsVersion] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [tree, setTree] = useState(null);
@@ -137,6 +146,7 @@ function TeamDashboard() {
             getJson(`/commits?teamId=${teamId}`)
                 .then((rows) => {
                     setCommits(rows);
+                    setCommitsVersion((v) => v + 1);
                     setError(null);
                 })
                 .catch((err) => setError(err.message));
@@ -211,27 +221,54 @@ function TeamDashboard() {
             />
 
             <main id="main-content" className="team-page">
-                <TeamOverview stats={stats} loading={loading} error={error} />
-                <CommitLog
-                    commits={commits}
-                    visibleCommits={visibleCommits}
-                    loading={loading}
-                    error={error}
-                    page={page}
-                    pageCount={pageCount}
-                    firstShown={firstShown}
-                    lastShown={lastShown}
-                    onPrevious={() => setPage(page - 1)}
-                    onNext={() => setPage(page + 1)}
-                />
-                <ContributionCategories
-                    tree={tree}
-                    treeError={treeError}
-                    treeLoading={treeLoading}
-                    savingPaths={savingPaths}
-                    labelErrors={labelErrors}
-                    onCategoryChange={saveCategory}
-                />
+                <div className="team-tabs" role="tablist" aria-label="Team views">
+                    {TABS.map((tab) => (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            role="tab"
+                            id={`team-tab-${tab.id}`}
+                            aria-selected={activeTab === tab.id}
+                            aria-controls={`team-tabpanel-${tab.id}`}
+                            className={`team-tab${activeTab === tab.id ? " is-active" : ""}`}
+                            onClick={() => setSearchParams(tab.id === "overview" ? {} : { tab: tab.id }, { replace: true })}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                {activeTab === "members" && (
+                    <div role="tabpanel" id="team-tabpanel-members" aria-labelledby="team-tab-members">
+                        <MembersTab teamId={teamId} commitsVersion={commitsVersion} />
+                    </div>
+                )}
+
+                {activeTab === "overview" && (
+                    <div role="tabpanel" id="team-tabpanel-overview" aria-labelledby="team-tab-overview">
+                        <TeamOverview stats={stats} loading={loading} error={error} />
+                        <CommitLog
+                            commits={commits}
+                            visibleCommits={visibleCommits}
+                            loading={loading}
+                            error={error}
+                            page={page}
+                            pageCount={pageCount}
+                            firstShown={firstShown}
+                            lastShown={lastShown}
+                            onPrevious={() => setPage(page - 1)}
+                            onNext={() => setPage(page + 1)}
+                        />
+                        <ContributionCategories
+                            tree={tree}
+                            treeError={treeError}
+                            treeLoading={treeLoading}
+                            savingPaths={savingPaths}
+                            labelErrors={labelErrors}
+                            onCategoryChange={saveCategory}
+                        />
+                    </div>
+                )}
             </main>
         </>
     );

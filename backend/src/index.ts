@@ -14,7 +14,7 @@ import {
   type FileCategory,
 } from './lib/fileLabels.js';
 import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
-import { countPullRequestsMerged } from './lib/stats.js';
+import { countPullRequestsMerged, memberStats } from './lib/stats.js';
 import { analyzeCourseRepo, CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import {
   GithubAppError,
@@ -171,6 +171,40 @@ app.get('/repositories/:teamId/stats', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: String(err) });
+  }
+});
+
+// One row per team member with their own totals; merge commits are excluded from commit and line counts.
+app.get('/repositories/:teamId/members', async (req, res) => {
+  try {
+    const teamID = parseTeamId(req.params.teamId);
+    if (!teamID) {
+      res.status(400).json({ error: 'Invalid repository id.' });
+      return;
+    }
+    if (!(await db.orm.public.Repository.where({ teamID }).first())) {
+      res.status(404).json({ error: 'Repository not found' });
+      return;
+    }
+
+    const { students, commits } = await commitsForTeam(teamID);
+    const [users, fileChanges] = await Promise.all([
+      db.orm.public.User.all(),
+      commits.length === 0
+        ? Promise.resolve([])
+        : db.orm.public.FileChange.where((change) => change.commitHash.in(commits.map((c) => c.commitHash))).all(),
+    ]);
+    const usersById = new Map(users.map((u) => [u.userID, u]));
+    const members = students.flatMap((s) => {
+      const user = usersById.get(s.userID);
+      return user ? [{ userID: user.userID, name: user.name, username: user.username, email: user.email }] : [];
+    });
+    res.json(
+      memberStats({ members, commits, fileChanges }).sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name)),
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong loading team members.' });
   }
 });
 
@@ -339,7 +373,7 @@ app.delete('/repositories/:teamId/directory-labels', async (req, res) => {
   }
 });
 
-// Optional ?teamId= narrows to commits written by that team's students.
+// Optional ?teamId= narrows to commits written by that team's students; ?studentId= (with teamId) to one student.
 app.get('/commits', async (req, res) => {
   try {
     if (!req.query.teamId) {
@@ -348,7 +382,8 @@ app.get('/commits', async (req, res) => {
     }
 
     const teamID = Number(req.query.teamId);
-    const commits = (await commitsForTeam(teamID)).commits;
+    const studentID = req.query.studentId === undefined ? null : Number(req.query.studentId);
+    const commits = (await commitsForTeam(teamID)).commits.filter((c) => studentID === null || c.studentID === studentID);
     const commitHashes = new Set(commits.map((commit) => commit.commitHash));
     const [labels, directoryLabels, fileChanges] = await Promise.all([
       db.orm.public.RepositoryFileLabel.where({ teamID }).all(),
