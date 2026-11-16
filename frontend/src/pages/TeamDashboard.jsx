@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../App.css";
 import { Link, useParams } from "react-router-dom";
+import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import RepositoryTree from "../components/RepositoryTree.jsx";
 import { replaceFileLabel } from "../utils/fileLabels.js";
 
@@ -17,6 +18,7 @@ function TeamDashboard() {
     const { teamId } = useParams();
     const [commits, setCommits] = useState([]);
     const [stats, setStats] = useState(null);
+    const [course, setCourse] = useState(null);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -44,6 +46,24 @@ function TeamDashboard() {
             .catch((err) => setError(err.message))
             .finally(() => setLoading(false));
     }, [teamId]);
+
+    useEffect(() => {
+        if (!stats?.courseID) {
+            setCourse(null);
+            return undefined;
+        }
+        let cancelled = false;
+        getJson("/courses")
+            .then((courses) => {
+                if (!cancelled) setCourse(courses.find((c) => c.courseID === stats.courseID) ?? null);
+            })
+            .catch(() => {
+                if (!cancelled) setCourse(null);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [stats?.courseID]);
 
     useEffect(() => {
         if (!treePanelOpen) return undefined;
@@ -148,6 +168,14 @@ function TeamDashboard() {
         }
     };
 
+    const crumbs = [
+        { label: "Courses", to: "/" },
+        ...(stats?.courseID
+            ? [{ label: course?.courseName ?? "Course", to: `/course/${stats.courseID}` }]
+            : []),
+        { label: stats?.name ? stats.name.split("/").pop() : "Team" },
+    ];
+
     const stat = (value) => (loading || error || !stats ? "—" : value);
 
     const pageCount = Math.max(1, Math.ceil(commits.length / PAGE_SIZE));
@@ -169,15 +197,7 @@ function TeamDashboard() {
                 >
                     Project structure
                 </button>
-                <div className="file-path">
-                    <span>CS3733 Software Engineering</span>
-                    <span>/</span>
-                    <span>A26</span>
-                    <span>/</span>
-                    <span>Section 02</span>
-                    <span>/</span>
-                    <strong>Team 1</strong>
-                </div>
+                <Breadcrumbs crumbs={crumbs} />
 
                 <div className="nav-actions">
                     <div className="inbox-button"></div>

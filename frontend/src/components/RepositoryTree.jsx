@@ -1,9 +1,16 @@
+import { Tag } from "lucide-react";
 import { useCallback, useState } from "react";
 import { inheritedDirectoryCategory } from "../utils/fileLabels.js";
 
-function CategoryEditor({ paletteId, path, categories, directCategory, inheritedCategory, saving, error, onCategoryChange }) {
+function CategoryEditor({ paletteId, path, categories, directCategory, inheritedCategory, saving, error, anchored = false, onCategoryChange }) {
     return (
-        <div className="tree-file-editor">
+        <div className={`tree-file-editor${anchored ? " is-anchored" : ""}`}>
+            {anchored && (
+                <div className="tree-editor-title">
+                    <Tag size={12} aria-hidden="true" />
+                    <span>Tag this directory</span>
+                </div>
+            )}
             <div id={paletteId} className="tree-tag-palette" role="group" aria-label={`Category for ${path}`}>
                 <button
                     type="button"
@@ -115,23 +122,29 @@ function TreeNode({
                 onToggle={(event) => onDirectoryToggle(node.path, event.currentTarget.open)}
             >
                 <summary>
-                    <span>{node.name}</span>
+                    <span className="tree-directory-name">{node.name}</span>
                     {category && <span className="file-category-badge">{category}</span>}
                     <span className="sr-only">
                         {category ? `, categorized as ${category}` : ", uncategorized"}
                     </span>
-                </summary>
-                <div className="tree-directory-toolbar">
                     <button
+                        className="tree-tag-button"
                         type="button"
+                        title="Tag directory"
+                        aria-label={`Tag directory ${node.name}`}
                         aria-expanded={active}
                         aria-controls={active ? paletteId : undefined}
                         disabled={saving}
-                        onClick={() => onEntryToggle(node.path)}
+                        onClick={(event) => {
+                            // The button sits inside <summary>; keep it from also toggling the folder.
+                            event.preventDefault();
+                            event.stopPropagation();
+                            onEntryToggle(node.path);
+                        }}
                     >
-                        Tag directory
+                        <Tag size={14} aria-hidden="true" />
                     </button>
-                </div>
+                </summary>
                 {active && (
                     <CategoryEditor
                         paletteId={paletteId}
@@ -141,6 +154,7 @@ function TreeNode({
                         inheritedCategory={inheritedCategory}
                         saving={saving}
                         error={error}
+                        anchored
                         onCategoryChange={(choice) => onCategoryChange("directory", node.path, choice)}
                     />
                 )}

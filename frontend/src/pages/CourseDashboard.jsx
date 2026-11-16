@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "../App.css";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar.jsx";
 
 async function post(path) {
@@ -14,9 +14,6 @@ async function post(path) {
 
 function CourseDashboard() {
     const { courseId } = useParams();
-    const navigate = useNavigate();
-    const [url, setUrl] = useState("");
-    const [analyzing, setAnalyzing] = useState(false);
     const [error, setError] = useState(null);
     const [repos, setRepos] = useState([]);
     const [course, setCourse] = useState(null);
@@ -86,37 +83,13 @@ function CourseDashboard() {
     const running = job?.status === "running";
     const failed = job?.results?.filter((r) => !r.ok) ?? [];
 
-    const analyze = async (event) => {
-        event.preventDefault();
-        setAnalyzing(true);
-        setError(null);
-
-        try {
-            const response = await fetch("/repositories/analyze", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url }),
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                throw new Error(data.error || `Analysis failed (HTTP ${response.status})`);
-            }
-            navigate(`/team/${data.teamID}`);
-        } catch (err) {
-            setError(err.message);
-            setAnalyzing(false);
-        }
-    };
-
     return (
         <div>
-            <NavBar />
+            <NavBar crumbs={[{ label: "Courses", to: "/" }, { label: course?.courseName ?? "Course" }]} />
 
-            <div>
-                <Link to="/" className="back-link">← All Courses</Link>
-            </div>
-                    
             <div className="course-page">
+                <Link to="/" className="back-link">← All Courses</Link>
+
                 <div className="course-header">
                     <div>
                         {course && <h1>{course.courseName}</h1>}
@@ -140,22 +113,6 @@ function CourseDashboard() {
                         {failed.length > 0 && `, ${failed.length} failed`}.
                     </p>
                 )}
-
-                <form className="analyze-repo" onSubmit={analyze}>
-                    <input
-                        className="repo-input"
-                        type="text"
-                        placeholder="https://github.com/owner/repo"
-                        aria-label="Repository URL"
-                        value={url}
-                        onChange={(event) => setUrl(event.target.value)}
-                        disabled={analyzing}
-                    />
-
-                    <button className="repo-button" type="submit" disabled={analyzing || !url.trim()}>
-                        {analyzing ? "Analyzing..." : "Analyze Repo"}
-                    </button>
-                </form>
 
                 {error && <p className="repo-error" role="alert">{error}</p>}
 

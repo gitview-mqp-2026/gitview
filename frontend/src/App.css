@@ -58,6 +58,17 @@ button:hover {
     white-space: nowrap;
 }
 
+.file-path > * {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-path > .crumb-separator {
+    flex: 0 0 auto;
+}
+
 .nav-actions {
     flex: 0 0 auto;
     display: flex;
@@ -224,30 +235,34 @@ button:hover {
 
 .stats-overview {
     display: flex;
-    gap: 16px;
-    padding: 14px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 0;
 }
 
 .stat-card {
-    width: 168px;
-    height: 98px;
+    width: 140px;
+    height: 80px;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     justify-content: space-between;
-    padding: 16px;
+    padding: 12px 14px;
+    text-align: left;
     background-color: #263e5e;
     border: 2px solid #637995;
-    border-radius: 12px;
+    border-radius: 10px;
 }
 
 .stat-card span {
     color: #72adff;
-    font-size: 15px;
+    font-size: 12px;
     font-weight: bold;
 }
 
 .stat-card strong {
-    font-size: 34px;
+    font-size: 26px;
     font-weight: normal;
 }
 
@@ -333,9 +348,7 @@ button:hover {
     left: 0;
     bottom: 0;
     z-index: 20;
-    width: fit-content;
-    min-width: min(440px, 100vw);
-    max-width: min(720px, 100vw);
+    width: min(480px, 100vw);
     display: flex;
     flex-direction: column;
     padding: 20px;
@@ -424,17 +437,53 @@ button:hover {
 }
 
 .tree-directory summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 6px 4px;
     cursor: pointer;
+}
+
+.tree-directory-name {
+    min-width: 0;
     overflow-wrap: anywhere;
 }
 
 .tree-directory summary .file-category-badge {
-    margin-left: 8px;
+    flex: 0 0 auto;
 }
 
-.tree-directory-toolbar {
-    margin: 0 4px 4px 20px;
+.tree-directory summary .tree-tag-button {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin-left: auto;
+    padding: 0;
+    color: #9fb3cc;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.tree-directory summary .tree-tag-button:hover,
+.tree-directory summary .tree-tag-button[aria-expanded="true"] {
+    color: white;
+    background-color: #243b58;
+    border-color: #526a86;
+}
+
+.tree-directory summary .tree-tag-button:focus-visible {
+    outline: 2px solid #72adff;
+    outline-offset: 2px;
+}
+
+.tree-directory summary .tree-tag-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .tree-file,
@@ -500,14 +549,14 @@ button:hover {
 }
 
 .file-category-badge {
-    max-width: 190px;
+    max-width: 150px;
     flex: 0 1 auto;
-    padding: 3px 7px;
+    padding: 1px 6px;
     color: #dcecff;
     background-color: #182b43;
     border: 1px solid #526a86;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 10px;
     overflow-wrap: anywhere;
 }
 
@@ -516,7 +565,7 @@ button:hover {
     flex-direction: column;
     gap: 7px;
     margin: 2px 4px 8px 22px;
-    padding: 9px;
+    padding: 8px;
     background-color: #1d304a;
     border: 1px solid #536b88;
     border-radius: 7px;
@@ -525,12 +574,44 @@ button:hover {
 .tree-tag-palette {
     display: flex;
     flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* Directory editor reads as a popover opened by the tag icon: right-aligned under it, with a caret. */
+.tree-file-editor.is-anchored {
+    position: relative;
+    width: min(100%, 300px);
+    margin: 10px 4px 8px auto;
+    border-color: #72adff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.tree-file-editor.is-anchored::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 10px;
+    width: 10px;
+    height: 10px;
+    background-color: #1d304a;
+    border-top: 1px solid #72adff;
+    border-left: 1px solid #72adff;
+    transform: rotate(45deg);
+}
+
+.tree-editor-title {
+    display: flex;
+    align-items: center;
     gap: 6px;
+    color: #9fb3cc;
+    font-size: 11px;
 }
 
 .tree-tag-palette button {
-    min-height: 32px;
-    padding: 5px 9px;
+    min-height: 24px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: normal;
     color: #dce6f4;
     background-color: #182b43;
     border: 1px solid #7186a1;
@@ -546,8 +627,7 @@ button:hover {
 }
 
 .tree-tag-palette button:disabled,
-.category-paths button:disabled,
-.tree-directory-toolbar button:disabled {
+.category-paths button:disabled {
     opacity: 0.6;
     cursor: wait;
 }
@@ -581,8 +661,7 @@ button:hover {
     overflow-wrap: anywhere;
 }
 
-.category-paths button,
-.tree-directory-toolbar button {
+.category-paths button {
     padding: 4px 8px;
     color: white;
     background-color: #182b43;
@@ -661,12 +740,37 @@ button:hover {
         padding: 24px 16px 36px;
     }
 
-    .stats-overview {
+    .file-path > :nth-last-child(n + 4) {
+        display: none;
+    }
+
+    .team-header {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .team-header h1 {
+        font-size: 28px;
+        overflow-wrap: anywhere;
+    }
+
+    .two-columns {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .categories-table {
+        display: block;
         overflow-x: auto;
     }
 
-    .file-path {
-        display: none;
+    .commit-tags-cell {
+        min-width: 180px;
+    }
+
+    .pager {
+        flex-wrap: wrap;
+        gap: 10px;
     }
 
     .repository-tree ul {
@@ -715,6 +819,14 @@ button:hover {
 
     .logo {
         font-size: 22px;
+    }
+
+    .file-path > :nth-last-child(n + 2) {
+        display: none;
+    }
+
+    .file-path {
+        font-size: 14px;
     }
 
     .inbox-button {
@@ -1054,10 +1166,12 @@ a {
 }
 
 .back-link {
-    display: inline-block;
+    display: block;
+    width: fit-content;
     margin-bottom: 8px;
     color: #9fb3cc;
     font-size: 14px;
+    text-align: left;
     text-decoration: none;
 }
 
@@ -1133,10 +1247,12 @@ a {
 }
 
 .back-link {
-    display: inline-block;
+    display: block;
+    width: fit-content;
     margin-bottom: 8px;
     color: #9fb3cc;
     font-size: 14px;
+    text-align: left;
     text-decoration: none;
 }
 
@@ -1236,7 +1352,22 @@ a {
     flex-direction: column;
     align-items: center;
     gap: 14px;
-    padding: 0 30px 30px;
+    padding: 22px 30px 30px;
+}
+
+.course-page > .back-link {
+    width: min(1400px, 100%);
+    margin: 0;
+    text-align: left;
+}
+
+.team-header > div {
+    text-align: left;
+}
+
+/* A back link placed straight under the header (no padded page around it) still gets spacing. */
+.nav-bar + .back-link {
+    margin: 22px 30px 0;
 }
 
 .course-page > * {
@@ -1245,9 +1376,10 @@ a {
 
 .course-header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: flex-end;
-    gap: 20px;
+    gap: 14px 20px;
 }
 
 .course-header h1 {
@@ -1263,10 +1395,6 @@ a {
 }
 
 .course-page .course-status {
-    margin: 0;
-}
-
-.course-page .analyze-repo {
     margin: 0;
 }
 
@@ -1309,5 +1437,38 @@ a {
 @media (max-width: 520px) {
     .course-page .repo-widget-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .course-page {
+        padding: 16px 16px 24px;
+    }
+
+    .course-header h1 {
+        overflow-wrap: anywhere;
+    }
+
+    .courses {
+        padding: 16px;
+    }
+
+    .course-list {
+        padding: 0;
+    }
+
+    .course-widget {
+        width: 100%;
+    }
+
+    .add-course-popup {
+        width: min(500px, calc(100vw - 32px));
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    .stat-card {
+        flex: 1 1 130px;
     }
 }
