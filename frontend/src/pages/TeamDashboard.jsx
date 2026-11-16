@@ -33,6 +33,10 @@ function TeamDashboard() {
     const [page, setPage] = useState(1);
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "overview";
+    const memberParam = Number(searchParams.get("member"));
+    const expandedMemberId = Number.isInteger(memberParam) && memberParam > 0 ? memberParam : null;
+    const [members, setMembers] = useState(null);
+    const [membersError, setMembersError] = useState(null);
     const [commitsVersion, setCommitsVersion] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -60,6 +64,23 @@ function TeamDashboard() {
             .catch((err) => setError(err.message))
             .finally(() => setLoading(false));
     }, [teamId]);
+
+    useEffect(() => {
+        let cancelled = false;
+        setMembers(null);
+        setMembersError(null);
+        getJson(`/repositories/${teamId}/members`)
+            .then((rows) => !cancelled && setMembers(rows))
+            .catch((err) => !cancelled && setMembersError(err.message));
+        return () => {
+            cancelled = true;
+        };
+    }, [teamId]);
+
+    const showMember = (userID) => setSearchParams(
+        userID ? { tab: "members", member: String(userID) } : { tab: "members" },
+        { replace: true },
+    );
 
     useEffect(() => {
         if (!treePanelOpen) return undefined;
@@ -240,13 +261,28 @@ function TeamDashboard() {
 
                 {activeTab === "members" && (
                     <div role="tabpanel" id="team-tabpanel-members" aria-labelledby="team-tab-members">
-                        <MembersTab teamId={teamId} commitsVersion={commitsVersion} />
+                        <MembersTab
+                            teamId={teamId}
+                            members={members}
+                            loading={!members && !membersError}
+                            error={membersError}
+                            expandedId={expandedMemberId}
+                            onExpandedChange={showMember}
+                            commitsVersion={commitsVersion}
+                        />
                     </div>
                 )}
 
                 {activeTab === "overview" && (
                     <div role="tabpanel" id="team-tabpanel-overview" aria-labelledby="team-tab-overview">
-                        <TeamOverview stats={stats} loading={loading} error={error} />
+                        <TeamOverview
+                            stats={stats}
+                            loading={loading}
+                            error={error}
+                            members={members}
+                            membersError={membersError}
+                            onShowMember={showMember}
+                        />
                         <CommitLog
                             commits={commits}
                             visibleCommits={visibleCommits}

@@ -15,9 +15,13 @@ import {
 } from "lucide-react";
 import { withMemberQualifiers } from "../../utils/teamMembers.js";
 
-function TeamOverview({ error, loading, stats }) {
-    const members = withMemberQualifiers(stats?.teamMembers ?? []);
-    const membersById = new Map(members.map((member) => [member.userID, member]));
+const OVERVIEW_MEMBER_LIMIT = 5;
+
+function TeamOverview({ error, loading, stats, members, membersError, onShowMember }) {
+    // People who share a display name get a "Member <id>" qualifier. `members` below is the /members list with
+    // commit counts; both are keyed by the same student id, so the qualifiers apply to it as well as to alerts.
+    const qualifiedMembers = withMemberQualifiers(stats?.teamMembers ?? []);
+    const membersById = new Map(qualifiedMembers.map((member) => [member.userID, member]));
     const metrics = [
         { label: "Commits", value: stats?.commits, icon: GitCommitHorizontal },
         { label: "PRs merged", value: stats?.prsMerged, icon: GitPullRequest },
@@ -130,25 +134,43 @@ function TeamOverview({ error, loading, stats }) {
                             <span className="status-badge">{stats?.teamMembers.length ?? 0}</span>
                         )}
                     </header>
-                    <div className="overview-list" aria-busy={loading}>
+                    <div className="overview-list" aria-busy={loading || (!members && !membersError)}>
                         {loading && [0, 1, 2].map((item) => (
                             <span className="skeleton list-skeleton" aria-hidden="true" key={item} />
                         ))}
                         {error && <span className="empty-state">Members are unavailable.</span>}
-                        {!loading && !error && stats?.teamMembers.length === 0 && (
+                        {!loading && !error && membersError && (
+                            <span className="empty-state" role="alert">Could not load members.</span>
+                        )}
+                        {!loading && !error && !membersError && !members && (
+                            <span className="empty-state">Loading members…</span>
+                        )}
+                        {!loading && !error && members?.length === 0 && (
                             <div className="empty-state">No members assigned</div>
                         )}
-                        {!loading && !error && members.map((member) => (
+                        {!loading && !error && (members ?? []).slice(0, OVERVIEW_MEMBER_LIMIT).map((member) => (
                             <div className="member" key={member.userID}>
                                 <span className="member-avatar" aria-hidden="true">
-                                    {member.displayName.trim().charAt(0).toUpperCase() || "?"}
+                                    {member.name.trim().charAt(0).toUpperCase() || "?"}
                                 </span>
                                 <span className="member-copy">
-                                    <span>{member.displayName}</span>
-                                    {member.qualifier && <small>{member.qualifier}</small>}
+                                    <button type="button" className="member-link" onClick={() => onShowMember(member.userID)}>
+                                        {member.name}
+                                    </button>
+                                    {membersById.get(member.userID)?.qualifier && (
+                                        <small>{membersById.get(member.userID).qualifier}</small>
+                                    )}
+                                </span>
+                                <span className="member-quick-stats">
+                                    {member.commits} {member.commits === 1 ? "commit" : "commits"} · {member.prsMerged} {member.prsMerged === 1 ? "PR" : "PRs"}
                                 </span>
                             </div>
                         ))}
+                        {!loading && !error && (members?.length ?? 0) > OVERVIEW_MEMBER_LIMIT && (
+                            <button type="button" className="member-link member-view-all" onClick={() => onShowMember(null)}>
+                                View all {members.length} members
+                            </button>
+                        )}
                     </div>
                 </article>
             </section>
