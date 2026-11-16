@@ -6,7 +6,7 @@ export interface RepoUrl {
   canonical: string;
   /** What we hand to git clone */
   cloneUrl: string;
-  /** owner/repo */
+  /** repo name without the owner/org prefix */
   name: string;
 }
 
@@ -56,7 +56,7 @@ export function parseRepoUrl(input: unknown): RepoUrl {
   }
 
   const canonical = `https://${host}/${segments.join('/')}`;
-  return { canonical, cloneUrl: `${canonical}.git`, name: segments.join('/') };
+  return { canonical, cloneUrl: `${canonical}.git`, name: segments[segments.length - 1] };
 }
 
 function isPrivateAddress(addr: string): boolean {

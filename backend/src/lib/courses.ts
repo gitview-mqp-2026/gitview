@@ -129,7 +129,7 @@ export async function syncCourse(courseID: number): Promise<SyncResult> {
   for (const r of matching) {
     const url = parseRepoUrl(r.htmlUrl).canonical;
     const githubRepoId = String(r.id);
-    const name = r.fullName;
+    const name = r.fullName.split('/').pop() ?? r.fullName;
     const existing =
       (await db.orm.public.Repository.where({ githubRepoId }).first()) ??
       (await db.orm.public.Repository.where({ url }).first());

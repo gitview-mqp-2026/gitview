@@ -183,15 +183,23 @@ export async function ingestRepo(opts: {
   }
 
   async function studentIdFor(email: string, name: string): Promise<number> {
-    const githubUsername = usernameFromEmail(email) ?? usernameFromAuthor(name);
+    // only a noreply email is a confirmed GitHub account
+    const verifiedUsername = usernameFromEmail(email);
+    const githubUsername = verifiedUsername ?? usernameFromAuthor(name);
     const emailIdentity = normalizeIdentity(email.split('@')[0]);
     const authorName = normalizeName(name);
 
-    const githubProfile = githubUsername
-      ? await getCachedGithubUser(githubUsername)
+    const githubProfile = verifiedUsername
+      ? await getCachedGithubUser(verifiedUsername)
       : null;
 
     const githubName = githubProfile?.name?.trim() || null;
+
+    // an author name that is just a username isn't the full name 
+    const authorDisplayName =
+      /\s/.test(name.trim()) && normalizeName(name) !== normalizeName(githubUsername ?? '')
+        ? name.trim()
+        : null;
 
     const cacheKey = githubUsername
       ? `github:${githubUsername}`
@@ -227,6 +235,20 @@ export async function ingestRepo(opts: {
       );
     }
 
+    // match git email to a student's real name, or a student's email against the author name
+    if (matches.length === 0) {
+      const authorKeys = [authorName, githubName ? normalizeName(githubName) : '']
+        .filter(Boolean)
+        .map(normalizeIdentity);
+      matches = studentsOnTeam.filter((student) => {
+        const studentEmailKey = normalizeIdentity(student.email.split('@')[0]);
+        return (
+          (emailIdentity && student.name && normalizeIdentity(student.name) === emailIdentity) ||
+          (studentEmailKey && authorKeys.includes(studentEmailKey))
+        );
+      });
+    }
+
     if (matches.length === 1) {
       const matchedUser = matches[0];
 
@@ -236,9 +258,9 @@ export async function ingestRepo(opts: {
       } = {};
 
       // Save a newly discovered GitHub username.
-      if (githubUsername && !matchedUser.username) {
-        updates.username = githubUsername;
-        matchedUser.username = githubUsername;
+      if (verifiedUsername && !matchedUser.username) {
+        updates.username = verifiedUsername;
+        matchedUser.username = verifiedUsername;
       }
 
       // Use GitHub profile name if existing name is missing or just the GitHub username.
@@ -270,8 +292,8 @@ export async function ingestRepo(opts: {
     if (!user) {
       user = await db.orm.public.User.create({
         email: key,
-        name: githubName ?? name,
-        username: githubUsername,
+        name: githubName ?? authorDisplayName,
+        username: verifiedUsername,
       });
     }
 
@@ -290,7 +312,7 @@ export async function ingestRepo(opts: {
 
     studentsOnTeam.push({
       ...user,
-      username: user.username ?? githubUsername,
+      username: user.username ?? verifiedUsername,
     });
 
     return user.userID;

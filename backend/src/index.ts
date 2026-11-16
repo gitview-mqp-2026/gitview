@@ -13,6 +13,7 @@ import {
 import { filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged } from './lib/stats.js';
 import { CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
+import { editStudent, mergeStudents } from './lib/roster.js';
 import {
   GithubAppError,
   installUrl,
@@ -325,7 +326,11 @@ app.get('/courses/:courseId/roster', async (req, res) => {
         if (!rosterMap.has(student.userID)) {
           rosterMap.set(student.userID, {
             ...student,
-            name: user?.name ?? null,
+            // makes sure name is not just the GitHub username
+            name:
+              user?.name && user.name.trim().toLowerCase() !== (user.username ?? '').toLowerCase()
+                ? user.name
+                : null,
             email: user?.email ?? null,
             username: user?.username ?? null,
             teamID: student.teamID,
@@ -344,7 +349,27 @@ app.get('/courses/:courseId/roster', async (req, res) => {
   }
 });
 
-// retrieves all members of a GitHub organization connected to a course
+// edits a student's name, GitHub username or email
+app.patch('/courses/:courseId/roster/:userId', async (req, res) => {
+  try {
+    await editStudent(Number(req.params.courseId), Number(req.params.userId), req.body ?? {});
+    res.json({ ok: true });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// merges one student into another 
+app.post('/courses/:courseId/roster/merge', async (req, res) => {
+  try {
+    const { keepUserID, mergeUserID } = req.body ?? {};
+    await mergeStudents(Number(req.params.courseId), Number(keepUserID), Number(mergeUserID));
+    res.json({ ok: true });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 app.get('/courses/:courseId/github-members', async (req, res) => {
   try {
     const courseID = Number(req.params.courseId);
