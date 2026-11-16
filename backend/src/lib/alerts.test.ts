@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildTeamAlerts, INACTIVITY_DAYS } from './alerts.js';
+import { activeAlertRows, buildTeamAlerts, INACTIVITY_DAYS } from './alerts.js';
 
 const instant = (value: string) => ({ epochMilliseconds: Date.parse(value) });
 
@@ -56,4 +56,19 @@ test('buildTeamAlerts ignores future timestamps, sub-threshold inactivity, and m
   );
 
   assert.deepEqual(alerts, []);
+});
+
+test('activeAlertRows keeps the database identity of generated alerts', () => {
+  assert.deepEqual(activeAlertRows([{
+    type: 'inactivity',
+    studentID: 7,
+    commitHash: 'a'.repeat(40),
+    daysInactive: 8,
+    message: 'Ada - no commits in 8 days',
+  }]), [{
+    alertType: 'inactivity',
+    alertStatus: 'active',
+    commitHash: 'a'.repeat(40),
+    studentID: 7,
+  }]);
 });

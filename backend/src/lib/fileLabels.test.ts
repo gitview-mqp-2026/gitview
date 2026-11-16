@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  commitTagRows,
   commitTagsByHash,
   FILE_CATEGORIES,
   normalizeFileCategory,
@@ -86,5 +87,19 @@ test('labels saved under a renamed category still resolve to the current name', 
       [{ commitHash: hash, filePath: 'src/App.jsx' }],
     ).get(hash),
     ['Templates/Components'],
+  );
+});
+
+test('commitTagRows maps derived categories to stored tag ids', () => {
+  const hash = 'd'.repeat(40);
+  assert.deepEqual(
+    commitTagRows(
+      new Map([[hash, ['Database', 'Testing']]]),
+      new Map([['Database', 2], ['Testing', 5]]),
+    ),
+    [
+      { commitHash: hash, tagID: 2 },
+      { commitHash: hash, tagID: 5 },
+    ],
   );
 });

@@ -4,18 +4,20 @@ import cors from 'cors';
 import { db } from './prisma/db.js';
 import { analyzeRepo, AnalyzeError, RepoUrlError } from './lib/analyze.js';
 import {
+  commitTagRows,
   commitTagsByHash,
   FILE_CATEGORIES,
   normalizeFileCategory,
   parseFileLabelInput,
   parseFilePath,
   parseTeamId,
+  type FileCategory,
 } from './lib/fileLabels.js';
 import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged } from './lib/stats.js';
 import { CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import { GithubAppError, installUrl } from './lib/githubApp.js';
-import { buildTeamAlerts } from './lib/alerts.js';
+import { activeAlertRows, buildTeamAlerts, type TeamAlert } from './lib/alerts.js';
 
 const app = express();
 app.use(cors());
@@ -32,6 +34,53 @@ async function commitsForTeam(teamID: number) {
       .orderBy((commit) => commit.dateTime.desc())
       .all();
   return { students, commits };
+}
+
+async function replaceStoredAlerts(studentIds: number[], alerts: readonly TeamAlert[]) {
+  if (studentIds.length === 0) return;
+
+  await db.transaction(async (tx) => {
+    const stored = await tx.orm.public.Alert.where((alert) => alert.studentID.in(studentIds)).all();
+    for (const alert of stored) {
+      if (alert.alertType === 'inactivity' || alert.alertType === 'deadline') {
+        await tx.orm.public.Alert.where({ alertID: alert.alertID }).delete();
+      }
+    }
+    for (const alert of activeAlertRows(alerts)) {
+      await tx.orm.public.Alert.create(alert);
+    }
+  });
+}
+
+async function replaceStoredCommitTags(
+  commitHashes: string[],
+  tagsByHash: ReturnType<typeof commitTagsByHash>,
+) {
+  if (commitHashes.length === 0) return;
+
+  await db.transaction(async (tx) => {
+    const storedLinks = await tx.orm.public.CommitTag
+      .where((link) => link.commitHash.in(commitHashes))
+      .all();
+    for (const link of storedLinks) {
+      await tx.orm.public.CommitTag.where({ commitHash: link.commitHash, tagID: link.tagID }).delete();
+    }
+
+    const tagIdByCategory = new Map<FileCategory, number>();
+    for (const tag of await tx.orm.public.Tag.all()) {
+      const category = normalizeFileCategory(tag.categoryName);
+      if (category) tagIdByCategory.set(category, tag.tagID);
+    }
+    for (const category of new Set([...tagsByHash.values()].flat())) {
+      if (!tagIdByCategory.has(category)) {
+        const tag = await tx.orm.public.Tag.create({ categoryName: category });
+        tagIdByCategory.set(category, tag.tagID);
+      }
+    }
+    for (const link of commitTagRows(tagsByHash, tagIdByCategory)) {
+      await tx.orm.public.CommitTag.create(link);
+    }
+  });
 }
 
 // Newest first, with a commit count and last-commit time for the Home widgets.
@@ -106,6 +155,9 @@ app.get('/repositories/:teamId/stats', async (req, res) => {
         };
       })
       .sort((a, b) => a.userID - b.userID);
+    const alerts = buildTeamAlerts(teamMembers, commits);
+    // Alerts change with time, so refresh their materialized rows whenever team stats are read.
+    await replaceStoredAlerts(studentIds, alerts);
     res.json({
       teamID,
       courseID: repo.courseID ?? null,
@@ -117,7 +169,7 @@ app.get('/repositories/:teamId/stats', async (req, res) => {
       prsMerged: countPullRequestsMerged(commits.map((c) => c.commitSubject)),
       comments: 0,
       issuesClosed: 0,
-      alerts: buildTeamAlerts(teamMembers, commits),
+      alerts,
     });
   } catch (err) {
     res.status(500).json({ error: String(err) });
@@ -308,6 +360,7 @@ app.get('/commits', async (req, res) => {
         : db.orm.public.FileChange.where((change) => change.commitHash.in([...commitHashes])).all(),
     ]);
     const tagsByHash = commitTagsByHash(labels, directoryLabels, fileChanges);
+    await replaceStoredCommitTags([...commitHashes], tagsByHash);
     res.json(commits.map((commit) => ({ ...commit, tags: tagsByHash.get(commit.commitHash) ?? [] })));
   } catch (err) {
     res.status(500).json({ error: String(err) });

@@ -73,6 +73,21 @@ export function commitTagsByHash(
   return result;
 }
 
+export function commitTagRows(
+  tagsByHash: ReadonlyMap<string, readonly FileCategory[]>,
+  tagIdByCategory: ReadonlyMap<FileCategory, number>,
+) {
+  const rows: { commitHash: string; tagID: number }[] = [];
+  for (const [commitHash, categories] of tagsByHash) {
+    for (const category of categories) {
+      const tagID = tagIdByCategory.get(category);
+      if (tagID === undefined) throw new Error(`Missing stored tag for ${category}.`);
+      rows.push({ commitHash, tagID });
+    }
+  }
+  return rows;
+}
+
 export function parseFilePath(value: unknown): string | null {
   if (typeof value !== 'string' || value.length === 0 || value.length > 4096 || value.includes('\0')) {
     return null;

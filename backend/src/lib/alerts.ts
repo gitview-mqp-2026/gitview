@@ -30,6 +30,15 @@ export type TeamAlert =
       message: string;
     };
 
+export function activeAlertRows(alerts: readonly TeamAlert[]) {
+  return alerts.map(({ type: alertType, studentID, commitHash }) => ({
+    alertType,
+    alertStatus: 'active',
+    commitHash,
+    studentID,
+  }));
+}
+
 export function buildTeamAlerts(
   students: StudentRow[],
   commits: CommitRow[],
