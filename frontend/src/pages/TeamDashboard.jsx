@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../App.css";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import RepositoryTree from "../components/RepositoryTree.jsx";
+import CommitTable from "../components/CommitTable.jsx";
+import MembersTab from "../components/MembersTab.jsx";
 import { replaceFileLabel } from "../utils/fileLabels.js";
 
-const PAGE_SIZE = 10;
+const TABS = [
+    { id: "overview", label: "Overview" },
+    { id: "members", label: "Members" },
+];
 
 async function getJson(path) {
     const response = await fetch(path);
@@ -17,7 +22,9 @@ function TeamDashboard() {
     const { teamId } = useParams();
     const [commits, setCommits] = useState([]);
     const [stats, setStats] = useState(null);
-    const [page, setPage] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "overview";
+    const [commitsVersion, setCommitsVersion] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [tree, setTree] = useState(null);
@@ -31,7 +38,6 @@ function TeamDashboard() {
     useEffect(() => {
         setLoading(true);
         setError(null);
-        setPage(1);
 
         Promise.all([
             getJson(`/commits?teamId=${teamId}`),
@@ -130,6 +136,7 @@ function TeamDashboard() {
             getJson(`/commits?teamId=${teamId}`)
                 .then((rows) => {
                     setCommits(rows);
+                    setCommitsVersion((v) => v + 1);
                     setError(null);
                 })
                 .catch((err) => setError(err.message));
@@ -149,11 +156,6 @@ function TeamDashboard() {
     };
 
     const stat = (value) => (loading || error || !stats ? "—" : value);
-
-    const pageCount = Math.max(1, Math.ceil(commits.length / PAGE_SIZE));
-    const firstShown = (page - 1) * PAGE_SIZE + 1;
-    const lastShown = Math.min(page * PAGE_SIZE, commits.length);
-    const visibleCommits = commits.slice(firstShown - 1, lastShown);
 
     return (
         <div>
@@ -243,6 +245,31 @@ function TeamDashboard() {
                     <button>last 30 days</button>
                 </section>
 
+                <div className="team-tabs" role="tablist" aria-label="Team views">
+                    {TABS.map((tab) => (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            role="tab"
+                            id={`team-tab-${tab.id}`}
+                            aria-selected={activeTab === tab.id}
+                            aria-controls={`team-tabpanel-${tab.id}`}
+                            className={`team-tab${activeTab === tab.id ? " is-active" : ""}`}
+                            onClick={() => setSearchParams(tab.id === "overview" ? {} : { tab: tab.id }, { replace: true })}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                {activeTab === "members" && (
+                    <div role="tabpanel" id="team-tabpanel-members" aria-labelledby="team-tab-members">
+                        <MembersTab teamId={teamId} commitsVersion={commitsVersion} />
+                    </div>
+                )}
+
+                {activeTab === "overview" && (
+                <div role="tabpanel" id="team-tabpanel-overview" aria-labelledby="team-tab-overview">
                 {/* Stats Overview */}
                 <section className="stats-overview">
                     <div className="stat-card">
@@ -257,12 +284,12 @@ function TeamDashboard() {
 
                     <div className="stat-card">
                         <span>COMMENTS</span>
-                        <strong>{stat(stats?.comments)}</strong>
+                        <strong>—</strong>
                     </div>
 
                     <div className="stat-card">
                         <span>ISSUES CLOSED</span>
-                        <strong>{stat(stats?.issuesClosed)}</strong>
+                        <strong>—</strong>
                     </div>
 
                     <div className="stat-card">
@@ -326,58 +353,7 @@ function TeamDashboard() {
 
                     {!loading && !error && (
                         <>
-                            <table className="categories-table">
-                                <thead>
-                                    <tr>
-                                        <th>Hash</th>
-                                        <th>Subject</th>
-                                        <th>Author</th>
-                                        <th>Date</th>
-                                        <th>Categories from files</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {commits.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5}>No commits found for this repository.</td>
-                                        </tr>
-                                    ) : (
-                                        visibleCommits.map((c) => (
-                                            <tr key={c.commitHash}>
-                                                <td><code>{c.commitHash.slice(0, 7)}</code></td>
-                                                <td>{c.commitSubject}</td>
-                                                <td>{c.author}</td>
-                                                <td>{new Date(c.dateTime).toLocaleDateString()}</td>
-                                                <td className="commit-tags-cell">
-                                                    <div
-                                                        className="commit-tag-summary"
-                                                        title="Derived from labeled files changed by this commit"
-                                                    >
-                                                        {(c.tags ?? []).map((tag) => (
-                                                            <span className="file-category-badge" key={tag}>{tag}</span>
-                                                        ))}
-                                                        {(c.tags ?? []).length === 0 && <span className="empty-category">None</span>}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-
-                            {pageCount > 1 && (
-                                <div className="pager">
-                                    <button type="button" onClick={() => setPage(page - 1)} disabled={page === 1}>
-                                        Previous
-                                    </button>
-                                    <span>
-                                        Page {page} of {pageCount} · {firstShown}–{lastShown} of {commits.length}
-                                    </span>
-                                    <button type="button" onClick={() => setPage(page + 1)} disabled={page === pageCount}>
-                                        Next
-                                    </button>
-                                </div>
-                            )}
+                            <CommitTable commits={commits} emptyMessage="No commits found for this repository." />
                         </>
                     )}
                 </section>
@@ -445,6 +421,8 @@ function TeamDashboard() {
                         </tbody>
                     </table>
                 </section>
+                </div>
+                )}
 
             </main>
         </div>
