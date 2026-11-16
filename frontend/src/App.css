@@ -1392,3 +1392,8 @@ a {
 .member-commits { margin-top: 18px; overflow-x: auto; }
 .member-commits h3 { margin: 0 0 8px; font-size: 18px; font-weight: normal; color: #fff; }
 .member-commits .categories-table { background-color: #1d304a; border-color: #536b88; }
+.member-link { background: none; border: none; padding: 0; font: inherit; color: #fff; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
+.member-link:hover { color: #72adff; text-decoration-color: currentColor; }
+.member-link:focus-visible { outline: 2px solid #72adff; outline-offset: 2px; }
+.member-view-all { color: #9fb3cc; font-size: 14px; }
+.member-quick-stats { margin-left: auto; color: #9fb3cc; font-size: 14px; white-space: nowrap; }

@@ -3,8 +3,10 @@ import "../App.css";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import RepositoryTree from "../components/RepositoryTree.jsx";
 import CommitTable from "../components/CommitTable.jsx";
-import MembersTab from "../components/MembersTab.jsx";
+import MembersTab, { initials } from "../components/MembersTab.jsx";
 import { replaceFileLabel } from "../utils/fileLabels.js";
+
+const OVERVIEW_MEMBER_LIMIT = 5;
 
 const TABS = [
     { id: "overview", label: "Overview" },
@@ -24,6 +26,10 @@ function TeamDashboard() {
     const [stats, setStats] = useState(null);
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "overview";
+    const memberParam = Number(searchParams.get("member"));
+    const expandedMemberId = Number.isInteger(memberParam) && memberParam > 0 ? memberParam : null;
+    const [members, setMembers] = useState(null);
+    const [membersError, setMembersError] = useState(null);
     const [commitsVersion, setCommitsVersion] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -50,6 +56,23 @@ function TeamDashboard() {
             .catch((err) => setError(err.message))
             .finally(() => setLoading(false));
     }, [teamId]);
+
+    useEffect(() => {
+        let cancelled = false;
+        setMembers(null);
+        setMembersError(null);
+        getJson(`/repositories/${teamId}/members`)
+            .then((rows) => !cancelled && setMembers(rows))
+            .catch((err) => !cancelled && setMembersError(err.message));
+        return () => {
+            cancelled = true;
+        };
+    }, [teamId]);
+
+    const showMember = (userID) => setSearchParams(
+        userID ? { tab: "members", member: String(userID) } : { tab: "members" },
+        { replace: true },
+    );
 
     useEffect(() => {
         if (!treePanelOpen) return undefined;
@@ -264,7 +287,15 @@ function TeamDashboard() {
 
                 {activeTab === "members" && (
                     <div role="tabpanel" id="team-tabpanel-members" aria-labelledby="team-tab-members">
-                        <MembersTab teamId={teamId} commitsVersion={commitsVersion} />
+                        <MembersTab
+                            teamId={teamId}
+                            members={members}
+                            loading={!members && !membersError}
+                            error={membersError}
+                            expandedId={expandedMemberId}
+                            onExpandedChange={showMember}
+                            commitsVersion={commitsVersion}
+                        />
                     </div>
                 )}
 
@@ -326,20 +357,25 @@ function TeamDashboard() {
                         <h2>Members</h2>
 
                         <div className="content">
-                            <div className="member">
-                                <div className="profile-button"></div>
-                                <span>Student 2 · username</span>
-                            </div>
-
-                            <div className="member">
-                                <div className="profile-button"></div>
-                                <span>Student 4 · username</span>
-                            </div>
-
-                            <div className="member">
-                                <div className="profile-button"></div>
-                                <span>Student 3 · username</span>
-                            </div>
+                            {membersError && <span className="repo-error" role="alert">Could not load members.</span>}
+                            {!membersError && !members && <span className="empty-category">Loading members…</span>}
+                            {members?.length === 0 && <span className="empty-category">No members yet.</span>}
+                            {(members ?? []).slice(0, OVERVIEW_MEMBER_LIMIT).map((member) => (
+                                <div className="member" key={member.userID}>
+                                    <span className="member-avatar" aria-hidden="true">{initials(member.name)}</span>
+                                    <button type="button" className="member-link" onClick={() => showMember(member.userID)}>
+                                        {member.name}
+                                    </button>
+                                    <span className="member-quick-stats">
+                                        {member.commits} {member.commits === 1 ? "commit" : "commits"} · {member.prsMerged} {member.prsMerged === 1 ? "PR" : "PRs"}
+                                    </span>
+                                </div>
+                            ))}
+                            {(members?.length ?? 0) > OVERVIEW_MEMBER_LIMIT && (
+                                <button type="button" className="member-link member-view-all" onClick={() => showMember(null)}>
+                                    View all {members.length} members
+                                </button>
+                            )}
                         </div>
                     </div>
                 </section>
