@@ -23,6 +23,17 @@ model Student {
   repository        Repository    @relation(fields: [teamID], references: [teamID])
   commits           Commit[]
   alerts            Alert[]
+  aliases           StudentAlias[]
+}
+
+// a different identity (GitHub username or commit email) that was merged into a student used to attribute new commits under that identity to the existing student
+model StudentAlias {
+  teamID            Int
+  identity          String
+  userID            Int
+  student           Student       @relation(fields: [userID], references: [userID], onDelete: Cascade)
+
+  @@id([teamID, identity])
 }
 
 model Commit {
@@ -40,6 +51,7 @@ model Commit {
   tags              Tag[]?
   fileChanges       FileChange[]
   alerts            Alert[]?
+  branches          CommitBranch[]
 }
 
 model Tag {
@@ -84,6 +96,7 @@ model Repository {
   students          Student[]
   directoryLabels   RepositoryDirectoryLabel[]
   fileLabels        RepositoryFileLabel[]
+  branches          RepositoryBranch[]
 }
 
 model RepositoryDirectoryLabel {
@@ -102,6 +115,27 @@ model RepositoryFileLabel {
   repository         Repository   @relation(fields: [teamID], references: [teamID], onDelete: Cascade)
 
   @@id([teamID, path])
+}
+
+model RepositoryBranch {
+  teamID        Int
+  name          String                      
+  tipHash       String                     
+  ingestedAt    DateTime
+  repository    Repository     @relation(fields: [teamID], references: [teamID], onDelete: Cascade)
+  commits       CommitBranch[]
+
+  @@id([teamID, name])
+}
+
+model CommitBranch {
+  teamID        Int
+  branchName    String
+  commitHash    String
+  branch        RepositoryBranch @relation(fields: [teamID, branchName], references: [teamID, name], onDelete: Cascade)
+  commit        Commit           @relation(fields: [commitHash], references: [commitHash], onDelete: Cascade)
+
+  @@id([teamID, branchName, commitHash])
 }
 
 model Course {

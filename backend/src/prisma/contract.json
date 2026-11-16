@@ -12,6 +12,10 @@
       "model": "Commit",
       "namespace": "public"
     },
+    "commitBranch": {
+      "model": "CommitBranch",
+      "namespace": "public"
+    },
     "commitTag": {
       "model": "CommitTag",
       "namespace": "public"
@@ -36,6 +40,10 @@
       "model": "Repository",
       "namespace": "public"
     },
+    "repositoryBranch": {
+      "model": "RepositoryBranch",
+      "namespace": "public"
+    },
     "repositoryDirectoryLabel": {
       "model": "RepositoryDirectoryLabel",
       "namespace": "public"
@@ -46,6 +54,10 @@
     },
     "student": {
       "model": "Student",
+      "namespace": "public"
+    },
+    "studentAlias": {
+      "model": "StudentAlias",
       "namespace": "public"
     },
     "tag": {
@@ -235,6 +247,21 @@
                   "namespace": "public"
                 }
               },
+              "branches": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "commitHash"
+                  ],
+                  "targetFields": [
+                    "commitHash"
+                  ]
+                },
+                "to": {
+                  "model": "CommitBranch",
+                  "namespace": "public"
+                }
+              },
               "feedback": {
                 "cardinality": "1:N",
                 "on": {
@@ -341,6 +368,80 @@
               },
               "namespaceId": "public",
               "table": "commit"
+            }
+          },
+          "CommitBranch": {
+            "fields": {
+              "branchName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "commitHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "teamID": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "branch": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "teamID",
+                    "branchName"
+                  ],
+                  "targetFields": [
+                    "teamID",
+                    "name"
+                  ]
+                },
+                "to": {
+                  "model": "RepositoryBranch",
+                  "namespace": "public"
+                }
+              },
+              "commit": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "commitHash"
+                  ],
+                  "targetFields": [
+                    "commitHash"
+                  ]
+                },
+                "to": {
+                  "model": "Commit",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "branchName": {
+                  "column": "branchName"
+                },
+                "commitHash": {
+                  "column": "commitHash"
+                },
+                "teamID": {
+                  "column": "teamID"
+                }
+              },
+              "namespaceId": "public",
+              "table": "commitBranch"
             }
           },
           "CommitTag": {
@@ -767,6 +868,21 @@
               }
             },
             "relations": {
+              "branches": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "teamID"
+                  ],
+                  "targetFields": [
+                    "teamID"
+                  ]
+                },
+                "to": {
+                  "model": "RepositoryBranch",
+                  "namespace": "public"
+                }
+              },
               "course": {
                 "cardinality": "N:1",
                 "on": {
@@ -848,6 +964,90 @@
               },
               "namespaceId": "public",
               "table": "repository"
+            }
+          },
+          "RepositoryBranch": {
+            "fields": {
+              "ingestedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "teamID": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "tipHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "commits": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "teamID",
+                    "name"
+                  ],
+                  "targetFields": [
+                    "teamID",
+                    "branchName"
+                  ]
+                },
+                "to": {
+                  "model": "CommitBranch",
+                  "namespace": "public"
+                }
+              },
+              "repository": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "teamID"
+                  ],
+                  "targetFields": [
+                    "teamID"
+                  ]
+                },
+                "to": {
+                  "model": "Repository",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "ingestedAt": {
+                  "column": "ingestedAt"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "teamID": {
+                  "column": "teamID"
+                },
+                "tipHash": {
+                  "column": "tipHash"
+                }
+              },
+              "namespaceId": "public",
+              "table": "repositoryBranch"
             }
           },
           "RepositoryDirectoryLabel": {
@@ -997,6 +1197,21 @@
                   "namespace": "public"
                 }
               },
+              "aliases": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "userID"
+                  ],
+                  "targetFields": [
+                    "userID"
+                  ]
+                },
+                "to": {
+                  "model": "StudentAlias",
+                  "namespace": "public"
+                }
+              },
               "commits": {
                 "cardinality": "1:N",
                 "on": {
@@ -1054,6 +1269,63 @@
               },
               "namespaceId": "public",
               "table": "student"
+            }
+          },
+          "StudentAlias": {
+            "fields": {
+              "identity": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "teamID": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "userID": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "student": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "userID"
+                  ],
+                  "targetFields": [
+                    "userID"
+                  ]
+                },
+                "to": {
+                  "model": "Student",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "identity": {
+                  "column": "identity"
+                },
+                "teamID": {
+                  "column": "teamID"
+                },
+                "userID": {
+                  "column": "userID"
+                }
+              },
+              "namespaceId": "public",
+              "table": "studentAlias"
             }
           },
           "Tag": {
@@ -1394,6 +1666,90 @@
               ],
               "primaryKey": {
                 "columns": [
+                  "commitHash"
+                ]
+              },
+              "uniques": []
+            },
+            "commitBranch": {
+              "columns": {
+                "branchName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "commitHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "teamID": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "teamID",
+                      "branchName"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "commitBranch"
+                  },
+                  "target": {
+                    "columns": [
+                      "teamID",
+                      "name"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repositoryBranch"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "commitHash"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "commitBranch"
+                  },
+                  "target": {
+                    "columns": [
+                      "commitHash"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "commit"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "commitHash"
+                  ],
+                  "name": "commitBranch_commitHash_idx_a57efd78",
+                  "prefix": "commitBranch_commitHash_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "teamID",
+                    "branchName"
+                  ],
+                  "name": "commitBranch_teamID_branchName_idx_53fd2c22",
+                  "prefix": "commitBranch_teamID_branchName_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "teamID",
+                  "branchName",
                   "commitHash"
                 ]
               },
@@ -1822,6 +2178,66 @@
                 }
               ]
             },
+            "repositoryBranch": {
+              "columns": {
+                "ingestedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "teamID": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "tipHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "teamID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repositoryBranch"
+                  },
+                  "target": {
+                    "columns": [
+                      "teamID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repository"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "teamID"
+                  ],
+                  "name": "repositoryBranch_teamID_idx_fe196944",
+                  "prefix": "repositoryBranch_teamID_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "teamID",
+                  "name"
+                ]
+              },
+              "uniques": []
+            },
             "repositoryDirectoryLabel": {
               "columns": {
                 "category": {
@@ -1997,6 +2413,61 @@
               },
               "uniques": []
             },
+            "studentAlias": {
+              "columns": {
+                "identity": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "teamID": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "userID": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "studentAlias"
+                  },
+                  "target": {
+                    "columns": [
+                      "userID"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "student"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userID"
+                  ],
+                  "name": "studentAlias_userID_idx_d00403d7",
+                  "prefix": "studentAlias_userID_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "teamID",
+                  "identity"
+                ]
+              },
+              "uniques": []
+            },
             "tag": {
               "columns": {
                 "categoryName": {
@@ -2071,7 +2542,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "0cb708c2bf15ed6a0a426db2f5241a9b60f73ae6615aad2a63a3a10ed1060927"
+    "storageHash": "82e567dbd6b3945e9ae49b1c3955276e397b1c4339b9b42813abb9cbbe6c73ad"
   },
   "capabilities": {
     "postgres": {

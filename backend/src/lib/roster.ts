@@ -84,7 +84,24 @@ export async function mergeStudents(courseID: number, keepID: number, mergeID: n
   if (!keep.name && merged.name) fill.name = merged.name;
   if (!keep.username && merged.username) fill.username = merged.username;
 
+  // commits from merged student identities/aliases go to the kept student
+  const mergedTeamID = (await db.orm.public.Student.where({ userID: mergeID }).first())!.teamID;
+  const identities = [`email:${merged.email.toLowerCase()}`];
+  if (merged.username) {
+    identities.push(`github:${merged.username.toLowerCase()}`);
+  }
+
   await db.transaction(async (tx) => {
+    // aliases the merged student already had go to the kept student
+    await tx.orm.public.StudentAlias.where({ userID: mergeID }).update({ userID: keepID });
+    for (const identity of identities) {
+      const existing = await tx.orm.public.StudentAlias.where({ teamID: mergedTeamID, identity }).first();
+      if (existing) {
+        await tx.orm.public.StudentAlias.where({ teamID: mergedTeamID, identity }).update({ userID: keepID });
+      } else {
+        await tx.orm.public.StudentAlias.create({ teamID: mergedTeamID, identity, userID: keepID });
+      }
+    }
     await tx.orm.public.Commit.where({ studentID: mergeID }).update({ studentID: keepID });
     await tx.orm.public.Alert.where({ studentID: mergeID }).update({ studentID: keepID });
     await tx.orm.public.Feedback.where({ authorID: mergeID }).update({ authorID: keepID });

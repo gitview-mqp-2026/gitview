@@ -167,6 +167,23 @@ export async function ingestRepo(opts: {
 
   const studentIdByIdentity = new Map<string, number>();
 
+  // identities merged into a student on the Roster page
+  const aliasByIdentity = new Map<string, number>(
+    (await db.orm.public.StudentAlias.where({ teamID }).all()).map((alias) => [alias.identity, alias.userID])
+  );
+
+  // keys a commit author can be found under in the alias table
+  function aliasKeys(email: string, verifiedUsername: string | null, githubUsername: string | null): string[] {
+    const keys = [`email:${email.toLowerCase()}`];
+    if (verifiedUsername) {
+      keys.push(`github:${verifiedUsername}`);
+    }
+    if (githubUsername && githubUsername !== verifiedUsername) {
+      keys.push(`github:${githubUsername}`);
+    }
+    return keys;
+  }
+
   // Cache GitHub user profiles to avoid repeated API calls.
   const githubProfileCache = new Map<
     string,
@@ -207,6 +224,15 @@ export async function ingestRepo(opts: {
 
     const cached = studentIdByIdentity.get(cacheKey);
     if (cached !== undefined) return cached;
+
+    // an identity that was merged into another student maps to that student
+    const aliased = aliasKeys(email, verifiedUsername, githubUsername)
+      .map((key) => aliasByIdentity.get(key))
+      .find((id) => id !== undefined);
+    if (aliased !== undefined) {
+      studentIdByIdentity.set(cacheKey, aliased);
+      return aliased;
+    }
 
     // Match by GitHub username.
     let matches = githubUsername
