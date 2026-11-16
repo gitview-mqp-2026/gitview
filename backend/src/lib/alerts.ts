@@ -3,6 +3,7 @@ export const INACTIVITY_DAYS = 7;
 
 interface StudentRow {
   userID: number;
+  displayName: string;
 }
 
 interface CommitRow {
@@ -56,7 +57,7 @@ export function buildTeamAlerts(
         studentID: student.userID,
         commitHash: latest.commitHash,
         daysInactive,
-        message: `Student ${student.userID} - no commits in ${daysInactive} days`,
+        message: `${student.displayName} - no commits in ${daysInactive} days`,
       });
     }
 
@@ -80,7 +81,7 @@ export function buildTeamAlerts(
       commitHash: latestDeadlineCommit.commitHash,
       commitCount: deadlineCommits.length,
       mergeCount,
-      message: `Student ${student.userID} - ${deadlineCommits.length} ${commitWord} made on Monday deadlines${mergeDetail}`,
+      message: `${student.displayName} - ${deadlineCommits.length} ${commitWord} made on Monday deadlines${mergeDetail}`,
     });
   }
 

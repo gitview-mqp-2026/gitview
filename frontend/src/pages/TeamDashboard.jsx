@@ -286,25 +286,17 @@ function TeamDashboard() {
                         </div>
                     </div>
 
-                    {/* Members */}
                     <div className="container">
                         <h2>Members</h2>
 
                         <div className="content">
-                            <div className="member">
-                                <div className="profile-button"></div>
-                                <span>Student 2 · username</span>
-                            </div>
-
-                            <div className="member">
-                                <div className="profile-button"></div>
-                                <span>Student 4 · username</span>
-                            </div>
-
-                            <div className="member">
-                                <div className="profile-button"></div>
-                                <span>Student 3 · username</span>
-                            </div>
+                            {!loading && !error && stats?.teamMembers.length === 0 && <span>No members</span>}
+                            {stats?.teamMembers.map((member) => (
+                                <div className="member" key={member.userID}>
+                                    <div className="profile-button"></div>
+                                    <span>{member.displayName}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </section>

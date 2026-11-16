@@ -6,7 +6,12 @@ const instant = (value: string) => ({ epochMilliseconds: Date.parse(value) });
 
 test('buildTeamAlerts derives inactivity and Monday deadline activity from commit timestamps', () => {
   const alerts = buildTeamAlerts(
-    [{ userID: 1 }, { userID: 2 }, { userID: 3 }, { userID: 4 }],
+    [
+      { userID: 1, displayName: 'Ada Lovelace' },
+      { userID: 2, displayName: '@grace' },
+      { userID: 3, displayName: 'Linus Torvalds' },
+      { userID: 4, displayName: 'Student 4' },
+    ],
     [
       { commitHash: 'old', studentID: 1, dateTime: instant('2026-11-03T12:00:00Z'), isMerge: 0 },
       { commitHash: 'merge', studentID: 2, dateTime: instant('2026-11-09T20:00:00Z'), isMerge: 1 },
@@ -23,7 +28,7 @@ test('buildTeamAlerts derives inactivity and Monday deadline activity from commi
       studentID: 1,
       commitHash: 'old',
       daysInactive: 7,
-      message: 'Student 1 - no commits in 7 days',
+      message: 'Ada Lovelace - no commits in 7 days',
     },
     {
       type: 'deadline',
@@ -31,14 +36,18 @@ test('buildTeamAlerts derives inactivity and Monday deadline activity from commi
       commitHash: 'merge',
       commitCount: 2,
       mergeCount: 1,
-      message: 'Student 2 - 2 commits made on Monday deadlines, including 1 merge',
+      message: '@grace - 2 commits made on Monday deadlines, including 1 merge',
     },
   ]);
 });
 
 test('buildTeamAlerts ignores future timestamps, sub-threshold inactivity, and members without commits', () => {
   const alerts = buildTeamAlerts(
-    [{ userID: 1 }, { userID: 2 }, { userID: 3 }],
+    [
+      { userID: 1, displayName: 'Recent Member' },
+      { userID: 2, displayName: 'Future Member' },
+      { userID: 3, displayName: 'No Commits' },
+    ],
     [
       { commitHash: 'recent', studentID: 1, dateTime: instant('2026-11-03T12:00:01Z'), isMerge: 0 },
       { commitHash: 'future', studentID: 2, dateTime: instant('2026-11-11T12:00:00Z'), isMerge: 0 },

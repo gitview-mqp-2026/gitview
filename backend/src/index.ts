@@ -88,17 +88,36 @@ app.get('/repositories/:teamId/stats', async (req, res) => {
       return;
     }
     const { students, commits } = await commitsForTeam(teamID);
+    const studentIds = students.map((student) => student.userID);
+    const users = studentIds.length === 0
+      ? []
+      : await db.orm.public.User.where((user) => user.userID.in(studentIds)).all();
+    const usersById = new Map(users.map((user) => [user.userID, user]));
+    const teamMembers = students
+      .map((student) => {
+        const user = usersById.get(student.userID);
+        const name = user?.name?.trim() || null;
+        const username = user?.username?.trim() || null;
+        return {
+          userID: student.userID,
+          name,
+          username,
+          displayName: name ?? (username ? `@${username}` : `Student ${student.userID}`),
+        };
+      })
+      .sort((a, b) => a.userID - b.userID);
     res.json({
       teamID,
       courseID: repo.courseID ?? null,
       name: repo.name,
       url: repo.url,
-      members: students.length,
+      members: teamMembers.length,
+      teamMembers,
       commits: commits.length,
       prsMerged: countPullRequestsMerged(commits.map((c) => c.commitSubject)),
       comments: 0,
       issuesClosed: 0,
-      alerts: buildTeamAlerts(students, commits),
+      alerts: buildTeamAlerts(teamMembers, commits),
     });
   } catch (err) {
     res.status(500).json({ error: String(err) });
