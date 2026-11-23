@@ -1,26 +1,7 @@
-import { execFileSync } from 'child_process';
 import { Temporal } from 'temporal-polyfill';
 import { db } from '../prisma/db.js';
 import { getGithubUser } from './githubApp.js';
-
-interface ParsedFileChange {
-  filePath: string;
-  additions: number;
-  deletions: number;
-}
-
-interface ParsedCommit {
-  commitHash: string;
-  parentHashes: string[];
-  author: string;
-  authorEmail: string;
-  committer: string;
-  committedAtMs: number;
-  refs: string;
-  subject: string;
-  body: string;
-  fileChanges: ParsedFileChange[];
-}
+import { readGitLog, type ParsedCommit } from './gitLog.js';
 
 function usernameFromEmail(email: string): string | null {
   const match = email.trim().match(
@@ -69,61 +50,8 @@ export interface IngestResult {
   alreadyPresent: number;
 }
 
-const COMMIT_MARK = '--GITVIEW-COMMIT--';
-const BODY_START = '--GITVIEW-BODY--';
-const BODY_END = '--GITVIEW-BODY-END--';
-
 export function parseGitLog(cwd: string, maxCommits?: number): ParsedCommit[] {
-  // Fixed-position header lines, then a marker-delimited body (it can span lines), then --numstat rows.
-  const raw = execFileSync(
-    'git',
-    [
-      'log',
-      ...(maxCommits ? [`--max-count=${maxCommits}`] : []),
-      `--pretty=format:${COMMIT_MARK}%n%H%n%P%n%an%n%ae%n%at%n%cn%n%D%n%s%n${BODY_START}%n%b%n${BODY_END}`,
-      '--numstat',
-    ],
-    { cwd, encoding: 'utf-8', maxBuffer: 200 * 1024 * 1024 }
-  );
-
-  return raw
-    .split(`${COMMIT_MARK}\n`)
-    .filter(Boolean)
-    .flatMap((block): ParsedCommit[] => {
-      const lines = block.split('\n');
-      const commitHash = lines[0]?.trim() ?? '';
-      if (commitHash.length !== 40 || lines[8]?.trim() !== BODY_START) return [];
-
-      const bodyEnd = lines.indexOf(BODY_END, 9);
-      if (bodyEnd === -1) return [];
-
-      const fileChanges: ParsedFileChange[] = [];
-      for (let i = bodyEnd + 1; i < lines.length; i++) {
-        const match = lines[i].trim().match(/^(\d+|-)\t(\d+|-)\t(.+)$/);
-        if (match) {
-          fileChanges.push({
-            filePath: match[3],
-            additions: match[1] === '-' ? 0 : parseInt(match[1], 10),
-            deletions: match[2] === '-' ? 0 : parseInt(match[2], 10),
-          });
-        }
-      }
-
-      return [
-        {
-          commitHash,
-          parentHashes: (lines[1] ?? '').trim().split(/\s+/).filter(Boolean),
-          author: lines[2].trim(),
-          authorEmail: lines[3].trim().toLowerCase(),
-          committedAtMs: parseInt(lines[4].trim(), 10) * 1000,
-          committer: lines[5].trim(),
-          refs: lines[6].trim(),
-          subject: lines[7].trim(),
-          body: lines.slice(9, bodyEnd).join('\n').trim(),
-          fileChanges,
-        },
-      ];
-    });
+  return readGitLog(cwd, maxCommits);
 }
 
 export async function ingestRepo(opts: {

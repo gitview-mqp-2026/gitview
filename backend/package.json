@@ -7,7 +7,8 @@
     "test": "tsx --test src/lib/*.test.ts",
     "dev": "tsx watch src/index.ts",
     "contract:emit": "prisma contract emit",
-    "ingest": "tsx src/scripts/ingest-git-log.ts"
+    "ingest": "tsx src/scripts/ingest-git-log.ts",
+    "refresh-file-changes": "tsx src/scripts/refresh-file-changes.ts"
   },
   "keywords": [],
   "author": "",
