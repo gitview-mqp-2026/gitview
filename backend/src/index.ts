@@ -78,7 +78,7 @@ async function replaceStoredCommitTags(
       }
     }
     for (const link of commitTagRows(tagsByHash, tagIdByCategory)) {
-      await tx.orm.public.CommitTag.create(link);
+      await tx.orm.public.CommitTag.upsert({ create: link, update: link });
     }
   });
 }
