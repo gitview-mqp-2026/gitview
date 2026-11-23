@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../App.css";
 import { Link, useParams } from "react-router-dom";
-import RepositoryTree from "../components/RepositoryTree.jsx";
+import { PanelLeftOpen } from "lucide-react";
+import AppHeader from "../components/AppHeader.jsx";
+import LogoutButton from "../components/auth/LogoutButton.jsx";
+import Profile from "../components/auth/Profile.jsx";
+import CommitLog from "../components/team/CommitLog.jsx";
+import ContributionCategories from "../components/team/ContributionCategories.jsx";
+import ProjectStructurePanel from "../components/team/ProjectStructurePanel.jsx";
+import TeamOverview from "../components/team/TeamOverview.jsx";
 import { replaceFileLabel } from "../utils/fileLabels.js";
 
 const PAGE_SIZE = 10;
@@ -148,17 +155,19 @@ function TeamDashboard() {
         }
     };
 
-    const stat = (value) => (loading || error || !stats ? "—" : value);
-
     const pageCount = Math.max(1, Math.ceil(commits.length / PAGE_SIZE));
     const firstShown = (page - 1) * PAGE_SIZE + 1;
     const lastShown = Math.min(page * PAGE_SIZE, commits.length);
     const visibleCommits = commits.slice(firstShown - 1, lastShown);
 
     return (
-        <div>
-            <header className="nav-bar">
-                <Link to="/" className="logo">GitView</Link>
+        <>
+            <AppHeader actions={(
+                <div className="nav-account">
+                    <Profile />
+                    <LogoutButton />
+                </div>
+            )}>
                 <button
                     ref={treePanelToggle}
                     className="tree-panel-toggle"
@@ -167,271 +176,58 @@ function TeamDashboard() {
                     aria-expanded={treePanelOpen}
                     onClick={() => setTreePanelOpen((open) => !open)}
                 >
+                    <PanelLeftOpen size={16} aria-hidden="true" />
                     Project structure
                 </button>
-                <div className="file-path">
-                    <span>CS3733 Software Engineering</span>
+                <div className="file-path" aria-label="Current location">
+                    <Link to={stats?.courseID ? `/course/${stats.courseID}` : "/"}>
+                        Repositories
+                    </Link>
                     <span>/</span>
-                    <span>A26</span>
-                    <span>/</span>
-                    <span>Section 02</span>
-                    <span>/</span>
-                    <strong>Team 1</strong>
+                    <strong>{stats?.name ?? "Team dashboard"}</strong>
                 </div>
+            </AppHeader>
 
-                <div className="nav-actions">
-                    <div className="inbox-button"></div>
-                    <div className="profile-button"></div>
-                </div>
-            </header>
+            <ProjectStructurePanel
+                isOpen={treePanelOpen}
+                tree={tree}
+                treeLoading={treeLoading}
+                treeError={treeError}
+                fileLabelsByPath={fileLabelsByPath}
+                directoryLabelsByPath={directoryLabelsByPath}
+                savingPaths={savingPaths}
+                labelErrors={labelErrors}
+                onCategoryChange={saveCategory}
+                onClose={() => {
+                    setTreePanelOpen(false);
+                    treePanelToggle.current?.focus();
+                }}
+            />
 
-            <aside
-                id="project-structure-panel"
-                className={`project-structure-panel${treePanelOpen ? " is-open" : ""}`}
-                aria-hidden={!treePanelOpen}
-                inert={!treePanelOpen}
-            >
-                <div className="project-structure-panel-header">
-                    <div>
-                        <h2>Project structure</h2>
-                        {tree && (
-                            <code title={tree.commitHash}>
-                                {tree.branch} @ {tree.commitHash.slice(0, 7)}
-                            </code>
-                        )}
-                    </div>
-                    <button
-                        className="project-structure-panel-close"
-                        type="button"
-                        aria-label="Close project structure"
-                        onClick={() => {
-                            setTreePanelOpen(false);
-                            treePanelToggle.current?.focus();
-                        }}
-                    >
-                        ×
-                    </button>
-                </div>
-
-                <div className="tree-container">
-                    {treeLoading && <p>Loading project structure…</p>}
-                    {treeError && <p className="repo-error" role="alert">Could not load project structure: {treeError}</p>}
-                    {tree && (
-                        <RepositoryTree
-                            key={tree.commitHash}
-                            nodes={tree.nodes}
-                            categories={tree.categories}
-                            fileLabelsByPath={fileLabelsByPath}
-                            directoryLabelsByPath={directoryLabelsByPath}
-                            savingPaths={savingPaths}
-                            labelErrors={labelErrors}
-                            onCategoryChange={saveCategory}
-                        />
-                    )}
-                </div>
-            </aside>
-
-            <main className="team-page">
-                {/* Team Header */}
-                <section className="team-header">
-                    <div>
-                        <Link to={stats?.courseID ? `/course/${stats.courseID}` : "/"} className="back-link">← All repositories</Link>
-                        <h1>{stats?.name ?? "Team"}</h1>
-                        <p>{stats ? `${stats.members} ${stats.members === 1 ? "member" : "members"} · ${stats.url}` : ""}</p>
-                    </div>
-
-                    <button>last 30 days</button>
-                </section>
-
-                {/* Stats Overview */}
-                <section className="stats-overview">
-                    <div className="stat-card">
-                        <span>COMMITS</span>
-                        <strong>{stat(stats?.commits)}</strong>
-                    </div>
-
-                    <div className="stat-card">
-                        <span>PRS MERGED</span>
-                        <strong>{stat(stats?.prsMerged)}</strong>
-                    </div>
-
-                    <div className="stat-card">
-                        <span>COMMENTS</span>
-                        <strong>{stat(stats?.comments)}</strong>
-                    </div>
-
-                    <div className="stat-card">
-                        <span>ISSUES CLOSED</span>
-                        <strong>{stat(stats?.issuesClosed)}</strong>
-                    </div>
-
-                    <div className="stat-card">
-                        <span>ALERTS</span>
-                        <strong>{stat(stats?.alerts.length)}</strong>
-                    </div>
-                </section>
-
-                <section className="two-columns">
-                    <div className="container">
-                        <h2>Alerts</h2>
-
-                        <div className="content">
-                            {!loading && !error && stats?.alerts.length === 0 && <span>No alerts</span>}
-                            {stats?.alerts.map((alert) => (
-                                <div className="alert" key={`${alert.type}-${alert.studentID}`}>
-                                    <div className="profile-button"></div>
-                                    <span>{alert.message}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="container">
-                        <h2>Members</h2>
-
-                        <div className="content">
-                            {!loading && !error && stats?.teamMembers.length === 0 && <span>No members</span>}
-                            {stats?.teamMembers.map((member) => (
-                                <div className="member" key={member.userID}>
-                                    <div className="profile-button"></div>
-                                    <span>{member.displayName}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Commit Log (live from /commits) */}
-                <section className="significant-commits">
-                    <h2>Commit log</h2>
-
-                    {loading && <p>Loading commits…</p>}
-                    {error && <p style={{ color: "red" }}>Could not load commits: {error}</p>}
-
-                    {!loading && !error && (
-                        <>
-                            <table className="categories-table">
-                                <thead>
-                                    <tr>
-                                        <th>Hash</th>
-                                        <th>Subject</th>
-                                        <th>Author</th>
-                                        <th>Date</th>
-                                        <th>Categories from files</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {commits.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5}>No commits found for this repository.</td>
-                                        </tr>
-                                    ) : (
-                                        visibleCommits.map((c) => (
-                                            <tr key={c.commitHash}>
-                                                <td><code>{c.commitHash.slice(0, 7)}</code></td>
-                                                <td>{c.commitSubject}</td>
-                                                <td>{c.author}</td>
-                                                <td>{new Date(c.dateTime).toLocaleDateString()}</td>
-                                                <td className="commit-tags-cell">
-                                                    <div
-                                                        className="commit-tag-summary"
-                                                        title="Derived from labeled files changed by this commit"
-                                                    >
-                                                        {(c.tags ?? []).map((tag) => (
-                                                            <span className="file-category-badge" key={tag}>{tag}</span>
-                                                        ))}
-                                                        {(c.tags ?? []).length === 0 && <span className="empty-category">None</span>}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-
-                            {pageCount > 1 && (
-                                <div className="pager">
-                                    <button type="button" onClick={() => setPage(page - 1)} disabled={page === 1}>
-                                        Previous
-                                    </button>
-                                    <span>
-                                        Page {page} of {pageCount} · {firstShown}–{lastShown} of {commits.length}
-                                    </span>
-                                    <button type="button" onClick={() => setPage(page + 1)} disabled={page === pageCount}>
-                                        Next
-                                    </button>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </section>
-
-                {/* Major Contribution Categories */}
-                <section className="contribution-categories">
-                    <h2>Major contribution categories</h2>
-
-                    <table className="categories-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Directly labeled paths</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {(tree?.categories ?? []).map((category) => {
-                                const labels = [
-                                    ...(tree.directoryLabels ?? [])
-                                        .filter((label) => label.category === category)
-                                        .map((label) => ({ ...label, labelType: "directory" })),
-                                    ...tree.labels
-                                        .filter((label) => label.category === category)
-                                        .map((label) => ({ ...label, labelType: "file" })),
-                                ];
-                                return (
-                                    <tr key={category}>
-                                        <td>{category}</td>
-                                        <td>
-                                            {labels.length === 0 ? (
-                                                <span className="empty-category">None</span>
-                                            ) : (
-                                                <ul className="category-paths">
-                                                    {labels.map((label) => (
-                                                        <li key={`${label.labelType}:${label.path}`}>
-                                                            <code>{label.path}</code>
-                                                            <span className="path-kind">{label.labelType}</span>
-                                                            {!label.present && <span className="missing-path">Missing from branch</span>}
-                                                            <button
-                                                                type="button"
-                                                                disabled={savingPaths.has(label.path)}
-                                                                onClick={() => saveCategory(label.labelType, label.path, "")}
-                                                            >
-                                                                Remove
-                                                            </button>
-                                                            {labelErrors.get(label.path) && (
-                                                                <span className="tree-save-error" role="alert">
-                                                                    {labelErrors.get(label.path)}
-                                                                </span>
-                                                            )}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                            {!tree && (
-                                <tr>
-                                    <td colSpan={2}>{treeLoading ? "Loading categories…" : "Categories unavailable."}</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </section>
-
+            <main id="main-content" className="team-page">
+                <TeamOverview stats={stats} loading={loading} error={error} />
+                <CommitLog
+                    commits={commits}
+                    visibleCommits={visibleCommits}
+                    loading={loading}
+                    error={error}
+                    page={page}
+                    pageCount={pageCount}
+                    firstShown={firstShown}
+                    lastShown={lastShown}
+                    onPrevious={() => setPage(page - 1)}
+                    onNext={() => setPage(page + 1)}
+                />
+                <ContributionCategories
+                    tree={tree}
+                    treeError={treeError}
+                    treeLoading={treeLoading}
+                    savingPaths={savingPaths}
+                    labelErrors={labelErrors}
+                    onCategoryChange={saveCategory}
+                />
             </main>
-        </div>
+        </>
     );
 }
 

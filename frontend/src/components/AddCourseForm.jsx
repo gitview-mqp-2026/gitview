@@ -62,7 +62,7 @@ function AddCourseForm({ onClose, onAddCourse }) {
             >
                 <div className="popup-header">
                     <h1>Add Course</h1>
-                    <button type="button" onClick={onClose}>
+                    <button type="button" aria-label="Close add course form" onClick={onClose}>
                         <X size={20} />
                     </button>
                 </div>
