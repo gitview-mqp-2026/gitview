@@ -1,5 +1,14 @@
 import { db } from '../prisma/db.js';
-import { contributionIndex, type CategoryWeights, type TeamContribution } from './contribution.js';
+import {
+  contributionIndex,
+  labelingCoverage,
+  unlabeledFolders,
+  type CategoryWeights,
+  type ContributionInput,
+  type LabelingCoverage,
+  type TeamContribution,
+  type UnlabeledFolder,
+} from './contribution.js';
 import { categoryResolver } from './fileLabels.js';
 
 // Keeps each IN (...) list well under Postgres's 65,535 bind-parameter limit on large courses.
@@ -24,16 +33,14 @@ async function fileChangesForCommits(hashes: readonly string[]) {
   return rows.flat();
 }
 
-// Contribution results for each team, keyed by teamID. Teams are scored on their own work and their own labels;
-// a team with no students still gets an (empty) result. Scores are computed on request, not stored, because
-// file labels change whenever an instructor relabels the project tree.
-export async function contributionForTeams(
-  teamIDs: readonly number[],
-  weights?: CategoryWeights,
-): Promise<Map<number, TeamContribution>> {
+// Everything needed to score or measure each team, keyed by teamID: its members, their commits and file
+// changes, and a resolver built from that team's own labels. Teams are kept apart; a team with no students
+// still gets (empty) inputs. Nothing is stored: file labels change whenever an instructor relabels the
+// project tree, so scores and coverage are computed on request from these inputs.
+async function loadTeamInputs(teamIDs: readonly number[]): Promise<Map<number, ContributionInput>> {
   const ids = [...new Set(teamIDs)];
-  const results = new Map<number, TeamContribution>();
-  if (ids.length === 0) return results;
+  const inputs = new Map<number, ContributionInput>();
+  if (ids.length === 0) return inputs;
 
   const [students, fileLabels, directoryLabels] = await Promise.all([
     db.orm.public.Student.where((student) => student.teamID.in(ids)).all(),
@@ -55,16 +62,24 @@ export async function contributionForTeams(
   const directoryLabelsByTeam = groupBy(directoryLabels, (label) => label.teamID);
 
   for (const teamID of ids) {
-    results.set(
-      teamID,
-      contributionIndex({
-        members: studentsByTeam.get(teamID) ?? [],
-        commits: commitsByTeam.get(teamID) ?? [],
-        fileChanges: changesByTeam.get(teamID) ?? [],
-        resolve: categoryResolver(fileLabelsByTeam.get(teamID) ?? [], directoryLabelsByTeam.get(teamID) ?? []),
-        weights,
-      }),
-    );
+    inputs.set(teamID, {
+      members: studentsByTeam.get(teamID) ?? [],
+      commits: commitsByTeam.get(teamID) ?? [],
+      fileChanges: changesByTeam.get(teamID) ?? [],
+      resolve: categoryResolver(fileLabelsByTeam.get(teamID) ?? [], directoryLabelsByTeam.get(teamID) ?? []),
+    });
+  }
+  return inputs;
+}
+
+// Contribution results for each team, keyed by teamID.
+export async function contributionForTeams(
+  teamIDs: readonly number[],
+  weights?: CategoryWeights,
+): Promise<Map<number, TeamContribution>> {
+  const results = new Map<number, TeamContribution>();
+  for (const [teamID, input] of await loadTeamInputs(teamIDs)) {
+    results.set(teamID, contributionIndex({ ...input, weights }));
   }
   return results;
 }
@@ -78,4 +93,15 @@ export async function teamContribution(teamID: number, weights?: CategoryWeights
 export async function courseContribution(courseID: number, weights?: CategoryWeights): Promise<Map<number, TeamContribution>> {
   const repositories = await db.orm.public.Repository.where({ courseID }).all();
   return contributionForTeams(repositories.map((repository) => repository.teamID), weights);
+}
+
+export interface TeamLabelCoverage extends LabelingCoverage {
+  unlabeledFolders: UnlabeledFolder[];
+}
+
+// How much of a team's work sits under a file or folder label, and where the unlabeled work is. Built from
+// the same inputs as the scores, so what the tree reports is exactly what the scores can and can't count.
+export async function teamLabelCoverage(teamID: number): Promise<TeamLabelCoverage> {
+  const input = (await loadTeamInputs([teamID])).get(teamID)!;
+  return { ...labelingCoverage(input), unlabeledFolders: unlabeledFolders(input) };
 }

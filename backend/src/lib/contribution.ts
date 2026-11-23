@@ -139,22 +139,83 @@ export interface TeamContribution {
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
-// Authors are the team's members; merge commits and excluded files are skipped. Files with no label are left
-// out of every score but still count against coverage.
+// The file changes that count toward coverage: from non-merge commits, minus generated and vendored files.
+// Shared by coverage and the unlabeled-folder list so the two always agree on what counts.
+function* countedChanges(input: Pick<ContributionInput, 'commits' | 'fileChanges'>) {
+  const authored = new Set<string>();
+  for (const commit of input.commits) if (!commit.isMerge) authored.add(commit.commitHash);
+  for (const change of input.fileChanges) {
+    if (!authored.has(change.commitHash) || isExcludedPath(change.filePath)) continue;
+    yield { filePath: change.filePath, lines: effectiveLines(change.additions, change.deletions) };
+  }
+}
+
+// Files with no label are left out of every score but still count against coverage.
 export function labelingCoverage(
   input: Pick<ContributionInput, 'commits' | 'fileChanges' | 'resolve'>,
 ): LabelingCoverage {
-  const authored = new Set<string>();
-  for (const commit of input.commits) if (!commit.isMerge) authored.add(commit.commitHash);
   let labeledLines = 0;
   let totalLines = 0;
-  for (const change of input.fileChanges) {
-    if (!authored.has(change.commitHash) || isExcludedPath(change.filePath)) continue;
-    const lines = effectiveLines(change.additions, change.deletions);
+  for (const { filePath, lines } of countedChanges(input)) {
     totalLines += lines;
-    if (input.resolve(change.filePath)) labeledLines += lines;
+    if (input.resolve(filePath)) labeledLines += lines;
   }
   return { labeledLines, totalLines, ratio: totalLines === 0 ? 1 : labeledLines / totalLines };
+}
+
+export interface UnlabeledFolder {
+  // The folder holding the unlabeled files directly; '' means files in the repository root.
+  path: string;
+  lines: number;
+  // Fraction of all of the team's counted work that sits unlabeled in this folder.
+  share: number;
+}
+
+// The folders holding the most unlabeled work, so an instructor knows where labeling helps most. Labeling a
+// folder covers everything beneath it, which is why files are grouped by their immediate folder.
+export function unlabeledFolders(
+  input: Pick<ContributionInput, 'commits' | 'fileChanges' | 'resolve'>,
+  limit = 5,
+): UnlabeledFolder[] {
+  const byFolder = new Map<string, number>();
+  let totalLines = 0;
+  for (const { filePath, lines } of countedChanges(input)) {
+    totalLines += lines;
+    if (input.resolve(filePath)) continue;
+    const slash = filePath.lastIndexOf('/');
+    const folder = slash === -1 ? '' : filePath.slice(0, slash);
+    byFolder.set(folder, (byFolder.get(folder) ?? 0) + lines);
+  }
+  return [...byFolder]
+    .map(([path, lines]) => ({ path, lines, share: totalLines === 0 ? 0 : lines / totalLines }))
+    .sort((a, b) => b.lines - a.lines || a.path.localeCompare(b.path))
+    .slice(0, limit);
+}
+
+export interface LabelCoverageDetail {
+  coveredPercent: number;
+  labeledLines: number;
+  totalLines: number;
+  // The coverage below which scores are withheld, so the tree never hard-codes the rule.
+  minCoveragePercent: number;
+  unlabeledFolders: { path: string; lines: number; percent: number }[];
+}
+
+// What the label-coverage endpoint sends. Percentages round down, so a team just under the threshold is never
+// shown as having reached it while its scores are still withheld.
+export function coverageDetail(coverage: LabelingCoverage & { unlabeledFolders: UnlabeledFolder[] }): LabelCoverageDetail {
+  const floor1 = (value: number) => Math.floor(value * 10 + 1e-9) / 10;
+  return {
+    coveredPercent: floor1(coverage.ratio * 100),
+    labeledLines: Math.round(coverage.labeledLines),
+    totalLines: Math.round(coverage.totalLines),
+    minCoveragePercent: MIN_COVERAGE * 100,
+    unlabeledFolders: coverage.unlabeledFolders.map((folder) => ({
+      path: folder.path,
+      lines: Math.round(folder.lines),
+      percent: floor1(folder.share * 100),
+    })),
+  };
 }
 
 export function contributionIndex(input: ContributionInput): TeamContribution {

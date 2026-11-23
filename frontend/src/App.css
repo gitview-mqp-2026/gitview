@@ -1928,10 +1928,10 @@
 /* Fair-Share Index badge: color, glyph and tooltip all carry the level. */
 .fsi-badge { display: inline-flex; align-items: center; gap: 5px; border: 1px solid; border-radius: 999px; padding: 2px 10px 2px 8px; font-size: 14px; font-weight: bold; line-height: 1.5; white-space: nowrap; flex: none; cursor: help; }
 .fsi-glyph { font-size: 12px; }
-.fsi-green { background-color: #17432f; border-color: #3fae78; color: #b8f0d2; }
-.fsi-yellow { background-color: #4a3b12; border-color: #d4a72c; color: #ffe9a6; }
-.fsi-red { background-color: #4d1f26; border-color: #e0606e; color: #ffc6cc; }
-.fsi-gray { background-color: #2a3a50; border-color: #6b819c; color: #c4d2e3; }
+.fsi-green { background-color: color-mix(in srgb, var(--success) 18%, var(--card)); border-color: color-mix(in srgb, var(--success) 60%, transparent); color: var(--success); }
+.fsi-yellow { background-color: color-mix(in srgb, var(--warning) 18%, var(--card)); border-color: color-mix(in srgb, var(--warning) 60%, transparent); color: var(--warning); }
+.fsi-red { background-color: color-mix(in srgb, var(--destructive) 18%, var(--card)); border-color: color-mix(in srgb, var(--destructive) 60%, transparent); color: var(--destructive); }
+.fsi-gray { background-color: var(--card); border-color: var(--border); color: var(--muted-foreground); }
 .fsi-link { display: inline-flex; border-radius: 999px; text-decoration: none; }
 .fsi-link:hover .fsi-badge { filter: brightness(1.2); }
 .fsi-link:focus-visible { outline: 2px solid #72adff; outline-offset: 2px; }
@@ -1944,3 +1944,101 @@
 .member-breakdown th:first-child, .member-breakdown td:first-child { text-align: left; }
 .member-breakdown th { color: #72adff; text-transform: uppercase; font-size: 12px; }
 .member-breakdown tr.is-excluded td { color: #7f93ad; }
+
+
+/* Label coverage in the project structure panel (design tokens, like the panel it sits in). */
+.label-coverage {
+    flex: none;
+    margin: 0 0 var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+}
+
+.coverage-headline {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+}
+
+.coverage-headline strong {
+    font-size: var(--text-lg);
+    color: var(--foreground);
+}
+
+.coverage-bar {
+    position: relative;
+    height: 8px;
+    margin: var(--space-2) 0;
+    background-color: var(--border-subtle);
+    border-radius: var(--radius-full);
+}
+
+.coverage-fill {
+    display: block;
+    height: 100%;
+    background-color: var(--success);
+    border-radius: inherit;
+}
+
+.coverage-bar.is-low .coverage-fill {
+    background-color: var(--warning);
+}
+
+.coverage-threshold {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    background-color: var(--foreground);
+    opacity: 0.75;
+}
+
+.coverage-note {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+}
+
+.coverage-folders {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+}
+
+.coverage-folders summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.coverage-folders summary:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.coverage-folders ul {
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.coverage-folders li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-1) 0;
+}
+
+.coverage-folders code {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.coverage-folders li span {
+    flex: none;
+    color: var(--muted-foreground);
+}

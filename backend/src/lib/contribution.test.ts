@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   contributionDetail,
+  coverageDetail,
   contributionIndex,
   contributionSummary,
   DEFAULT_WEIGHTS,
@@ -9,6 +10,7 @@ import {
   isExcludedPath,
   labelingCoverage,
   levelFor,
+  unlabeledFolders,
 } from './contribution.js';
 import { categoryResolver } from './fileLabels.js';
 
@@ -218,4 +220,44 @@ test('contributionSummary and contributionDetail shape one member for the API wi
   assert.equal('coverage' in detail, false);
   assert.equal(contributionSummary(undefined), null);
   assert.equal(contributionDetail(undefined), null);
+});
+
+test('unlabeledFolders ranks the folders holding the most unlabeled work and ignores labeled and excluded files', () => {
+  const rows = [
+    commit(1, [['db/a.sql', 100], ['misc/a.txt', 50], ['misc/b.txt', 30], ['docs/guide/x.md', 120], ['root.txt', 10]]),
+    commit(2, [['misc/c.txt', 20], ['package-lock.json', 9000], ['node_modules/x/y.js', 500]]),
+    commit(2, [['docs/guide/merge.md', 999]], 1),
+  ];
+  const folders = unlabeledFolders({
+    commits: rows.map((r) => r.commit),
+    fileChanges: rows.flatMap((r) => r.changes),
+    resolve,
+  });
+
+  assert.deepEqual(folders.map((f) => [f.path, f.lines]), [['docs/guide', 120], ['misc', 100], ['', 10]]);
+  assert.equal(Math.round(folders[0].share * 1000) / 1000, 0.364); // 120 of 330 counted lines
+  assert.equal(unlabeledFolders({ commits: rows.map((r) => r.commit), fileChanges: rows.flatMap((r) => r.changes), resolve }, 2).length, 2);
+  assert.deepEqual(unlabeledFolders({ commits: [], fileChanges: [], resolve }), []);
+});
+
+test('unlabeledFolders and labelingCoverage agree on the unlabeled total', () => {
+  const rows = [commit(1, [['db/a.sql', 100], ['misc/a.txt', 60], ['other/b.txt', 40]])];
+  const input = { commits: rows.map((r) => r.commit), fileChanges: rows.flatMap((r) => r.changes), resolve };
+  const coverage = labelingCoverage(input);
+  const unlabeled = unlabeledFolders(input, 10).reduce((sum, f) => sum + f.lines, 0);
+  assert.equal(unlabeled, coverage.totalLines - coverage.labeledLines);
+});
+
+test('coverageDetail rounds down so a team just under the threshold never reads as having reached it', () => {
+  const detail = coverageDetail({
+    labeledLines: 499.6,
+    totalLines: 1000,
+    ratio: 0.4996,
+    unlabeledFolders: [{ path: 'misc', lines: 250.4, share: 0.2504 }],
+  });
+  assert.equal(detail.coveredPercent, 49.9);
+  assert.equal(detail.minCoveragePercent, 50);
+  assert.deepEqual(detail.unlabeledFolders, [{ path: 'misc', lines: 250, percent: 25 }]);
+  assert.equal(detail.labeledLines, 500);
+  assert.equal(coverageDetail({ labeledLines: 100, totalLines: 100, ratio: 1, unlabeledFolders: [] }).coveredPercent, 100);
 });

@@ -15,8 +15,8 @@ import {
 } from './lib/fileLabels.js';
 import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged, memberStats } from './lib/stats.js';
-import { contributionDetail, contributionSummary } from './lib/contribution.js';
-import { courseContribution, teamContribution } from './lib/teamContribution.js';
+import { contributionDetail, contributionSummary, coverageDetail } from './lib/contribution.js';
+import { courseContribution, teamContribution, teamLabelCoverage } from './lib/teamContribution.js';
 import { analyzeCourseRepo, CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import {
   GithubAppError,
@@ -255,6 +255,26 @@ app.get('/repositories/:teamId/tree', async (req, res) => {
       console.error(err);
       res.status(500).json({ error: 'Something went wrong loading that repository tree.' });
     }
+  }
+});
+
+// How much of the team's work is covered by a file or directory label, and the folders holding the most
+// unlabeled work. Scores only count labeled files, so this tells an instructor what labeling would unlock.
+app.get('/repositories/:teamId/label-coverage', async (req, res) => {
+  try {
+    const teamID = parseTeamId(req.params.teamId);
+    if (!teamID) {
+      res.status(400).json({ error: 'Invalid repository id.' });
+      return;
+    }
+    if (!(await db.orm.public.Repository.where({ teamID }).first())) {
+      res.status(404).json({ error: 'Repository not found' });
+      return;
+    }
+    res.json(coverageDetail(await teamLabelCoverage(teamID)));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong loading label coverage.' });
   }
 });
 

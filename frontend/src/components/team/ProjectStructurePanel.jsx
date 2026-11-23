@@ -1,10 +1,13 @@
 import { useEffect, useRef } from "react";
 import RepositoryTree from "../RepositoryTree.jsx";
+import LabelingCoverage from "./LabelingCoverage.jsx";
 import { X } from "lucide-react";
 
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
 
 function ProjectStructurePanel({
+    coverage,
+    coverageError,
     directoryLabelsByPath,
     fileLabelsByPath,
     isOpen,
@@ -78,6 +81,8 @@ function ProjectStructurePanel({
                     <X size={18} aria-hidden="true" />
                 </button>
             </div>
+
+            <LabelingCoverage coverage={coverage} error={coverageError} />
 
             <div className="tree-container">
                 {treeLoading && <p>Loading project structure…</p>}

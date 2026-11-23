@@ -37,6 +37,8 @@ function TeamDashboard() {
     const expandedMemberId = Number.isInteger(memberParam) && memberParam > 0 ? memberParam : null;
     const [members, setMembers] = useState(null);
     const [membersError, setMembersError] = useState(null);
+    const [coverage, setCoverage] = useState(null);
+    const [coverageError, setCoverageError] = useState(null);
     const [commitsVersion, setCommitsVersion] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -81,6 +83,27 @@ function TeamDashboard() {
                 setMembersError(null);
             })
             .catch((err) => !cancelled && setMembersError(err.message));
+        return () => {
+            cancelled = true;
+        };
+    }, [teamId, commitsVersion]);
+
+    useEffect(() => {
+        setCoverage(null);
+        setCoverageError(null);
+    }, [teamId]);
+
+    // Label coverage changes whenever labels do, so it is fetched again on the same trigger as members. It is
+    // not cleared first, so the panel does not flicker while the new figure loads.
+    useEffect(() => {
+        let cancelled = false;
+        getJson(`/repositories/${teamId}/label-coverage`)
+            .then((data) => {
+                if (cancelled) return;
+                setCoverage(data);
+                setCoverageError(null);
+            })
+            .catch((err) => !cancelled && setCoverageError(err.message));
         return () => {
             cancelled = true;
         };
@@ -235,6 +258,8 @@ function TeamDashboard() {
             </AppHeader>
 
             <ProjectStructurePanel
+                coverage={coverage}
+                coverageError={coverageError}
                 isOpen={treePanelOpen}
                 tree={tree}
                 treeLoading={treeLoading}
