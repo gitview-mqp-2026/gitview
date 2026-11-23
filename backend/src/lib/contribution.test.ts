@@ -62,10 +62,10 @@ test('default weights total 100 percent', () => {
 });
 
 test('isExcludedPath skips lockfiles, build output, vendored and minified files', () => {
-  for (const path of ['package-lock.json', 'frontend/package-lock.json', 'node_modules/x/index.js', 'a/dist/app.js', 'x.min.js', 'app.js.map']) {
+  for (const path of ['package-lock.json', 'frontend/package-lock.json', 'node_modules/x/index.js', 'a/dist/app.js', 'x.min.js', 'app.js.map', 'venv/Lib/site-packages/pip/__init__.py', 'app/.venv/bin/x', 'app/__pycache__/main.cpython-311.pyc', 'x.pyc']) {
     assert.equal(isExcludedPath(path), true, path);
   }
-  for (const path of ['src/app.js', 'distance/calc.ts', 'docs/build-notes.md']) assert.equal(isExcludedPath(path), false, path);
+  for (const path of ['src/app.js', 'distance/calc.ts', 'docs/build-notes.md', 'app/venues/routes.py', 'app/environment.py', 'app/pycache_notes.md']) assert.equal(isExcludedPath(path), false, path);
 });
 
 test('an equal split gives everyone exactly 1.00 and green', () => {

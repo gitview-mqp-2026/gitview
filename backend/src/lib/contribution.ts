@@ -32,6 +32,9 @@ const OVERFLOW_CREDIT = 0.25;
 const EXCLUDED_PATHS: readonly RegExp[] = [
   /(^|\/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|Gemfile\.lock|poetry\.lock|Cargo\.lock|composer\.lock)$/,
   /(^|\/)(node_modules|dist|build|vendor|coverage|\.next)\//,
+  // Python virtual environments and bytecode that some repositories commit by mistake.
+  /(^|\/)(venv|\.venv|site-packages|__pycache__)\//,
+  /\.py[co]$/,
   /\.min\.(js|css)$/,
   /\.map$/,
 ];
