@@ -4,7 +4,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/utils/fileLabels.test.js src/utils/teamMembers.test.js src/utils/contributionWeights.test.js"
+    "test": "node --test src/utils/fileLabels.test.js src/utils/teamMembers.test.js src/utils/contributionWeights.test.js src/utils/breadcrumbs.test.js"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.1",

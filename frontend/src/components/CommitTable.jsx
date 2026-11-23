@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
-// Paginated, tagged commit list shared by the team commit log and each member's commit list.
-function CommitTable({ commits, emptyMessage = "No commits found." }) {
+// One member's commits, paginated and tagged like the team commit log. There is no Author column because every
+// row belongs to the same person.
+function CommitTable({ commits, emptyMessage = "No commits found.", label = "Commits" }) {
     const [page, setPage] = useState(1);
     useEffect(() => setPage(1), [commits.length]);
 
@@ -14,48 +16,54 @@ function CommitTable({ commits, emptyMessage = "No commits found." }) {
 
     return (
         <>
-            <table className="categories-table">
-                <thead>
-                    <tr>
-                        <th>Hash</th>
-                        <th>Subject</th>
-                        <th>Author</th>
-                        <th>Date</th>
-                        <th>Categories from files</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {commits.length === 0 ? (
+            <div
+                className="table-scroll"
+                role="region"
+                aria-label={label}
+                tabIndex={commits.length > 0 ? 0 : undefined}
+            >
+                <table className="categories-table commit-table member-commit-table">
+                    <thead>
                         <tr>
-                            <td colSpan={5}>{emptyMessage}</td>
+                            <th scope="col">Hash</th>
+                            <th scope="col">Subject</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Categories from files</th>
                         </tr>
-                    ) : (
-                        visibleCommits.map((c) => (
-                            <tr key={c.commitHash}>
-                                <td><code>{c.commitHash.slice(0, 7)}</code></td>
-                                <td>{c.commitSubject}</td>
-                                <td>{c.author}</td>
-                                <td>{new Date(c.dateTime).toLocaleDateString()}</td>
-                                <td className="commit-tags-cell">
-                                    <div
-                                        className="commit-tag-summary"
-                                        title="Derived from labeled files changed by this commit"
-                                    >
-                                        {(c.tags ?? []).map((tag) => (
-                                            <span className="file-category-badge" key={tag}>{tag}</span>
-                                        ))}
-                                        {(c.tags ?? []).length === 0 && <span className="empty-category">None</span>}
-                                    </div>
-                                </td>
+                    </thead>
+                    <tbody>
+                        {commits.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="table-empty">{emptyMessage}</td>
                             </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+                        ) : (
+                            visibleCommits.map((commit) => (
+                                <tr key={commit.commitHash}>
+                                    <td><code>{commit.commitHash.slice(0, 7)}</code></td>
+                                    <td className="commit-subject">{commit.commitSubject}</td>
+                                    <td>{new Date(commit.dateTime).toLocaleDateString()}</td>
+                                    <td className="commit-tags-cell">
+                                        <div
+                                            className="commit-tag-summary"
+                                            title="Derived from labeled files changed by this commit"
+                                        >
+                                            {(commit.tags ?? []).map((tag) => (
+                                                <span className="file-category-badge" key={tag}>{tag}</span>
+                                            ))}
+                                            {(commit.tags ?? []).length === 0 && <span className="empty-category">None</span>}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
             {pageCount > 1 && (
-                <div className="pager">
+                <nav className="pager" aria-label={`${label} pagination`}>
                     <button type="button" onClick={() => setPage(page - 1)} disabled={page === 1}>
+                        <ChevronLeft size={16} aria-hidden="true" />
                         Previous
                     </button>
                     <span>
@@ -63,8 +71,9 @@ function CommitTable({ commits, emptyMessage = "No commits found." }) {
                     </span>
                     <button type="button" onClick={() => setPage(page + 1)} disabled={page === pageCount}>
                         Next
+                        <ChevronRight size={16} aria-hidden="true" />
                     </button>
-                </div>
+                </nav>
             )}
         </>
     );

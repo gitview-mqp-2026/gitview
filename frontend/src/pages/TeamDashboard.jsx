@@ -3,13 +3,16 @@ import "../App.css";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { PanelLeftOpen } from "lucide-react";
 import AppHeader from "../components/AppHeader.jsx";
+import Breadcrumbs from "../components/Breadcrumbs.jsx";
 import LogoutButton from "../components/auth/LogoutButton.jsx";
 import Profile from "../components/auth/Profile.jsx";
 import MembersTab from "../components/MembersTab.jsx";
 import CommitLog from "../components/team/CommitLog.jsx";
 import ContributionCategories from "../components/team/ContributionCategories.jsx";
 import ProjectStructurePanel from "../components/team/ProjectStructurePanel.jsx";
+import TeamHeader from "../components/team/TeamHeader.jsx";
 import TeamOverview from "../components/team/TeamOverview.jsx";
+import { teamCrumbs } from "../utils/breadcrumbs.js";
 import { replaceFileLabel } from "../utils/fileLabels.js";
 
 const PAGE_SIZE = 10;
@@ -30,6 +33,7 @@ function TeamDashboard() {
     const { teamId } = useParams();
     const [commits, setCommits] = useState([]);
     const [stats, setStats] = useState(null);
+    const [course, setCourse] = useState(null);
     const [page, setPage] = useState(1);
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "overview";
@@ -66,6 +70,21 @@ function TeamDashboard() {
             .catch((err) => setError(err.message))
             .finally(() => setLoading(false));
     }, [teamId]);
+
+    // The breadcrumb names the course; if that lookup fails the crumb still links there, it just reads "Course".
+    useEffect(() => {
+        if (!stats?.courseID) {
+            setCourse(null);
+            return undefined;
+        }
+        let cancelled = false;
+        getJson("/courses")
+            .then((rows) => !cancelled && setCourse(rows.find((row) => row.courseID === stats.courseID) ?? null))
+            .catch(() => !cancelled && setCourse(null));
+        return () => {
+            cancelled = true;
+        };
+    }, [stats?.courseID]);
 
     useEffect(() => {
         setMembers(null);
@@ -248,13 +267,7 @@ function TeamDashboard() {
                         Files
                     </span>
                 </button>
-                <div className="file-path" aria-label="Current location">
-                    <Link to={stats?.courseID ? `/course/${stats.courseID}` : "/"}>
-                        Repositories
-                    </Link>
-                    <span>/</span>
-                    <strong>{stats?.name ?? "Team dashboard"}</strong>
-                </div>
+                <Breadcrumbs crumbs={teamCrumbs({ stats, course })} />
             </AppHeader>
 
             <ProjectStructurePanel
@@ -276,6 +289,8 @@ function TeamDashboard() {
             />
 
             <main id="main-content" className="team-page">
+                <TeamHeader stats={stats} loading={loading} />
+
                 <div className="team-tabs" role="tablist" aria-label="Team views">
                     {TABS.map((tab) => (
                         <button
@@ -294,7 +309,7 @@ function TeamDashboard() {
                 </div>
 
                 {activeTab === "members" && (
-                    <div role="tabpanel" id="team-tabpanel-members" aria-labelledby="team-tab-members">
+                    <div className="team-tabpanel" role="tabpanel" id="team-tabpanel-members" aria-labelledby="team-tab-members">
                         <MembersTab
                             teamId={teamId}
                             members={members}
@@ -308,7 +323,7 @@ function TeamDashboard() {
                 )}
 
                 {activeTab === "overview" && (
-                    <div role="tabpanel" id="team-tabpanel-overview" aria-labelledby="team-tab-overview">
+                    <div className="team-tabpanel" role="tabpanel" id="team-tabpanel-overview" aria-labelledby="team-tab-overview">
                         <TeamOverview
                             stats={stats}
                             loading={loading}
