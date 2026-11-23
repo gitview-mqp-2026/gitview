@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  contributionDetail,
   contributionIndex,
+  contributionSummary,
   DEFAULT_WEIGHTS,
   effectiveLines,
   isExcludedPath,
@@ -95,6 +97,12 @@ test('categories nobody worked in are dropped and the rest are rescaled to 100 p
   assert.equal(result.members.get(2)!.index, 0.36); // 10/35 × 1.25
   assert.equal(a.categories.filter((c) => c.included).length, 2);
   assert.equal(a.categories.find((c) => c.category === 'Styling')!.included, false);
+
+  const effective = Object.fromEntries(a.categories.map((c) => [c.category, Math.round(c.effectiveWeight * 100) / 100]));
+  assert.equal(effective.Database, 71.43);
+  assert.equal(effective.Testing, 28.57);
+  assert.equal(effective.Styling, 0);
+  assert.equal(Math.round(a.categories.reduce((sum, c) => sum + c.effectiveWeight, 0)), 100);
 });
 
 test('a category with weight 0 does not count', () => {
@@ -188,4 +196,26 @@ test('a team with no labeled work has no index at all', () => {
 
 test('labelingCoverage reports full coverage for an empty repository', () => {
   assert.deepEqual(labelingCoverage({ commits: [], fileChanges: [], resolve }), { labeledLines: 0, totalLines: 0, ratio: 1 });
+});
+
+test('contributionSummary and contributionDetail shape one member for the API without leaking coverage', () => {
+  const result = build([commit(1, [['db/a.sql', 100]]), commit(2, [['test/a.test.ts', 100]])], [1, 2]);
+  const member = result.members.get(1);
+
+  assert.deepEqual(contributionSummary(member), { index: 0.89, level: 'green', reason: null });
+  const detail = contributionDetail(member)!;
+  assert.equal(detail.index, 0.89);
+  assert.equal(detail.categories.length, 7);
+  assert.deepEqual(detail.categories.find((c) => c.category === 'Database'), {
+    category: 'Database',
+    weight: 25,
+    effectiveWeight: 71.43,
+    included: true,
+    share: 1,
+    index: 1.25,
+  });
+  assert.equal(detail.categories.find((c) => c.category === 'Styling')!.included, false);
+  assert.equal('coverage' in detail, false);
+  assert.equal(contributionSummary(undefined), null);
+  assert.equal(contributionDetail(undefined), null);
 });

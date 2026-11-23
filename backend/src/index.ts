@@ -15,6 +15,8 @@ import {
 } from './lib/fileLabels.js';
 import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged, memberStats } from './lib/stats.js';
+import { contributionDetail } from './lib/contribution.js';
+import { teamContribution } from './lib/teamContribution.js';
 import { analyzeCourseRepo, CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import {
   GithubAppError,
@@ -188,11 +190,12 @@ app.get('/repositories/:teamId/members', async (req, res) => {
     }
 
     const { students, commits } = await commitsForTeam(teamID);
-    const [users, fileChanges] = await Promise.all([
+    const [users, fileChanges, contribution] = await Promise.all([
       db.orm.public.User.all(),
       commits.length === 0
         ? Promise.resolve([])
         : db.orm.public.FileChange.where((change) => change.commitHash.in(commits.map((c) => c.commitHash))).all(),
+      teamContribution(teamID),
     ]);
     const usersById = new Map(users.map((u) => [u.userID, u]));
     const members = students.flatMap((s) => {
@@ -200,7 +203,9 @@ app.get('/repositories/:teamId/members', async (req, res) => {
       return user ? [{ userID: user.userID, name: user.name, username: user.username, email: user.email }] : [];
     });
     res.json(
-      memberStats({ members, commits, fileChanges }).sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name)),
+      memberStats({ members, commits, fileChanges })
+        .map((member) => ({ ...member, contribution: contributionDetail(contribution.members.get(member.userID)) }))
+        .sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name)),
     );
   } catch (err) {
     console.error(err);

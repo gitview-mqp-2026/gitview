@@ -69,6 +69,9 @@ export interface CategoryBreakdown {
   // The configured percent, and whether the category counted: it is dropped when the team did no work in it
   // (or its weight is 0), and the remaining weights are scaled back up to 100%.
   weight: number;
+
+  // The percent this category actually carries after dropped categories are rescaled; 0 when not included.
+  effectiveWeight: number;
   included: boolean;
   effort: number;
   teamEffort: number;
@@ -82,6 +85,44 @@ export interface MemberContribution {
   level: ContributionLevel;
   reason: GrayReason | null;
   categories: CategoryBreakdown[];
+}
+
+// What the API sends for one member. The summary is all the roster needs; the detail adds the per-category
+// breakdown for the member card. Coverage is deliberately absent: it is shown only in the labeling tree.
+export interface ContributionSummary {
+  index: number | null;
+  level: ContributionLevel;
+  reason: GrayReason | null;
+}
+
+export interface ContributionDetail extends ContributionSummary {
+  categories: {
+    category: FileCategory;
+    weight: number;
+    effectiveWeight: number;
+    included: boolean;
+    share: number;
+    index: number;
+  }[];
+}
+
+export function contributionSummary(member: MemberContribution | undefined): ContributionSummary | null {
+  return member ? { index: member.index, level: member.level, reason: member.reason } : null;
+}
+
+export function contributionDetail(member: MemberContribution | undefined): ContributionDetail | null {
+  if (!member) return null;
+  return {
+    ...contributionSummary(member)!,
+    categories: member.categories.map((c) => ({
+      category: c.category,
+      weight: c.weight,
+      effectiveWeight: round2(c.effectiveWeight),
+      included: c.included,
+      share: Math.round(c.share * 1000) / 1000,
+      index: round2(c.index),
+    })),
+  };
 }
 
 export interface LabelingCoverage {
@@ -166,8 +207,9 @@ export function contributionIndex(input: ContributionInput): TeamContribution {
       const effort = own?.get(category) ?? 0;
       const share = included ? effort / all : 0;
       const index = included ? Math.min(teamSize * share, CONTRIBUTION_CAP) : 0;
-      if (included) total += (weight / activeWeightTotal) * index;
-      return { category, weight, included, effort, teamEffort: all, share, index };
+      const effectiveWeight = included ? (weight / activeWeightTotal) * 100 : 0;
+      if (included) total += (effectiveWeight / 100) * index;
+      return { category, weight, effectiveWeight, included, effort, teamEffort: all, share, index };
     });
 
     if (active.length === 0) {

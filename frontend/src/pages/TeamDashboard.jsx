@@ -66,16 +66,25 @@ function TeamDashboard() {
     }, [teamId]);
 
     useEffect(() => {
-        let cancelled = false;
         setMembers(null);
         setMembersError(null);
+    }, [teamId]);
+
+    // Contribution scores depend on file labels, so members are fetched again whenever labels change
+    // (commitsVersion). The list is not cleared first, so open cards stay put while scores refresh.
+    useEffect(() => {
+        let cancelled = false;
         getJson(`/repositories/${teamId}/members`)
-            .then((rows) => !cancelled && setMembers(rows))
+            .then((rows) => {
+                if (cancelled) return;
+                setMembers(rows);
+                setMembersError(null);
+            })
             .catch((err) => !cancelled && setMembersError(err.message));
         return () => {
             cancelled = true;
         };
-    }, [teamId]);
+    }, [teamId, commitsVersion]);
 
     const showMember = (userID) => setSearchParams(
         userID ? { tab: "members", member: String(userID) } : { tab: "members" },
