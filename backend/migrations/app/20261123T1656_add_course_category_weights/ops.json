@@ -1,0 +1,164 @@
+[
+  {
+    "id": "table.courseCategoryWeight",
+    "label": "Create table \"courseCategoryWeight\"",
+    "summary": "Creates table \"courseCategoryWeight\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "courseCategoryWeight"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"courseCategoryWeight\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"courseCategoryWeight\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"courseCategoryWeight\"",
+        "sql": "CREATE TABLE \"public\".\"courseCategoryWeight\" (\n  \"category\" text NOT NULL,\n  \"courseID\" int4 NOT NULL,\n  \"percent\" int4 NOT NULL,\n  PRIMARY KEY (\"courseID\", \"category\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"courseCategoryWeight\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"courseCategoryWeight\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.course.weightsUpdatedAt",
+    "label": "Add column \"weightsUpdatedAt\" to \"course\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "weightsUpdatedAt",
+        "table": "course"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"weightsUpdatedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "course",
+          "weightsUpdatedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"weightsUpdatedAt\"",
+        "sql": "ALTER TABLE \"public\".\"course\" ADD COLUMN \"weightsUpdatedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"weightsUpdatedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "course",
+          "weightsUpdatedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.courseCategoryWeight.courseCategoryWeight_courseID_idx_7300c0bc",
+    "label": "Create index \"courseCategoryWeight_courseID_idx_7300c0bc\" on \"courseCategoryWeight\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "courseCategoryWeight_courseID_idx_7300c0bc",
+        "table": "courseCategoryWeight"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"courseCategoryWeight_courseID_idx_7300c0bc\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"courseCategoryWeight_courseID_idx_7300c0bc\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"courseCategoryWeight_courseID_idx_7300c0bc\"",
+        "sql": "CREATE INDEX \"courseCategoryWeight_courseID_idx_7300c0bc\" ON \"public\".\"courseCategoryWeight\" (\"courseID\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"courseCategoryWeight_courseID_idx_7300c0bc\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"courseCategoryWeight_courseID_idx_7300c0bc\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.courseCategoryWeight.courseCategoryWeight_courseID_fkey",
+    "label": "Add foreign key \"courseCategoryWeight_courseID_fkey\" on \"courseCategoryWeight\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "courseCategoryWeight_courseID_fkey",
+        "table": "courseCategoryWeight"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"courseCategoryWeight_courseID_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "courseCategoryWeight_courseID_fkey",
+          "public",
+          "\"public\".\"courseCategoryWeight\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"courseCategoryWeight_courseID_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"courseCategoryWeight\"\nADD CONSTRAINT \"courseCategoryWeight_courseID_fkey\"\nFOREIGN KEY (\"courseID\")\nREFERENCES \"public\".\"course\" (\"courseID\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"courseCategoryWeight_courseID_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "courseCategoryWeight_courseID_fkey",
+          "public",
+          "\"public\".\"courseCategoryWeight\""
+        ]
+      }
+    ]
+  }
+]

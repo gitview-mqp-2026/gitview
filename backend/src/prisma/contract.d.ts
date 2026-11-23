@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'0cb708c2bf15ed6a0a426db2f5241a9b60f73ae6615aad2a63a3a10ed1060927'>;
+  StorageHashBase<'1f6045099ed65349ccb7f3165e98944ded25ceb55cc1b093d2f115032bcbf47a'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -270,6 +270,12 @@ export type FieldOutputTypes = {
       readonly githubOrg: CodecTypes['pg/text@1']['output'] | null;
       readonly installationId: CodecTypes['pg/int4@1']['output'] | null;
       readonly repoPattern: CodecTypes['pg/text@1']['output'] | null;
+      readonly weightsUpdatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+    };
+    readonly CourseCategoryWeight: {
+      readonly courseID: CodecTypes['pg/int4@1']['output'];
+      readonly category: CodecTypes['pg/text@1']['output'];
+      readonly percent: CodecTypes['pg/int4@1']['output'];
     };
     readonly Feedback: {
       readonly feedbackID: CodecTypes['pg/int4@1']['output'];
@@ -350,6 +356,12 @@ export type FieldInputTypes = {
       readonly githubOrg: CodecTypes['pg/text@1']['input'] | null;
       readonly installationId: CodecTypes['pg/int4@1']['input'] | null;
       readonly repoPattern: CodecTypes['pg/text@1']['input'] | null;
+      readonly weightsUpdatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+    };
+    readonly CourseCategoryWeight: {
+      readonly courseID: CodecTypes['pg/int4@1']['input'];
+      readonly category: CodecTypes['pg/text@1']['input'];
+      readonly percent: CodecTypes['pg/int4@1']['input'];
     };
     readonly Feedback: {
       readonly feedbackID: CodecTypes['pg/int4@1']['input'];
@@ -430,6 +442,12 @@ export type StorageColumnTypes = {
       readonly installationId: CodecTypes['pg/int4@1']['output'] | null;
       readonly instructorID: CodecTypes['pg/int4@1']['output'];
       readonly repoPattern: CodecTypes['pg/text@1']['output'] | null;
+      readonly weightsUpdatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+    };
+    readonly courseCategoryWeight: {
+      readonly category: CodecTypes['pg/text@1']['output'];
+      readonly courseID: CodecTypes['pg/int4@1']['output'];
+      readonly percent: CodecTypes['pg/int4@1']['output'];
     };
     readonly feedback: {
       readonly authorID: CodecTypes['pg/int4@1']['output'];
@@ -510,6 +528,12 @@ export type StorageColumnInputTypes = {
       readonly installationId: CodecTypes['pg/int4@1']['input'] | null;
       readonly instructorID: CodecTypes['pg/int4@1']['input'];
       readonly repoPattern: CodecTypes['pg/text@1']['input'] | null;
+      readonly weightsUpdatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+    };
+    readonly courseCategoryWeight: {
+      readonly category: CodecTypes['pg/text@1']['input'];
+      readonly courseID: CodecTypes['pg/int4@1']['input'];
+      readonly percent: CodecTypes['pg/int4@1']['input'];
     };
     readonly feedback: {
       readonly authorID: CodecTypes['pg/int4@1']['input'];
@@ -821,6 +845,11 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
+                readonly weightsUpdatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
+                };
               };
               primaryKey: { readonly columns: readonly ['courseID'] };
               uniques: readonly [{ readonly columns: readonly ['githubOrg'] }];
@@ -843,6 +872,49 @@ type ContractBase = Omit<
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'instructor';
                     readonly columns: readonly ['userID'];
+                  };
+                },
+              ];
+            };
+            readonly courseCategoryWeight: {
+              columns: {
+                readonly courseID: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly category: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly percent: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['courseID', 'category'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'courseCategoryWeight_courseID_idx_7300c0bc';
+                  readonly prefix: 'courseCategoryWeight_courseID_idx';
+                  readonly columns: readonly ['courseID'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'courseCategoryWeight';
+                    readonly columns: readonly ['courseID'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'course';
+                    readonly columns: readonly ['courseID'];
                   };
                 },
               ];
@@ -1285,6 +1357,10 @@ type ContractBase = Omit<
       readonly model: 'RepositoryFileLabel';
     };
     readonly course: { readonly namespace: 'public' & NamespaceId; readonly model: 'Course' };
+    readonly courseCategoryWeight: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'CourseCategoryWeight';
+    };
     readonly alert: { readonly namespace: 'public' & NamespaceId; readonly model: 'Alert' };
   };
   readonly domain: {
@@ -1540,8 +1616,26 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly weightsUpdatedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
             };
             readonly relations: {
+              readonly categoryWeights: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'CourseCategoryWeight';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['courseID'];
+                  readonly targetFields: readonly ['courseID'];
+                };
+              };
               readonly instructor: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -1576,6 +1670,45 @@ type ContractBase = Omit<
                 readonly githubOrg: { readonly column: 'githubOrg' };
                 readonly installationId: { readonly column: 'installationId' };
                 readonly repoPattern: { readonly column: 'repoPattern' };
+                readonly weightsUpdatedAt: { readonly column: 'weightsUpdatedAt' };
+              };
+            };
+          };
+          readonly CourseCategoryWeight: {
+            readonly fields: {
+              readonly courseID: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly category: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly percent: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly course: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Course';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['courseID'];
+                  readonly targetFields: readonly ['courseID'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'courseCategoryWeight';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly courseID: { readonly column: 'courseID' };
+                readonly category: { readonly column: 'category' };
+                readonly percent: { readonly column: 'percent' };
               };
             };
           };

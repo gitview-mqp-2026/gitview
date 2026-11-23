@@ -113,7 +113,20 @@ model Course {
   githubOrg         String?       @unique
   installationId    Int?
   repoPattern       String?
+  weightsUpdatedAt  DateTime?
   repositories      Repository[]
+  categoryWeights   CourseCategoryWeight[]
+}
+
+// Instructor-chosen contribution weights, one row per category, as whole percents. A course with no rows uses
+// the defaults in code, so rows exist only once an instructor has customized them.
+model CourseCategoryWeight {
+  courseID          Int
+  category          String
+  percent           Int
+  course            Course        @relation(fields: [courseID], references: [courseID], onDelete: Cascade)
+
+  @@id([courseID, category])
 }
 
 model Alert {

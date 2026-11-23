@@ -17,6 +17,8 @@ import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } fr
 import { countPullRequestsMerged, memberStats } from './lib/stats.js';
 import { contributionDetail, contributionSummary, coverageDetail } from './lib/contribution.js';
 import { courseContribution, teamContribution, teamLabelCoverage } from './lib/teamContribution.js';
+import { parseCourseId, parseWeightsInput } from './lib/courseWeights.js';
+import { getCourseWeights, resetCourseWeights, saveCourseWeights } from './lib/courseWeightsStore.js';
 import { analyzeCourseRepo, CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import {
   GithubAppError,
@@ -542,6 +544,54 @@ app.get('/courses/:courseId/roster', async (req, res) => {
       .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
 
     res.json(roster);
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// The contribution weights in effect for a course: the instructor's, or the defaults while it has never been
+// customized. Like the other routes, these do not check who is calling yet.
+app.get('/courses/:courseId/contribution-weights', async (req, res) => {
+  try {
+    const courseID = parseCourseId(req.params.courseId);
+    if (!courseID) {
+      res.status(400).json({ error: 'Invalid course id.' });
+      return;
+    }
+    res.json(await getCourseWeights(courseID));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Replaces the course's weights. All categories are required, each a whole percent, totaling exactly 100.
+app.put('/courses/:courseId/contribution-weights', async (req, res) => {
+  try {
+    const courseID = parseCourseId(req.params.courseId);
+    if (!courseID) {
+      res.status(400).json({ error: 'Invalid course id.' });
+      return;
+    }
+    const parsed = parseWeightsInput(req.body);
+    if (!parsed.ok) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    res.json(await saveCourseWeights(courseID, parsed.weights));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Back to the defaults.
+app.delete('/courses/:courseId/contribution-weights', async (req, res) => {
+  try {
+    const courseID = parseCourseId(req.params.courseId);
+    if (!courseID) {
+      res.status(400).json({ error: 'Invalid course id.' });
+      return;
+    }
+    res.json(await resetCourseWeights(courseID));
   } catch (err) {
     sendError(res, err);
   }

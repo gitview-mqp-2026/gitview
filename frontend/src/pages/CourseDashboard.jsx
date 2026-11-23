@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "../App.css";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar.jsx";
+import ContributionWeightsPanel from "../components/ContributionWeightsPanel.jsx";
 
 async function post(path) {
     const response = await fetch(path, { method: "POST" });
@@ -145,6 +146,8 @@ function CourseDashboard() {
                         {failed.length > 0 && `, ${failed.length} failed`}.
                     </p>
                 )}
+
+                <ContributionWeightsPanel courseId={courseId} />
 
                 <form className="analyze-repo" onSubmit={analyze}>
                     <input

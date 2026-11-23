@@ -9,6 +9,7 @@ import {
   type TeamContribution,
   type UnlabeledFolder,
 } from './contribution.js';
+import { getCourseWeights } from './courseWeightsStore.js';
 import { categoryResolver } from './fileLabels.js';
 
 // Keeps each IN (...) list well under Postgres's 65,535 bind-parameter limit on large courses.
@@ -84,15 +85,25 @@ export async function contributionForTeams(
   return results;
 }
 
+// Scored with the weights of the course the team belongs to (the defaults when the course never customized them,
+// or the team has no course), unless the caller passes weights explicitly, as a preview does.
 export async function teamContribution(teamID: number, weights?: CategoryWeights): Promise<TeamContribution> {
-  return (await contributionForTeams([teamID], weights)).get(teamID)!;
+  let resolved = weights;
+  if (!resolved) {
+    const repository = await db.orm.public.Repository.where({ teamID }).first();
+    resolved = repository?.courseID ? (await getCourseWeights(repository.courseID)).weights : undefined;
+  }
+  return (await contributionForTeams([teamID], resolved)).get(teamID)!;
 }
 
-// Every team in a course in one pass: the roster page needs all of them at once, and querying per team
-// would repeat the same four lookups for each repository.
+// Every team in a course in one pass, using that course's weights: the roster page needs all of them at once, and
+// querying per team would repeat the same four lookups for each repository.
 export async function courseContribution(courseID: number, weights?: CategoryWeights): Promise<Map<number, TeamContribution>> {
   const repositories = await db.orm.public.Repository.where({ courseID }).all();
-  return contributionForTeams(repositories.map((repository) => repository.teamID), weights);
+  return contributionForTeams(
+    repositories.map((repository) => repository.teamID),
+    weights ?? (await getCourseWeights(courseID)).weights,
+  );
 }
 
 export interface TeamLabelCoverage extends LabelingCoverage {
