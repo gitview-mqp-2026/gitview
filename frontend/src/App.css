@@ -1932,6 +1932,9 @@
 .fsi-yellow { background-color: #4a3b12; border-color: #d4a72c; color: #ffe9a6; }
 .fsi-red { background-color: #4d1f26; border-color: #e0606e; color: #ffc6cc; }
 .fsi-gray { background-color: #2a3a50; border-color: #6b819c; color: #c4d2e3; }
+.fsi-link { display: inline-flex; border-radius: 999px; text-decoration: none; }
+.fsi-link:hover .fsi-badge { filter: brightness(1.2); }
+.fsi-link:focus-visible { outline: 2px solid #72adff; outline-offset: 2px; }
 
 .member-breakdown { margin-top: 18px; overflow-x: auto; }
 .member-breakdown h3 { margin: 0 0 4px; font-size: 18px; font-weight: normal; color: #fff; }

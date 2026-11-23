@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import NavBar from "../components/NavBar.jsx"; 
+import NavBar from "../components/NavBar.jsx";
+import ContributionBadge, { contributionDescription } from "../components/ContributionBadge.jsx";
 import "../App.css";
 
 function Roster() {
@@ -88,6 +89,7 @@ function Roster() {
                                     <thead>
                                         <tr>
                                             <th>Name</th>
+                                            <th>Contribution</th>
                                             <th>GitHub Username</th>
                                             <th>Role</th>
                                             <th>Last Login</th>
@@ -97,6 +99,17 @@ function Roster() {
                                         {students.map((student) => (
                                             <tr key={student.userID}>
                                                 <td>{student.name || "Unknown"}</td>
+                                                <td>
+                                                    {student.contribution && student.teamID ? (
+                                                        <Link
+                                                            to={`/team/${student.teamID}?tab=members&member=${student.userID}`}
+                                                            className="fsi-link"
+                                                            aria-label={`${student.name || "Unknown"}: ${contributionDescription(student.contribution)} Open their member details.`}
+                                                        >
+                                                            <ContributionBadge contribution={student.contribution} />
+                                                        </Link>
+                                                    ) : "—"}
+                                                </td>
                                                 <td>{student.username || "Unknown"}</td>
                                                 <td>{student.role}</td>
                                                 <td></td>

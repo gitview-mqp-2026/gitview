@@ -15,8 +15,8 @@ import {
 } from './lib/fileLabels.js';
 import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged, memberStats } from './lib/stats.js';
-import { contributionDetail } from './lib/contribution.js';
-import { teamContribution } from './lib/teamContribution.js';
+import { contributionDetail, contributionSummary } from './lib/contribution.js';
+import { courseContribution, teamContribution } from './lib/teamContribution.js';
 import { analyzeCourseRepo, CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import {
   GithubAppError,
@@ -489,9 +489,10 @@ app.get('/courses/:courseId/roster', async (req, res) => {
       repositories.map((repo) => [repo.teamID, repo.name])
     );
 
-    const [students, users] = await Promise.all([
+    const [students, users, contribution] = await Promise.all([
       db.orm.public.Student.all(),
       db.orm.public.User.all(),
+      courseContribution(courseID),
     ]);
 
     const usersById = new Map(users.map((user) => [user.userID, user]));
@@ -512,6 +513,7 @@ app.get('/courses/:courseId/roster', async (req, res) => {
             teamID: student.teamID,
             teamName: teamNamesById.get(student.teamID) ?? null,
             role: 'Student',
+            contribution: contributionSummary(contribution.get(student.teamID)?.members.get(student.userID)),
           });
         }
       });
