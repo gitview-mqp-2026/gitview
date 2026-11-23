@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  categoryResolver,
   commitTagRows,
   commitTagsByHash,
   FILE_CATEGORIES,
@@ -102,4 +103,25 @@ test('commitTagRows maps derived categories to stored tag ids', () => {
       { commitHash: hash, tagID: 5 },
     ],
   );
+});
+
+test('categoryResolver prefers a file label, then the nearest labeled directory, then null', () => {
+  const resolve = categoryResolver(
+    [
+      { path: 'src/routes/legacy.ts', category: 'Database' },
+      { path: 'old.txt', category: 'Templates/components' },
+      { path: 'junk.txt', category: 'NotACategory' },
+    ],
+    [
+      { path: 'src', category: 'App-setup' },
+      { path: 'src/routes', category: 'Routes/Endpoints' },
+    ],
+  );
+  assert.equal(resolve('src/routes/legacy.ts'), 'Database');
+  assert.equal(resolve('src/routes/users/index.ts'), 'Routes/Endpoints');
+  assert.equal(resolve('src/main.ts'), 'App-setup');
+  assert.equal(resolve('old.txt'), 'Templates/Components');
+  assert.equal(resolve('junk.txt'), null);
+  assert.equal(resolve('README.md'), null);
+  assert.equal(resolve('srcother/file.ts'), null);
 });

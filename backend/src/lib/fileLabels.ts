@@ -36,11 +36,12 @@ export function normalizeFileCategory(value: string): FileCategory | null {
   return Object.hasOwn(LEGACY_CATEGORY_ALIASES, value) ? LEGACY_CATEGORY_ALIASES[value] : null;
 }
 
-export function commitTagsByHash(
+// One lookup shared by commit tags and contribution scoring so the two can never disagree about a file's
+// category: an exact file label wins, otherwise the nearest labeled parent directory, otherwise null.
+export function categoryResolver(
   fileLabels: readonly { path: string; category: string }[],
   directoryLabels: readonly { path: string; category: string }[],
-  fileChanges: readonly { commitHash: string; filePath: string }[],
-): Map<string, FileCategory[]> {
+): (filePath: string) => FileCategory | null {
   const fileCategoryByPath = new Map<string, FileCategory>();
   for (const label of fileLabels) {
     const category = normalizeFileCategory(label.category);
@@ -51,16 +52,29 @@ export function commitTagsByHash(
     const category = normalizeFileCategory(label.category);
     if (category) directoryCategoryByPath.set(label.path, category);
   }
+
+  return (filePath) => {
+    // shortcut: labels match recorded paths exactly, follow Git rename history when categories must span renames.
+    let category = fileCategoryByPath.get(filePath);
+    let parentEnd = filePath.lastIndexOf('/');
+    while (!category && parentEnd !== -1) {
+      category = directoryCategoryByPath.get(filePath.slice(0, parentEnd));
+      parentEnd = filePath.lastIndexOf('/', parentEnd - 1);
+    }
+    return category ?? null;
+  };
+}
+
+export function commitTagsByHash(
+  fileLabels: readonly { path: string; category: string }[],
+  directoryLabels: readonly { path: string; category: string }[],
+  fileChanges: readonly { commitHash: string; filePath: string }[],
+): Map<string, FileCategory[]> {
+  const resolve = categoryResolver(fileLabels, directoryLabels);
   const result = new Map<string, FileCategory[]>();
 
   for (const change of fileChanges) {
-    // shortcut: labels match recorded paths exactly, follow Git rename history when categories must span renames.
-    let category = fileCategoryByPath.get(change.filePath);
-    let parentEnd = change.filePath.lastIndexOf('/');
-    while (!category && parentEnd !== -1) {
-      category = directoryCategoryByPath.get(change.filePath.slice(0, parentEnd));
-      parentEnd = change.filePath.lastIndexOf('/', parentEnd - 1);
-    }
+    const category = resolve(change.filePath);
     if (!category) continue;
     const categories = result.get(change.commitHash) ?? [];
     if (!categories.includes(category)) categories.push(category);
