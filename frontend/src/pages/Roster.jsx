@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar.jsx";
 import ContributionBadge, { contributionDescription } from "../components/ContributionBadge.jsx";
+import { rosterCrumbs } from "../utils/breadcrumbs.js";
 import "../App.css";
 
 function Roster() {
@@ -60,7 +61,7 @@ function Roster() {
 
     return (
         <div>
-            <NavBar />
+            <NavBar crumbs={rosterCrumbs({ course, courseId })} />
                 <Link to={`/course/${courseId}`} className="back-link">
                     ← Back to Course Dashboard
                 </Link>

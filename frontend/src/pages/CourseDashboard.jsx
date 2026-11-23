@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "../App.css";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar.jsx";
+import { courseCrumbs } from "../utils/breadcrumbs.js";
 import ContributionWeightsPanel from "../components/ContributionWeightsPanel.jsx";
 
 async function post(path) {
@@ -111,7 +112,7 @@ function CourseDashboard() {
 
     return (
         <div>
-            <NavBar />
+            <NavBar crumbs={courseCrumbs({ course })} />
 
             <div>
                 <Link to="/" className="back-link">← All Courses</Link>

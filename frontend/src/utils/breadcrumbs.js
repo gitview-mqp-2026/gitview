@@ -11,3 +11,22 @@ export function teamCrumbs({ stats, course }) {
     crumbs.push({ label: shortName ?? "Team", title: stats?.name });
     return crumbs;
 }
+
+// The courses list is the top level, so it is the current page there and has no link.
+export const HOME_CRUMBS = [{ label: "Courses" }];
+
+const courseLabel = (course) => course?.courseName ?? "Course";
+
+// Courses / <course name>
+export function courseCrumbs({ course }) {
+    return [{ label: "Courses", to: "/" }, { label: courseLabel(course) }];
+}
+
+// Courses / <course name> / Roster
+export function rosterCrumbs({ course, courseId }) {
+    return [
+        { label: "Courses", to: "/" },
+        { label: courseLabel(course), to: `/course/${courseId}` },
+        { label: "Roster" },
+    ];
+}

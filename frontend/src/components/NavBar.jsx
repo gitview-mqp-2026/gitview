@@ -1,20 +1,13 @@
-import { Link, useLocation } from "react-router-dom";
-
 import AppHeader from "./AppHeader.jsx";
+import Breadcrumbs from "./Breadcrumbs.jsx";
 import LogoutButton from "../components/auth/LogoutButton.jsx";
 import Profile from "../components/auth/Profile.jsx";
+import { HOME_CRUMBS } from "../utils/breadcrumbs.js";
 import "../App.css";
 
-function NavBar() {
-    const location = useLocation();
-
-    const pathNames = {
-        course: "Course",
-        team: "Team",
-    };
-
-    const pathSegments = location.pathname.split("/").filter(Boolean);
-
+// Each page says where it is. Guessing from the URL showed raw ids ("/ Course / 1") and linked to pages that do
+// not exist ("/course").
+function NavBar({ crumbs = HOME_CRUMBS }) {
     return (
         <AppHeader actions={(
             <>
@@ -25,18 +18,7 @@ function NavBar() {
                 </div>
             </>
         )}>
-            <div className="file-path">
-                {pathSegments.map((segment, index) => {
-                    const path = "/" + pathSegments.slice(0, index + 1).join("/");
-                    const label = pathNames[segment] || segment;
-
-                    return (
-                        <span key={path}>
-                            / <Link to={path}>{label}</Link>
-                        </span>
-                    );
-                })}
-            </div>
+            <Breadcrumbs crumbs={crumbs} />
         </AppHeader>
     );
 }
