@@ -88,6 +88,21 @@ async function courseById(courseID: number) {
   return course;
 }
 
+export function assertRepositoryCourse(currentCourseID: number | null | undefined, courseID: number) {
+  if (currentCourseID && currentCourseID !== courseID) {
+    throw new CourseError(409, 'That repository is already linked to another course.');
+  }
+}
+
+export async function analyzeCourseRepo(courseID: number, input: unknown) {
+  await courseById(courseID);
+  const result = await analyzeRepo(input);
+  const repo = await db.orm.public.Repository.where({ teamID: result.teamID }).first();
+  assertRepositoryCourse(repo?.courseID, courseID);
+  await db.orm.public.Repository.where({ teamID: result.teamID }).update({ courseID });
+  return result;
+}
+
 function notInstalled(org: string): string {
   return `The GitView GitHub App isn't installed on "${org}" yet. Install it on the organization, then try again.`;
 }

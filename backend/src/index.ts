@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { db } from './prisma/db.js';
-import { analyzeRepo, AnalyzeError, RepoUrlError } from './lib/analyze.js';
+import { AnalyzeError, RepoUrlError } from './lib/analyze.js';
 import {
   commitTagRows,
   commitTagsByHash,
@@ -15,7 +15,7 @@ import {
 } from './lib/fileLabels.js';
 import { directoryPaths, filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged } from './lib/stats.js';
-import { CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
+import { analyzeCourseRepo, CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
 import { GithubAppError, installUrl } from './lib/githubApp.js';
 import { activeAlertRows, buildTeamAlerts, type TeamAlert } from './lib/alerts.js';
 
@@ -111,19 +111,12 @@ app.get('/repositories', async (req, res) => {
   }
 });
 
-// Clones a public repo and ingests its log; the Repository row it creates is the "saved" repo.
+// Clones a public repo, ingests its log, and saves it under the course that requested it.
 app.post('/repositories/analyze', async (req, res) => {
   try {
-    res.json(await analyzeRepo(req.body?.url));
+    res.json(await analyzeCourseRepo(Number(req.body?.courseId), req.body?.url));
   } catch (err) {
-    if (err instanceof RepoUrlError) {
-      res.status(400).json({ error: err.message });
-    } else if (err instanceof AnalyzeError) {
-      res.status(err.status).json({ error: err.message });
-    } else {
-      console.error(err);
-      res.status(500).json({ error: 'Something went wrong analyzing that repository.' });
-    }
+    sendError(res, err);
   }
 });
 

@@ -95,7 +95,7 @@ function CourseDashboard() {
             const response = await fetch("/repositories/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url }),
+                body: JSON.stringify({ url, courseId }),
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
