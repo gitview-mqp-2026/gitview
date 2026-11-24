@@ -596,18 +596,33 @@
     min-width: 0;
 }
 
+.tree-directory details {
+    position: relative;
+}
+
 .tree-directory summary {
-    padding: 6px 4px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 4px 116px 4px 4px;
     cursor: pointer;
     overflow-wrap: anywhere;
 }
 
+.tree-directory summary > span:first-child {
+    min-width: 0;
+}
+
 .tree-directory summary .file-category-badge {
-    margin-left: 8px;
+    margin-left: 0;
 }
 
 .tree-directory-toolbar {
-    margin: 0 4px 4px 20px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    margin: 0;
 }
 
 .tree-file,
@@ -683,6 +698,48 @@
     border-radius: var(--radius-full);
     font-size: var(--text-xs);
     overflow-wrap: anywhere;
+}
+
+.file-category-badge[data-category="Database"] {
+    color: #9ce7f5;
+    background-color: #143c4a;
+    border-color: #2b7181;
+}
+
+.file-category-badge[data-category="Routes/Endpoints"] {
+    color: #ffd09a;
+    background-color: #4a2c15;
+    border-color: #8f5a2e;
+}
+
+.file-category-badge[data-category="Templates/Components"] {
+    color: #c7b8ff;
+    background-color: #352b59;
+    border-color: #6651a8;
+}
+
+.file-category-badge[data-category="Forms"] {
+    color: #ffb3cb;
+    background-color: #4a2130;
+    border-color: #92425f;
+}
+
+.file-category-badge[data-category="Styling"] {
+    color: #edb6ff;
+    background-color: #40204c;
+    border-color: #844f96;
+}
+
+.file-category-badge[data-category="Testing"] {
+    color: #9ce5bd;
+    background-color: #173c30;
+    border-color: #32785c;
+}
+
+.file-category-badge[data-category="App-setup"] {
+    color: #f4dc87;
+    background-color: #443914;
+    border-color: #85702d;
 }
 
 .tree-file-editor {

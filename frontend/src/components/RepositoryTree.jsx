@@ -80,7 +80,7 @@ function TreeNode({
                             {category ? `, categorized as ${category}` : ", uncategorized"}
                         </span>
                     </button>
-                    {category && <span className="file-category-badge">{category}</span>}
+                    {category && <span className="file-category-badge" data-category={category}>{category}</span>}
                 </div>
 
                 {active && (
@@ -116,7 +116,7 @@ function TreeNode({
             >
                 <summary>
                     <span>{node.name}</span>
-                    {category && <span className="file-category-badge">{category}</span>}
+                    {category && <span className="file-category-badge" data-category={category}>{category}</span>}
                     <span className="sr-only">
                         {category ? `, categorized as ${category}` : ", uncategorized"}
                     </span>
