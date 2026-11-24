@@ -13,13 +13,16 @@ import {
     MessageSquare,
     Users,
 } from "lucide-react";
+import { withMemberQualifiers } from "../../utils/teamMembers.js";
 
 function TeamOverview({ error, loading, stats }) {
+    const members = withMemberQualifiers(stats?.teamMembers ?? []);
+    const membersById = new Map(members.map((member) => [member.userID, member]));
     const metrics = [
         { label: "Commits", value: stats?.commits, icon: GitCommitHorizontal },
         { label: "PRs merged", value: stats?.prsMerged, icon: GitPullRequest },
-        { label: "Comments", value: stats?.comments, icon: MessageSquare },
-        { label: "Issues closed", value: stats?.issuesClosed, icon: CircleCheckBig },
+        { label: "Comments", value: "Not tracked", icon: MessageSquare, unavailable: true },
+        { label: "Issues closed", value: "Not tracked", icon: CircleCheckBig, unavailable: true },
         { label: "Alerts", value: stats?.alerts.length, icon: Bell },
     ];
 
@@ -48,9 +51,9 @@ function TeamOverview({ error, loading, stats }) {
                     )}
                 </div>
 
-                <span className="range-badge">
+                <span className="activity-range">
                     <CalendarDays size={16} aria-hidden="true" />
-                    All activity
+                    All recorded activity
                 </span>
             </section>
 
@@ -62,7 +65,7 @@ function TeamOverview({ error, loading, stats }) {
             )}
 
             <section className="stats-overview" aria-label="Repository statistics" aria-busy={loading}>
-                {metrics.map(({ label, value, icon: Icon }) => (
+                {metrics.map(({ label, value, icon: Icon, unavailable }) => (
                     <article className="stat-card" key={label}>
                         <div className="stat-card-header">
                             <span>{label}</span>
@@ -71,7 +74,9 @@ function TeamOverview({ error, loading, stats }) {
                         {loading ? (
                             <span className="skeleton stat-skeleton" aria-hidden="true" />
                         ) : (
-                            <strong>{error || !stats ? "—" : value}</strong>
+                            <strong className={unavailable ? "stat-untracked" : undefined}>
+                                {error || !stats ? "—" : value}
+                            </strong>
                         )}
                     </article>
                 ))}
@@ -104,7 +109,12 @@ function TeamOverview({ error, loading, stats }) {
                                 <span className="alert-icon" aria-hidden="true">
                                     <AlertTriangle size={17} />
                                 </span>
-                                <span>{alert.message}</span>
+                                <span className="alert-copy">
+                                    <span>{alert.message}</span>
+                                    {membersById.get(alert.studentID)?.qualifier && (
+                                        <small>{membersById.get(alert.studentID).qualifier}</small>
+                                    )}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -128,12 +138,15 @@ function TeamOverview({ error, loading, stats }) {
                         {!loading && !error && stats?.teamMembers.length === 0 && (
                             <div className="empty-state">No members assigned</div>
                         )}
-                        {!loading && !error && stats?.teamMembers.map((member) => (
+                        {!loading && !error && members.map((member) => (
                             <div className="member" key={member.userID}>
                                 <span className="member-avatar" aria-hidden="true">
                                     {member.displayName.trim().charAt(0).toUpperCase() || "?"}
                                 </span>
-                                <span>{member.displayName}</span>
+                                <span className="member-copy">
+                                    <span>{member.displayName}</span>
+                                    {member.qualifier && <small>{member.qualifier}</small>}
+                                </span>
                             </div>
                         ))}
                     </div>

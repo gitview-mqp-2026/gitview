@@ -4,3 +4,10 @@ dist/
 .env.*
 !.env.example
 backend/.repos/
+
+# Local agent and Playwright artifacts
+/AGENTS.md
+/.playwright-mcp/
+/playwright-*.png
+/dashboard-*.png
+/team-dashboard-*.png

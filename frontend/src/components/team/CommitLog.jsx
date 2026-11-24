@@ -1,5 +1,16 @@
 import { ChevronLeft, ChevronRight, CircleAlert, GitCommitHorizontal } from "lucide-react";
 
+function CommitCategories({ tags }) {
+    return (
+        <div className="commit-tag-summary" title="Derived from labeled files changed by this commit">
+            {tags.map((tag) => (
+                <span className="file-category-badge" key={tag}>{tag}</span>
+            ))}
+            {tags.length === 0 && <span className="empty-category">None</span>}
+        </div>
+    );
+}
+
 function CommitLog({
     commits,
     error,
@@ -38,7 +49,7 @@ function CommitLog({
 
             {!loading && !error && (
                 <>
-                    <div className="table-scroll" tabIndex={commits.length > 0 ? 0 : undefined}>
+                    <div className="table-scroll commit-table-view" tabIndex={commits.length > 0 ? 0 : undefined}>
                         <table className="categories-table commit-table">
                             <thead>
                                 <tr>
@@ -60,19 +71,13 @@ function CommitLog({
                                             <td><code>{commit.commitHash.slice(0, 7)}</code></td>
                                             <td className="commit-subject">{commit.commitSubject}</td>
                                             <td>{commit.author}</td>
-                                            <td>{new Date(commit.dateTime).toLocaleDateString()}</td>
+                                            <td>
+                                                <time dateTime={commit.dateTime}>
+                                                    {new Date(commit.dateTime).toLocaleDateString()}
+                                                </time>
+                                            </td>
                                             <td className="commit-tags-cell">
-                                                <div
-                                                    className="commit-tag-summary"
-                                                    title="Derived from labeled files changed by this commit"
-                                                >
-                                                    {(commit.tags ?? []).map((tag) => (
-                                                        <span className="file-category-badge" key={tag}>{tag}</span>
-                                                    ))}
-                                                    {(commit.tags ?? []).length === 0 && (
-                                                        <span className="empty-category">None</span>
-                                                    )}
-                                                </div>
+                                                <CommitCategories tags={commit.tags ?? []} />
                                             </td>
                                         </tr>
                                     ))
@@ -80,6 +85,34 @@ function CommitLog({
                             </tbody>
                         </table>
                     </div>
+
+                    {commits.length === 0 ? (
+                        <div className="commit-mobile-empty">No commits found for this team.</div>
+                    ) : (
+                        <ol className="commit-mobile-list">
+                            {visibleCommits.map((commit) => (
+                                <li className="commit-mobile-card" key={commit.commitHash}>
+                                    <div className="commit-mobile-meta">
+                                        <code>{commit.commitHash.slice(0, 7)}</code>
+                                        <time dateTime={commit.dateTime}>
+                                            {new Date(commit.dateTime).toLocaleDateString()}
+                                        </time>
+                                    </div>
+                                    <h3>{commit.commitSubject}</h3>
+                                    <dl>
+                                        <div>
+                                            <dt>Author</dt>
+                                            <dd>{commit.author}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Categories</dt>
+                                            <dd><CommitCategories tags={commit.tags ?? []} /></dd>
+                                        </div>
+                                    </dl>
+                                </li>
+                            ))}
+                        </ol>
+                    )}
 
                     {pageCount > 1 && (
                         <nav className="pager" aria-label="Commit log pagination">

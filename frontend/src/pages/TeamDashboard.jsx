@@ -174,10 +174,16 @@ function TeamDashboard() {
                     type="button"
                     aria-controls="project-structure-panel"
                     aria-expanded={treePanelOpen}
+                    aria-label="Project structure"
                     onClick={() => setTreePanelOpen((open) => !open)}
                 >
                     <PanelLeftOpen size={16} aria-hidden="true" />
-                    Project structure
+                    <span className="tree-panel-label tree-panel-label-long" aria-hidden="true">
+                        Project structure
+                    </span>
+                    <span className="tree-panel-label tree-panel-label-short" aria-hidden="true">
+                        Files
+                    </span>
                 </button>
                 <div className="file-path" aria-label="Current location">
                     <Link to={stats?.courseID ? `/course/${stats.courseID}` : "/"}>
