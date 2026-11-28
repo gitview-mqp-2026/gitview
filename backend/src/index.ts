@@ -13,7 +13,7 @@ import {
 import { filePaths, readRepositoryTree, RepositoryTreeError } from './lib/repositoryTree.js';
 import { countPullRequestsMerged } from './lib/stats.js';
 import { CourseError, createCourse, ingestStatus, startCourseIngest, syncCourse } from './lib/courses.js';
-import { editStudent, mergeStudents } from './lib/roster.js';
+import { deleteStudent, editStudent, exportRosterCsv, importRosterCsv, mergeStudents } from './lib/roster.js';
 import {
   GithubAppError,
   installUrl,
@@ -349,6 +349,36 @@ app.get('/courses/:courseId/roster', async (req, res) => {
   }
 });
 
+// downloads the roster as a CSV (one row per student)
+app.get('/courses/:courseId/roster/export', async (req, res) => {
+  try {
+    const courseID = Number(req.params.courseId);
+    if (!(await db.orm.public.Course.where({ courseID }).first())) {
+      res.status(404).json({ error: 'Course not found' });
+      return;
+    }
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="roster-course-${courseID}.csv"`);
+    res.send(await exportRosterCsv(courseID));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// applies imported roster CSV by updating existing students and adding new ones
+app.post('/courses/:courseId/roster/import', async (req, res) => {
+  try {
+    const courseID = Number(req.params.courseId);
+    if (!(await db.orm.public.Course.where({ courseID }).first())) {
+      res.status(404).json({ error: 'Course not found' });
+      return;
+    }
+    res.json(await importRosterCsv(courseID, req.body?.csv));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 // edits a student's name, GitHub username or email
 app.patch('/courses/:courseId/roster/:userId', async (req, res) => {
   try {
@@ -359,7 +389,17 @@ app.patch('/courses/:courseId/roster/:userId', async (req, res) => {
   }
 });
 
-// merges one student into another 
+// removes a student from the course
+app.delete('/courses/:courseId/roster/:userId', async (req, res) => {
+  try {
+    await deleteStudent(Number(req.params.courseId), Number(req.params.userId));
+    res.json({ ok: true });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// merges one student into another
 app.post('/courses/:courseId/roster/merge', async (req, res) => {
   try {
     const { keepUserID, mergeUserID } = req.body ?? {};

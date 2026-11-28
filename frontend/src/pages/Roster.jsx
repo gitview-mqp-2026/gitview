@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import NavBar from "../components/NavBar.jsx";
 import "../App.css";
@@ -14,8 +14,14 @@ function Roster() {
     const [popup, setPopup] = useState(null); // team being edited
     const [drafts, setDrafts] = useState({}); // editable fields per student
     const [merges, setMerges] = useState({}); // pending merges
+    const [removals, setRemovals] = useState({}); // pending removals (by userID)
     const [popupError, setPopupError] = useState(null);
     const [saving, setSaving] = useState(false);
+
+    // csv export/import
+    const [importing, setImporting] = useState(false);
+    const [csvMessage, setCsvMessage] = useState(null);
+    const fileInput = useRef(null);
 
     const loadRoster = useCallback(async () => {
         try {
@@ -54,6 +60,7 @@ function Roster() {
         
         setDrafts(initial);
         setMerges({});
+        setRemovals({});
         setPopupError(null);
         setPopup({ teamID, teamName, students });
     }
@@ -79,11 +86,25 @@ function Roster() {
         });
     }
 
+    // marks a student to be removed on save (or undoes it)
+    function toggleRemoval(userID) {
+        setRemovals((removals) => {
+            const next = { ...removals };
+            if (next[userID]) {
+                delete next[userID];
+            } else {
+                next[userID] = true;
+            }
+            return next;
+        });
+        setMerge(userID, null); // a removed student can't be merged
+    }
+
     async function send(url, method, body) {
         const response = await fetch(url, {
             method,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
+            body: body === undefined ? undefined : JSON.stringify(body)
         });
         if (!response.ok) {
             const data = await response.json().catch(() => ({}));
@@ -93,13 +114,23 @@ function Roster() {
 
     async function save(event) {
         event.preventDefault();
+
+        const removeIDs = Object.keys(removals);
+        if (removeIDs.length > 0) {
+            const count = removeIDs.length;
+            const ok = window.confirm(
+                `Permanently remove ${count} ${count === 1 ? "student" : "students"} and all of their commits, alerts and feedback? This can't be undone.`
+            );
+            if (!ok) return;
+        }
+
         setSaving(true);
         setPopupError(null);
 
         try {
-            // edits first (skipping students that are about to be merged away), then merges.
+            // edits first (skipping students that are about to be merged away or removed), then merges, then removals.
             for (const s of popup.students) {
-                if (merges[s.userID]) continue;
+                if (merges[s.userID] || removals[s.userID]) continue;
 
                 const d = drafts[s.userID];
                 const changed = d.name !== (s.name ?? "") || d.username !== (s.username ?? "") || d.email !== (s.email ?? "");
@@ -116,6 +147,10 @@ function Roster() {
                 });
             }
 
+            for (const removeUserID of removeIDs) {
+                await send(`/courses/${courseId}/roster/${removeUserID}`, "DELETE");
+            }
+
             setPopup(null);
             await loadRoster();
         } catch (err) {
@@ -123,6 +158,56 @@ function Roster() {
             await loadRoster();
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function exportCsv() {
+        setCsvMessage(null);
+
+        try {
+            const response = await fetch(`/courses/${courseId}/roster/export`);
+            if (!response.ok) {
+                throw new Error("Failed to export the roster.");
+            }
+
+            const url = URL.createObjectURL(await response.blob());
+            const link = document.createElement("a"); // temporary link for the download
+            link.href = url;
+            link.download = `${course?.name ?? "course"}-roster.csv`; // default filename
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            setCsvMessage({ error: true, text: err.message });
+        }
+    }
+
+    async function importCsv(event) {
+        const file = event.target.files[0];
+        event.target.value = ""; // allows picking the same file again
+        if (!file) return;
+
+        setImporting(true);
+        setCsvMessage(null);
+
+        try {
+            const response = await fetch(`/courses/${courseId}/roster/import`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ csv: await file.text() })
+            });
+            
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "Failed to import the roster.");
+
+            setCsvMessage({
+                error: false,
+                text: `Imported: ${data.updated} updated, ${data.added} added, ${data.unchanged} unchanged.`
+            });
+            await loadRoster();
+        } catch (err) {
+            setCsvMessage({ error: true, text: err.message });
+        } finally {
+            setImporting(false);
         }
     }
 
@@ -157,14 +242,38 @@ function Roster() {
                 </Link>
             <div className="roster-page">
                 <div className="roster-header">
-                    <h1>{course?.name} Roster</h1>
-                    {course && (
-                        <p>{course.courseName} · {course.courseTerm}</p>
-                    )}
+                    <div className="roster-header-info">
+                        <h1>{course?.name} Roster</h1>
+                        {course && (
+                            <p>{course.courseName} · {course.courseTerm}</p>
+                        )}
 
-                    <span className="roster-count">
-                        {roster.length} {roster.length === 1 ? "student" : "students"}
-                    </span>
+                        <span className="roster-count">
+                            {roster.length} {roster.length === 1 ? "student" : "students"}
+                        </span>
+                    </div>
+
+                    <div className="roster-csv">
+                        <div className="roster-csv-actions">
+                            <button type="button" className="repo-button" onClick={exportCsv} disabled={loading || !!error}>
+                                Export CSV
+                            </button>
+                            <button
+                                type="button"
+                                className="repo-button"
+                                onClick={() => fileInput.current.click()}
+                                disabled={loading || !!error || importing}
+                            >
+                                {importing ? "Importing…" : "Import CSV"}
+                            </button>
+                            <input ref={fileInput} type="file" accept=".csv,text/csv" hidden onChange={importCsv} />
+                        </div>
+                        {csvMessage && (
+                            <p className={csvMessage.error ? "repo-error" : "roster-csv-success"} role="alert">
+                                {csvMessage.text}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 {loading && <p>Loading roster...</p>}
@@ -219,7 +328,7 @@ function Roster() {
                 <div className="roster-popup-backdrop" onClick={closePopup}>
                     <form className="roster-popup roster-popup-wide" onClick={(e) => e.stopPropagation()} onSubmit={save}>
                         <h2>Edit {popup.teamName}</h2>
-                        <p> Change student information or merge one student profileinto another.</p>
+                        <p> Change student information, merge one student profile into another, or remove a student.</p>
 
                         <div className="roster-popup-list">
                             <table className="roster-edit-table">
@@ -229,25 +338,27 @@ function Roster() {
                                         <th>GitHub Username</th>
                                         <th>Email</th>
                                         <th>Merge Into</th>
+                                        <th>Remove</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {popup.students.map((s) => {
                                         const mergedInto = merges[s.userID];
+                                        const removed = !!removals[s.userID];
                                         const d = drafts[s.userID];
                                         return (
-                                            <tr key={s.userID} className={mergedInto ? "is-merged" : undefined}>
+                                            <tr key={s.userID} className={mergedInto || removed ? "is-merged" : undefined}>
                                                 <td>
                                                     <input
                                                         value={d.name}
-                                                        disabled={!!mergedInto}
+                                                        disabled={!!mergedInto || removed}
                                                         onChange={(e) => setField(s.userID, "name", e.target.value)}
                                                     />
                                                 </td>
                                                 <td>
                                                     <input
                                                         value={d.username}
-                                                        disabled={!!mergedInto}
+                                                        disabled={!!mergedInto || removed}
                                                         onChange={(e) => setField(s.userID, "username", e.target.value)}
                                                     />
                                                 </td>
@@ -256,23 +367,34 @@ function Roster() {
                                                         type="email"
                                                         required
                                                         value={d.email}
-                                                        disabled={!!mergedInto}
+                                                        disabled={!!mergedInto || removed}
                                                         onChange={(e) => setField(s.userID, "email", e.target.value)}
                                                     />
                                                 </td>
                                                 <td>
                                                     <select
                                                         value={mergedInto ?? ""}
-                                                        disabled={mergeTargets.has(s.userID)}
+                                                        disabled={mergeTargets.has(s.userID) || removed}
                                                         onChange={(e) => setMerge(s.userID, e.target.value)}
                                                     >
                                                         <option value="">Don't merge</option>
                                                         {popup.students
-                                                            .filter((o) => o.userID !== s.userID && !merges[o.userID])
+                                                            .filter((o) => o.userID !== s.userID && !merges[o.userID] && !removals[o.userID])
                                                             .map((o) => (
                                                                 <option key={o.userID} value={o.userID}>{label(o)}</option>
                                                             ))}
                                                     </select>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        type="button"
+                                                        className="roster-remove-button"
+                                                        disabled={mergeTargets.has(s.userID)}
+                                                        title={mergeTargets.has(s.userID) ? "Another student is being merged into this one" : undefined}
+                                                        onClick={() => toggleRemoval(s.userID)}
+                                                    >
+                                                        {removed ? "Undo" : "Remove"}
+                                                    </button>
                                                 </td>
                                             </tr>
                                         );
@@ -281,6 +403,9 @@ function Roster() {
                             </table>
                             {Object.keys(merges).length > 0 && (
                                 <p className="roster-merge-note">On save, merged students are removed and their commits move to the student they are merged into.</p>
+                            )}
+                            {Object.keys(removals).length > 0 && (
+                                <p className="roster-merge-note">On save, removed students are permanently deleted along with their commits, alerts and feedback. If their commits are still in the repository, the next sync may add them back.</p>
                             )}
                         </div>
 
